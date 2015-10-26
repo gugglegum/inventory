@@ -1,4 +1,5 @@
 <?php
+
 namespace common\models;
 
 use Yii;
@@ -12,14 +13,15 @@ use yii\web\IdentityInterface;
  *
  * @property integer $id
  * @property string $username
- * @property string $password_hash
- * @property string $password_reset_token
+ * @property string $passwordHash
+ * @property string $passwordResetToken
  * @property string $email
- * @property string $auth_key
+ * @property string $authKey
  * @property integer $status
- * @property integer $created_at
- * @property integer $updated_at
+ * @property integer $created
+ * @property integer $updated
  * @property string $password write-only password
+ * @property string $statusAsText read-only
  */
 class User extends ActiveRecord implements IdentityInterface
 {
@@ -31,7 +33,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function tableName()
     {
-        return '{{%user}}';
+        return 'users';
     }
 
     /**
@@ -40,7 +42,11 @@ class User extends ActiveRecord implements IdentityInterface
     public function behaviors()
     {
         return [
-            TimestampBehavior::className(),
+            [
+                'class' => TimestampBehavior::className(),
+                'createdAtAttribute' => 'created',
+                'updatedAtAttribute' => 'updated',
+            ],
         ];
     }
 
@@ -50,8 +56,30 @@ class User extends ActiveRecord implements IdentityInterface
     public function rules()
     {
         return [
+            [['username', 'authKey', 'passwordHash', 'email'], 'required'],
+            [['status'], 'integer'],
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+            [['username', 'passwordHash', 'passwordResetToken', 'email'], 'string', 'max' => 255],
+            [['authKey'], 'string', 'max' => 32]
+        ];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'ID',
+            'username' => 'Username',
+            'authKey' => 'Auth Key',
+            'passwordHash' => 'Password Hash',
+            'passwordResetToken' => 'Password Reset Token',
+            'email' => 'Email',
+            'status' => 'Status',
+            'created' => 'Created',
+            'updated' => 'Updated',
         ];
     }
 
@@ -95,7 +123,7 @@ class User extends ActiveRecord implements IdentityInterface
         }
 
         return static::findOne([
-            'password_reset_token' => $token,
+            'passwordResetToken' => $token,
             'status' => self::STATUS_ACTIVE,
         ]);
     }
@@ -111,9 +139,9 @@ class User extends ActiveRecord implements IdentityInterface
         if (empty($token)) {
             return false;
         }
-
-        $timestamp = (int) substr($token, strrpos($token, '_') + 1);
         $expire = Yii::$app->params['user.passwordResetTokenExpire'];
+        $parts = explode('_', $token);
+        $timestamp = (int) end($parts);
         return $timestamp + $expire >= time();
     }
 
@@ -130,7 +158,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function getAuthKey()
     {
-        return $this->auth_key;
+        return $this->authKey;
     }
 
     /**
@@ -149,7 +177,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function validatePassword($password)
     {
-        return Yii::$app->security->validatePassword($password, $this->password_hash);
+        return Yii::$app->security->validatePassword($password, $this->passwordHash);
     }
 
     /**
@@ -159,7 +187,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function setPassword($password)
     {
-        $this->password_hash = Yii::$app->security->generatePasswordHash($password);
+        $this->passwordHash = Yii::$app->security->generatePasswordHash($password);
     }
 
     /**
@@ -167,7 +195,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function generateAuthKey()
     {
-        $this->auth_key = Yii::$app->security->generateRandomString();
+        $this->authKey = Yii::$app->security->generateRandomString();
     }
 
     /**
@@ -175,7 +203,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function generatePasswordResetToken()
     {
-        $this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
+        $this->passwordResetToken = Yii::$app->security->generateRandomString() . '_' . time();
     }
 
     /**
@@ -183,6 +211,35 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function removePasswordResetToken()
     {
-        $this->password_reset_token = null;
+        $this->passwordResetToken = null;
+    }
+
+    /**
+     * @inheritdoc
+     * @return UserQuery the active query used by this AR class.
+     */
+    public static function find()
+    {
+        return new UserQuery(get_called_class());
+    }
+
+    /**
+     * Возвращает статус в виде строки
+     *
+     * @return string
+     */
+    public function getStatusAsText()
+    {
+        switch ($this->status) {
+            case (self::STATUS_ACTIVE) :
+                $text = 'ACTIVE';
+                break;
+            case self::STATUS_DELETED :
+                $text = 'DELETED';
+                break;
+            default :
+                $text = "UNKNOWN({$this->status})";
+        }
+        return $text;
     }
 }
