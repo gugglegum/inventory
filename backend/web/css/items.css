@@ -1,0 +1,21 @@
+table.container-items td {
+    vertical-align: top;
+}
+table.container-items td.thumbnail {
+    width: 110px;
+    height: 110px;
+}
+table.container-items td.details {
+    padding: 0 10px;
+}
+table.container-items td.details .name {
+    font-size: 150%;
+}
+table.container-items td.details a.edit-link {
+    font-size: 50%;
+    vertical-align: super;
+}
+
+table.container-items td.details .child-items {
+    font-size: 80%;
+}
