@@ -49,6 +49,15 @@ if (extension_loaded('gd')) {
  * Adjust requirements according to your application specifics.
  */
 $requirements = array(
+    // App specific:
+    array(
+        'name' => 'EXIF extension',
+        'mandatory' => true,
+        'condition' => extension_loaded('exif'),
+        'by' => 'Thumbnails generator',
+        'memo' => 'Need for uploaded photo orientation and rotation',
+    ),
+
     // Database :
     array(
         'name' => 'PDO extension',
