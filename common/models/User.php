@@ -3,6 +3,9 @@
 namespace common\models;
 
 use Yii;
+use yii\base\Exception;
+use yii\base\InvalidConfigException;
+use yii\base\InvalidParamException;
 use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
@@ -93,6 +96,7 @@ class User extends ActiveRecord implements IdentityInterface
 
     /**
      * @inheritdoc
+     * @throws NotSupportedException
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
@@ -174,6 +178,8 @@ class User extends ActiveRecord implements IdentityInterface
      *
      * @param string $password password to validate
      * @return boolean if password provided is valid for current user
+     * @throws InvalidParamException if the current scenario is unknown.
+     * @throws InvalidConfigException when an unsupported password hash strategy is configured.
      */
     public function validatePassword($password)
     {
@@ -184,6 +190,8 @@ class User extends ActiveRecord implements IdentityInterface
      * Generates password hash from password and sets it to the model
      *
      * @param string $password
+     * @throws Exception on bad password parameter or cost parameter.
+     * @throws InvalidConfigException when an unsupported password hash strategy is configured.
      */
     public function setPassword($password)
     {
@@ -192,6 +200,8 @@ class User extends ActiveRecord implements IdentityInterface
 
     /**
      * Generates "remember me" authentication key
+     * @throws Exception on failure.
+     * @throws InvalidConfigException when an unsupported password hash strategy is configured.
      */
     public function generateAuthKey()
     {
@@ -200,6 +210,8 @@ class User extends ActiveRecord implements IdentityInterface
 
     /**
      * Generates new password reset token
+     * @throws Exception on failure.
+     * @throws InvalidConfigException when an unsupported password hash strategy is configured.
      */
     public function generatePasswordResetToken()
     {

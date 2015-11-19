@@ -3,6 +3,7 @@
 namespace common\models;
 
 use Yii;
+use yii\base\InvalidParamException;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 
@@ -37,6 +38,7 @@ class UserSearch extends User
      * @param array $params
      *
      * @return ActiveDataProvider
+     * @throws InvalidParamException if the current scenario is unknown.
      */
     public function search($params)
     {
