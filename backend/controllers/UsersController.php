@@ -5,6 +5,8 @@ namespace backend\controllers;
 use Yii;
 use common\models\User;
 use common\models\UserSearch;
+use yii\base\InvalidParamException;
+use yii\db\StaleObjectException;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -30,6 +32,7 @@ class UsersController extends Controller
     /**
      * Lists all User models.
      * @return mixed
+     * @throws InvalidParamException if the view file or the layout file does not exist.
      */
     public function actionIndex()
     {
@@ -46,6 +49,8 @@ class UsersController extends Controller
      * Displays a single User model.
      * @param string $id
      * @return mixed
+     * @throws InvalidParamException if the view file or the layout file does not exist.
+     * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
@@ -58,6 +63,7 @@ class UsersController extends Controller
      * Creates a new User model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
+     * @throws InvalidParamException if the view file or the layout file does not exist.
      */
     public function actionCreate()
     {
@@ -79,6 +85,8 @@ class UsersController extends Controller
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param string $id
      * @return mixed
+     * @throws InvalidParamException if the view file or the layout file does not exist.
+     * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionUpdate($id)
     {
@@ -100,6 +108,10 @@ class UsersController extends Controller
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param string $id
      * @return mixed
+     * @throws NotFoundHttpException if the model cannot be found
+     * @throws StaleObjectException if [[optimisticLock|optimistic locking]] is enabled and the data
+     * being deleted is outdated.
+     * @throws \Exception in case delete failed.
      */
     public function actionDelete($id)
     {
