@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = 'Редактирование';
 ?>
 <div class="item-update">
 
-    <h1><?= Html::encode($this->title) ?></h1>
+    <h1><?= Html::encode($this->title) ?>&nbsp;<sup style="color: #ccc">#<?= Html::encode($model->id) ?></sup></h1>
 
     <?= $this->render('_form', [
         'model' => $model,
