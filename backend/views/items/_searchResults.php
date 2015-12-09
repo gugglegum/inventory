@@ -55,9 +55,9 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 </div>
 
                 <div class="name">
-                    <?= Html::beginTag('a', ['href' => Url::to(['items/view', 'id' => $item->id])]) ?>
-                    <?= Html::encode($item->name) ?>&nbsp;<sup style="color: #ccc; font-size: 60%;">#<?= Html::encode($item->id) ?></sup>
-                    <?= Html::endTag('a') ?>
+                    <?= Html::beginTag('a', ['href' => Url::to(['items/view', 'id' => $item->id])])
+                        . Html::encode($item->name)
+                        . Html::endTag('a') ?>&nbsp;<sup style="color: #ccc; font-size: 60%;">#<?= Html::encode($item->id) ?></sup>
                     <?= Html::a('', Url::to(['items/update', 'id' => $item->id]), ['class' => 'glyphicon glyphicon-edit edit-link']) ?>
                 </div>
 
