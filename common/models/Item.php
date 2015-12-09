@@ -113,6 +113,12 @@ class Item extends ActiveRecord
         }
     }
 
+    public function saveTagsFromString($tagsString)
+    {
+        $tags = preg_split('/\s*,\s*/', $tagsString, -1, PREG_SPLIT_NO_EMPTY);
+        $this->saveTags($tags);
+    }
+
     /**
      * @return array
      * @throws \yii\db\Exception
@@ -122,7 +128,13 @@ class Item extends ActiveRecord
         return self::getDb()->createCommand('SELECT tag FROM ' . ItemTag::tableName() . ' WHERE itemId = :itemId ORDER BY tag ASC', ['itemId' => $this->id])->queryColumn();
     }
 
-    /**
+    public function fetchTagsAsString($separator = ', ')
+    {
+        $tags = $this->fetchTags();
+        return implode($separator, $tags);
+    }
+
+        /**
      * @return \yii\db\ActiveQuery
      */
     public function getItemRelations()
@@ -191,5 +203,4 @@ class Item extends ActiveRecord
     {
         return new ItemQuery(get_called_class());
     }
-
 }

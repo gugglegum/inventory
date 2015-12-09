@@ -83,6 +83,11 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
             echo Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить предмет внутрь', ['items/create', 'parentId' => $model->id], ['class' => 'btn btn-success']);
         }
         ?></p>
+
+        <?= $this->render('_importForm', [
+            'parent' => $model,
+            'text' => '',
+        ]) ?>
     </div>
     <?php } ?>
 

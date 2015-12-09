@@ -3,11 +3,14 @@
 namespace backend\controllers;
 
 use backend\models\ItemTagsForm;
+use common\helpers\ValidateErrorsFormatter;
 use Yii;
 use common\models\Item;
 use common\models\ItemPhoto;
+use yii\base\Exception;
 use yii\base\InvalidParamException;
 use yii\web\Controller;
+use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
@@ -23,6 +26,7 @@ class ItemsController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['post'],
+                    'import' => ['post'],
                 ],
             ],
         ];
@@ -135,7 +139,7 @@ class ItemsController extends Controller
             if ($item->load(Yii::$app->request->post()) && $item->save()) {
 
                 if ($tagsForm->load(Yii::$app->request->post())) {
-                    $item->saveTags(self::_extractTagsFromString($tagsForm->tags));
+                    $item->saveTagsFromString($tagsForm->tags);
                 }
 
                 $tmpNames = $_FILES['photos']['tmp_name'];
@@ -182,14 +186,14 @@ class ItemsController extends Controller
         $item = $this->findModel($id);
 
         $tagsForm = new ItemTagsForm();
-        $tagsForm->tags = self::_glueTagsToString($item->fetchTags());
+        $tagsForm->tags = $item->fetchTagsAsString();
 
         if (Yii::$app->request->isPost) {
             /** @noinspection NestedPositiveIfStatementsInspection */
             if ($item->load(Yii::$app->request->post()) && $item->save()) {
 
                 if ($tagsForm->load(Yii::$app->request->post())) {
-                    $item->saveTags(self::_extractTagsFromString($tagsForm->tags));
+                    $item->saveTagsFromString($tagsForm->tags);
                 }
 
                 $tmpNames = $_FILES['photos']['tmp_name'];
@@ -214,16 +218,6 @@ class ItemsController extends Controller
         ]);
     }
 
-    private static function _extractTagsFromString($str)
-    {
-        return preg_split('/\s*,\s*/', $str, -1, PREG_SPLIT_NO_EMPTY);
-    }
-
-    private static function _glueTagsToString(array $tags)
-    {
-        return implode(', ', $tags);
-    }
-
     /**
      * Deletes an existing Item model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
@@ -239,6 +233,88 @@ class ItemsController extends Controller
         $parentId = $model->parentId;
         $model->delete();
         return $this->redirect($parentId ? ['items/view', 'id' => $parentId] : ['items/index']);
+    }
+
+    /**
+     * Импорт предметов в контейнер
+     *
+     * @param int $parentId
+     * @return string
+     * @throws InvalidParamException if the view file or the layout file does not exist.
+     * @throws Exception
+     * @throws HttpException
+     */
+    public function actionImport($parentId)
+    {
+        if (! $parent = Item::findOne($parentId) ) {
+            throw new HttpException(404, "Item with ID={$parentId} not found");
+        }
+        $text = Yii::$app->request->post('text');
+        $confirm = (bool) Yii::$app->request->post('confirm');
+        $items = [];
+
+        $errorLine = null;
+        $errorStr = null;
+
+        $line = 1;
+        $item = [];
+        foreach (explode("\n", $text) as $str) {
+            $str = trim($str);
+
+            if ($str === '') {
+                continue;
+            }
+
+            if ($str{0} !== '*') {
+                if (isset($item['name'])) {
+                    $items[] = $item;
+                    $item = [];
+                }
+                $item['name'] = $str;
+            } else {
+                if (preg_match('/^\*\s*(tags|description|container)\s*:\s*(.*)$/i', $str, $m)) {
+                    $item[trim($m[1])] = trim($m[2]);
+                } else {
+                    $errorLine = $line;
+                    $errorStr = $str;
+                    break;
+                }
+            }
+
+            $line++;
+        }
+        if (isset($item['name'])) {
+            $items[] = $item;
+        }
+
+        if ($confirm) {
+            foreach ($items as $item) {
+                $itemModel = new Item();
+                $itemModel->name = $item['name'];
+                $itemModel->parentId = $parent->id;
+                $itemModel->isContainer = !empty($item['container']) ? '1' : '0';
+                if (isset($item['description'])) {
+                    $itemModel->description = $item['description'];
+                }
+                if (!$itemModel->save()) {
+                    throw new Exception(ValidateErrorsFormatter::getMessage($itemModel));
+                }
+
+                if (isset($item['tags'])) {
+                    $itemModel->saveTagsFromString($item['tags']);
+                }
+            }
+
+            return $this->redirect(['view', 'id' => $parent->id]);
+        }
+
+        return $this->render('import', [
+            'text' => $text,
+            'parent' => $parent,
+            'items' => $items,
+            'errorLine' => $errorLine,
+            'errorStr' => $errorStr,
+        ]);
     }
 
     /**
