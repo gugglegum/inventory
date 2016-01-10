@@ -11,6 +11,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
 
 ?>
 <?php if (!empty($items)) { ?>
+<p>Всего найдено предметов: <?= count($items) ?></p>
 <table class="search-results">
     <?php foreach ($items as $item) { ?>
         <tr>

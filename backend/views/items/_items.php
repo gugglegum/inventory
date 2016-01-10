@@ -62,6 +62,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
         </tr>
     <?php } ?>
 </table>
+<p>Всего предметов: <?= count($items) ?></p>
 <?php } else { ?>
 <p>Здесь пока ничего нет.</p>
 <?php } ?>
