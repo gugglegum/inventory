@@ -7,9 +7,10 @@ use yii\helpers\Url;
 
 /* @var $text string */
 /* @var $parent \common\models\Item */
-/* @var $items \common\models\Item[] */
+/* @var $items array[] */
 /* @var $errorLine int */
 /* @var $errorStr string */
+/* @var $errorMsg string */
 
 $this->title = 'Импорт предметов';
 $this->render('_breadcrumbs', ['model' => $parent]);
@@ -29,14 +30,14 @@ foreach ($items as $item) {
 ?>
     <li>
         <div style="font-size: 120%; font-weight: bold;"><?= Html::encode($item['name']) ?></div>
-        <?php if (count($items) > 1) { ?>
+        <?php if (count($item) > 1) { ?>
         <ul>
             <?php foreach ($item as $key => $value) {
                 if ($key === 'name') {
                     continue;
                 }
             ?>
-            <li><strong style="color: #999"><?= Html::encode($key) ?>:</strong> <?= Html::encode($value) ?></li>
+            <li><strong style="color: #999"><?= Html::encode($key) ?>:</strong> <?= nl2br(Html::encode($value)) ?></li>
             <?php } ?>
         </ul>
         <?php } ?>
@@ -45,7 +46,7 @@ foreach ($items as $item) {
 </ol>
 
 <?php if (!empty($errorLine) && !empty($errorStr)) { ?>
-<p>Ошибка в строке <?= $errorLine ?>:</p>
+<p>Ошибка в строке <?= $errorLine ?>: <?= Html::encode($errorMsg) ?></p>
 <pre><?= Html::encode($errorStr) ?></pre>
 <?php } ?>
 

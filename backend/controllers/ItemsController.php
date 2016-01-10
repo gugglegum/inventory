@@ -255,39 +255,105 @@ class ItemsController extends Controller
 
         $errorLine = null;
         $errorStr = null;
+        $errorMsg = null;
 
         $line = 1;
         $item = [];
-        foreach (explode("\n", $text) as $str) {
-            $str = trim($str);
 
-            if ($str === '') {
-                continue;
+        /**
+         * @param string $key
+         * @param string $value
+         * @throws Exception
+         */
+        $addProperty = function($key, $value) use (&$item) {
+            if (!in_array($key, ['description', 'tags', 'container'], true)) {
+                throw new Exception('Unknown property "' . $key . '"');
             }
-
-            if ($str{0} !== '*') {
-                if (isset($item['name'])) {
-                    $items[] = $item;
-                    $item = [];
+            if ($key === 'container') {
+                $value = $value ? '1' : '0';
+            }
+            if (array_key_exists($key, $item)) {
+                switch ($key) {
+                    case 'description' :
+                        $item[$key] .= "\n" . $value;
+                        break;
+                    case 'tags' :
+                        $item[$key] .= ', ' . $value;
+                        break;
+                    default :
+                        $item[$key] = $value;
                 }
-                $item['name'] = $str;
             } else {
-                if (preg_match('/^\*\s*(tags|description|container)\s*:\s*(.*)$/i', $str, $m)) {
-                    $item[trim($m[1])] = trim($m[2]);
-                } else {
-                    $errorLine = $line;
-                    $errorStr = $str;
-                    break;
-                }
+                $item[$key] = $value;
             }
+        };
 
-            $line++;
-        }
-        if (isset($item['name'])) {
-            $items[] = $item;
+        $str = '';
+        try {
+            foreach (explode("\n", $text) as $str) {
+                $str = trim($str);
+
+                if ($str === '') {
+                    continue;
+                }
+
+                switch ($str[0]) {
+                    case '*' :
+                        if (preg_match('/^\*\s*(\w+)\s*:\s*(.*)$/ui', $str, $m)) {
+                            $key = mb_strtolower(trim($m[1]));
+                            $replacements = [
+                                'метки' => 'tags',
+                                'теги' => 'tags',
+                                'тэги' => 'tags',
+                                'desc' => 'description',
+                                'описание' => 'description',
+                                'cont' => 'container',
+                                'контейнер' => 'container',
+                                'конт' => 'container',
+                            ];
+                            foreach ($replacements as $from => $to) {
+                                if ($key === $from) {
+                                    $key = $to;
+                                    break;
+                                }
+                            }
+                            $value = trim($m[2]);
+                            $addProperty($key, $value);
+                        } else {
+                            throw new Exception('Invalid property line format');
+                        }
+                        break;
+                    case '!' :
+                        $key = 'description';
+                        $value = trim(mb_substr($str, 1));
+                        $addProperty($key, $value);
+                        break;
+
+                    case '@' :
+                        $key = 'tags';
+                        $value = trim(mb_substr($str, 1));
+                        $addProperty($key, $value);
+                        break;
+
+                    default :
+                        if (isset($item['name'])) {
+                            $items[] = $item;
+                            $item = [];
+                        }
+                        $item['name'] = $str;
+                }
+                $line++;
+            }
+            if (isset($item['name'])) {
+                $items[] = $item;
+            }
+        } catch (Exception $e) {
+            $errorLine = $line;
+            $errorStr = $str;
+            $errorMsg = $e->getMessage();
         }
 
-        if ($confirm) {
+        if ($confirm && $errorLine === null) {
             foreach ($items as $item) {
                 $itemModel = new Item();
                 $itemModel->name = $item['name'];
@@ -299,12 +365,10 @@ class ItemsController extends Controller
                 if (!$itemModel->save()) {
                     throw new Exception(ValidateErrorsFormatter::getMessage($itemModel));
                 }
-
                 if (isset($item['tags'])) {
                     $itemModel->saveTagsFromString($item['tags']);
                 }
             }
-
             return $this->redirect(['view', 'id' => $parent->id]);
         }
 
@@ -314,6 +378,7 @@ class ItemsController extends Controller
             'items' => $items,
             'errorLine' => $errorLine,
             'errorStr' => $errorStr,
+            'errorMsg' => $errorMsg,
         ]);
     }
 
