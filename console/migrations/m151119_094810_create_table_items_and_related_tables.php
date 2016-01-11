@@ -17,7 +17,7 @@ class m151119_094810_create_table_items_and_related_tables extends Migration
             'updated' => "int(11) NOT NULL COMMENT 'Время последнего изменения'",
             "PRIMARY KEY (`id`)",
             "KEY `parentId` (`parentId`)",
-        ], "ENGINE=InnoDB AUTO_INCREMENT=296 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Предметы'");
+        ], "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Предметы'");
         $this->addForeignKey('items_parentId', 'items', ['parentId'], 'items', ['id']);
 
         // Таблица items_photos
@@ -35,7 +35,7 @@ class m151119_094810_create_table_items_and_related_tables extends Migration
             "UNIQUE KEY `sort` (`itemId`,`sortIndex`)",
             "KEY `itemId` (`itemId`)",
             "KEY `md5` (`md5`)"
-        ], "ENGINE=InnoDB AUTO_INCREMENT=496 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Фотографии предметов'");
+        ], "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Фотографии предметов'");
         $this->addForeignKey('items_photos_itemId', 'items_photos', ['itemId'], 'items', ['id'], 'CASCADE', 'CASCADE');
 
         // Таблица items_relations
