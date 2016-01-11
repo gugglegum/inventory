@@ -9,6 +9,7 @@ use common\models\Item;
 use common\models\ItemPhoto;
 use yii\base\Exception;
 use yii\base\InvalidParamException;
+use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
@@ -19,14 +20,25 @@ use yii\filters\VerbFilter;
  */
 class ItemsController extends Controller
 {
+    /**
+     * @inheritdoc
+     */
     public function behaviors()
     {
         return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
+                ],
+            ],
             'verbs' => [
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['post'],
-                    'import' => ['post'],
                 ],
             ],
         ];
