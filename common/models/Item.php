@@ -58,6 +58,7 @@ class Item extends ActiveRecord
         return [
             [['name', 'isContainer'], 'required'],
             [['parentId', 'isContainer'], 'integer'],
+            [['description'], 'filter', 'filter' => 'trim'],
             [['description'], 'string'],
             [['name'], 'string', 'max' => 100]
         ];
