@@ -17,6 +17,7 @@ $this->render('_breadcrumbs', ['model' => null]);
 
     <?= $this->render('_items', [
         'items' => $rootItems,
+        'isSearch' => false,
     ]) ?>
 
     <p><?= Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить контейнер', ['items/create', 'isContainer' => 1], ['class' => 'btn btn-success']) ?></p>

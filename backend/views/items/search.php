@@ -11,8 +11,6 @@ $this->title = 'Поиск';
 $this->render('_breadcrumbs', ['model' => null]);
 $this->params['breadcrumbs'][] = $this->title;
 
-$this->registerCssFile('@web/css/search.css', [], 'search');
-
 ?>
 <div class="item-search">
 
@@ -23,8 +21,9 @@ $this->registerCssFile('@web/css/search.css', [], 'search');
     <?php if ($query !== '') { ?>
     <h3>Результаты поиска</h3>
 
-    <?= $this->render('_searchResults', [
+    <?= $this->render('_items', [
         'items' => $items,
+        'isSearch' => true,
     ]) ?>
     <?php } ?>
 

@@ -8,6 +8,9 @@ table.container-items td.thumbnail {
 table.container-items td.details {
     padding: 0 10px;
 }
+table.container-items td.details .path {
+    font-size: 80%;
+}
 table.container-items td.details .name {
     font-size: 150%;
 }
@@ -15,7 +18,10 @@ table.container-items td.details a.edit-link {
     font-size: 50%;
     vertical-align: super;
 }
-
+table.container-items td.details .description {
+    font-size: 80%;
+    color: #999;
+}
 table.container-items td.details .child-items {
     font-size: 80%;
 }

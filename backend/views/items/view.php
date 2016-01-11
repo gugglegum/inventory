@@ -76,6 +76,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
 
         <?= $this->render('_items', [
             'items' => $children,
+            'isSearch' => false,
         ]) ?>
 
         <p style="margin-top: 1em"><?php
