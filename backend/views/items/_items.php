@@ -73,7 +73,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                     // пробелы на обычные пробелы.
                     $maxDescriptionLength = 140;
                     $threshold = 10;
-                    $shortDescription = preg_replace('/\s+/', "\x20", $item->description);
+                    $shortDescription = preg_replace('/\s+/u', "\x20", $item->description);
                     if (mb_strlen($shortDescription) > $maxDescriptionLength + $threshold) {
                         $shortDescription = mb_substr($shortDescription, 0, $maxDescriptionLength) . '...';
                     }
