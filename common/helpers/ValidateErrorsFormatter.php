@@ -78,6 +78,19 @@ class ValidateErrorsFormatter
     }
 
     /**
+     * Возвращает первую ошибку валидации в заданном формате
+     *
+     * @param Model $model              Модель (форма), из которой нужно извлечь ошибки
+     * @param string $text              OPTIONAL Шаблон ошибки
+     * @return string                   Строка с первой ошибкой валидации
+     */
+    public static function firstError(Model $model, $text = '%FIELD%: %ERROR%')
+    {
+        $firstErrors = $model->getFirstErrors();
+        return str_replace(['%MODEL%', '%FIELD%', '%ERROR%'], [get_class($model), key($firstErrors), current($firstErrors)], $text);
+    }
+
+    /**
      * @param Model $model              Модель (форма), из которой нужно извлечь атрибуты
      * @param string $prefix            OPTIONAL Префикс элемента списка
      * @param string $suffix            OPTIONAL Суффикс элемента списка
