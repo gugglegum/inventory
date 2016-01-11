@@ -20,9 +20,6 @@ return [
             'rules' => [
             ],
         ],
-        'request' => [
-            'baseUrl' => '/inventory',
-        ],
         'user' => [
             'identityClass' => 'common\models\User',
             'enableAutoLogin' => true,
