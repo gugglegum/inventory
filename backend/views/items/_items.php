@@ -67,17 +67,17 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                         Html::a('', Url::to(['items/update', 'id' => $item->id]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-left: 5px']) ?>
                 </div>
 
-                <?php if (trim($item->description) != '') { ?>
+                <?php if (($description = trim($item->description)) != '') { ?>
                 <div class="description"><?php
                     // Выводим укороченное описание, если оно слишком длинное. Заменяем в нём все избыточные белые
                     // пробелы на обычные пробелы.
                     $maxDescriptionLength = 140;
                     $threshold = 10;
-                    $shortDescription = preg_replace('/\s+/u', "\x20", $item->description);
-                    if (mb_strlen($shortDescription) > $maxDescriptionLength + $threshold) {
-                        $shortDescription = mb_substr($shortDescription, 0, $maxDescriptionLength) . '...';
+                    $description = preg_replace('/\s+/u', "\x20", $description);
+                    if (mb_strlen($description) > $maxDescriptionLength + $threshold) {
+                        $description = rtrim(mb_substr($description, 0, $maxDescriptionLength)) . '...';
                     }
-                    echo Html::encode($shortDescription);
+                    echo Html::encode($description);
                 ?></div>
                 <?php } ?>
 
