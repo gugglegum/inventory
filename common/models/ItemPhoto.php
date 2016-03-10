@@ -135,8 +135,8 @@ class ItemPhoto extends ActiveRecord
         if ($insert) {
             $file = $this->getFile();
             $dir = dirname($file);
-            if (! file_exists($dir)) {
-                mkdir($dir, 0777, true);
+            if (! file_exists($dir) && ! @mkdir($dir, 0777, true) && ! is_dir($dir)) {
+                throw new Exception('Failed to create directory "' . $dir . '"');
             }
 
             if (! copy($this->_tempFile, $file)) {
@@ -192,7 +192,12 @@ class ItemPhoto extends ActiveRecord
 
     private static function _getFileRelativePath($id)
     {
-        $sum = abs(crc32((string) $id));
+        $crc32 = crc32((string) $id);
+        // backward compatibility trick for int64 systems (e.g. php7 for win64)
+        if ($crc32 > 2147483647) {
+            $crc32 -= 4294967296;
+        }
+        $sum = abs($crc32);
         $path = [];
         $path[] = str_pad($sum % 100, 2, '0', STR_PAD_LEFT);
         $path[] = str_pad((int) floor($sum / 100) % 100, 2, '0', STR_PAD_LEFT);

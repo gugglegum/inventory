@@ -2,11 +2,6 @@
 
 namespace common\components;
 
-//use Yii;
-//use yii\base\Component;
-//use frontend\models\CorvusPayForm;
-//use common\models\Order;
-
 use yii\base\Exception;
 
 abstract class ImageResize
@@ -23,7 +18,7 @@ abstract class ImageResize
     public static function getImageFromFile($imagePath)
     {
         if (!is_file($imagePath)) {
-            throw new Exception('Image file is not found');
+            throw new Exception("Image file '{$imagePath}' is not found");
         }
         if ($info = getimagesize($imagePath)) {
             switch ($info[2]) {
