@@ -200,7 +200,7 @@ class ItemPhoto extends ActiveRecord
         $sum = abs($crc32);
         $path = [];
         $path[] = str_pad($sum % 100, 2, '0', STR_PAD_LEFT);
-        $path[] = str_pad((int) floor($sum / 100) % 100, 2, '0', STR_PAD_LEFT);
+        $path[] = str_pad(intdiv($sum, 100) % 100, 2, '0', STR_PAD_LEFT);
         return implode('/', $path) . '/' . $id . '.jpg';
     }
 
