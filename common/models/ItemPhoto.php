@@ -135,12 +135,11 @@ class ItemPhoto extends ActiveRecord
         if ($insert) {
             $file = $this->getFile();
             $dir = dirname($file);
-            if (! file_exists($dir) && ! @mkdir($dir, 0777, true) && ! is_dir($dir)) {
+            if (!file_exists($dir) && !@mkdir($dir, 0777, true) && !is_dir($dir)) {
                 throw new Exception('Failed to create directory "' . $dir . '"');
             }
-
-            if (! copy($this->_tempFile, $file)) {
-                throw new Exception('Failed to copy file "' . $this->_tempFile . '" to folder "' . $file);
+            if (!rename($this->_tempFile, $file)) {
+                throw new Exception('Failed to move photo file from "' . $this->_tempFile . '" to "' . $file);
             }
         }
     }
@@ -165,15 +164,15 @@ class ItemPhoto extends ActiveRecord
         }
         $this->_assignedFile = $file;
 
-        $this->_image = ImageResize::resizeImage(ImageResize::getImageFromFile($this->_assignedFile), [
-            'width'         => Yii::$app->params['photos']['resize']['width'],
-            'height'        => Yii::$app->params['photos']['resize']['height'],
-            'antiAliasing'  => Yii::$app->params['photos']['resize']['antiAliasing'],
-            'upscale'       => Yii::$app->params['photos']['resize']['upscale'],
-            'crop'          => Yii::$app->params['photos']['resize']['crop'],
-        ]);
+        $this->_image = ImageResize::resizeImage(
+            ImageResize::getImageFromFile($this->_assignedFile),
+            Yii::$app->params['photos']['resize']['width'],
+            Yii::$app->params['photos']['resize']['height'],
+            Yii::$app->params['photos']['resize']['upscale'],
+            Yii::$app->params['photos']['resize']['crop']
+        );
 
-        $this->_tempFile = tempnam(sys_get_temp_dir(), 'inv');
+        $this->_tempFile = tempnam(Yii::$app->params['photos']['storageTemp'], 'inv');
 
         imagejpeg($this->_image, $this->_tempFile, Yii::$app->params['photos']['resize']['quality']);
 
@@ -190,7 +189,13 @@ class ItemPhoto extends ActiveRecord
         $this->height = imagesy($this->_image);
     }
 
-    private static function _getFileRelativePath($id)
+    /**
+     * Возвращает относительный путь к файлу на диске относительно корня хранилища полноразмерных фотографий
+     *
+     * @param int $id
+     * @return string
+     */
+    private static function getFileRelativePath(int $id)
     {
         $crc32 = crc32((string) $id);
         // backward compatibility trick for int64 systems (e.g. php7 for win64)
@@ -204,29 +209,178 @@ class ItemPhoto extends ActiveRecord
         return implode('/', $path) . '/' . $id . '.jpg';
     }
 
-    public static function getFileById($id)
+    /**
+     * Возвращает относительный путь к уменьшенному файлу на диске относительно корня thumbnails
+     *
+     * @param int $id
+     * @param int $width
+     * @param int $height
+     * @param bool $upscale
+     * @param bool $crop
+     * @param int $quality
+     * @return string
+     */
+    private static function getThumbnailFileRelativePath(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality)
     {
-        return Yii::$app->params['photos']['storagePath'] . '/' . self::_getFileRelativePath($id);
+        $suffixes = ["q{$quality}"];
+        if ($upscale) {
+            $suffixes[] = 'upscale';
+        }
+        if ($crop) {
+            $suffixes[] = 'crop';
+        }
+        $path = [];
+        $path[] = "{$width}x{$height}." . implode('.', $suffixes);
+        $path[] = self::getFileRelativePath($id);
+        return implode('/', $path);
     }
 
+    /**
+     * Возвращает абсолютный путь к файлу с полноразмерной фотографией на диске по ID фотографии
+     *
+     * @param int $id
+     * @return string
+     */
+    public static function getFileById(int $id)
+    {
+        return Yii::$app->params['photos']['storagePath'] . '/' . self::getFileRelativePath($id);
+    }
+
+    /**
+     * Возвращает абсолютный путь к файлу с полноразмерной фотографией на диске для текущей фотографии
+     *
+     * @return string
+     */
     public function getFile()
     {
         return self::getFileById($this->primaryKey);
     }
 
+    /**
+     * Возвращает абсолютный путь к файлу с уменьшенной фотографией на диске по ID фотографии и параметрам уменьшения
+     *
+     * @param int $id
+     * @param int $width
+     * @param int $height
+     * @param bool $upscale
+     * @param bool $crop
+     * @param int $quality
+     * @return string
+     */
+    public static function getThumbnailFileById(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality)
+    {
+        return Yii::$app->params['photos']['thumbnailPath'] . '/' . self::getThumbnailFileRelativePath($id, $width, $height, $upscale, $crop, $quality);
+    }
+
+    /**
+     * Возвращает абсолютный путь к файлу с уменьшенной фотографией на диске для текущей фотографии
+     *
+     * @param int $width
+     * @param int $height
+     * @param bool $upscale
+     * @param bool $crop
+     * @param int $quality
+     * @return string
+     */
+    public function getThumbnailFile(int $width, int $height, bool $upscale, bool $crop, int $quality)
+    {
+        return self::getThumbnailFileById($this->primaryKey, $width, $height, $upscale, $crop, $quality);
+    }
+
+    /**
+     * Возвращает URL полноразмерной фотографии
+     *
+     * @return string
+     */
     public function getUrl()
     {
         $urlParts = [];
         $urlParts[] = Yii::$app->request->baseUrl;
-        if (Yii::$app->params['photos']['storageRelativeUrl'] !== '') {
-            $urlParts[] = Yii::$app->params['photos']['storageRelativeUrl'];
+        $storageRelativeUrl = trim(Yii::$app->params['photos']['storageRelativeUrl'], '/');
+        if ($storageRelativeUrl !== '') {
+            $urlParts[] = $storageRelativeUrl;
         }
-        $urlParts[] = self::_getFileRelativePath($this->primaryKey);
+        $urlParts[] = self::getFileRelativePath($this->primaryKey);
         return implode('/', $urlParts);
     }
 
-    public function getThumbnailUrl($width, $height, array $options = [])
+    /**
+     * Возвращает строго статический URL уменьшенной фотографии
+     * 
+     * @param int $width
+     * @param int $height
+     * @param bool $upscale
+     * @param bool $crop
+     * @param int $quality
+     * @return mixed
+     */
+    public function getStaticThumbnailUrl(int $width, int $height, bool $upscale, bool $crop, int $quality)
     {
-        return Url::toRoute(['photo/thumbnail', 'id' => $this->primaryKey, 'width' => $width, 'height' => $height] + $options);
+        $urlParts = [];
+        $urlParts[] = Yii::$app->request->baseUrl;
+        $storageRelativeUrl = trim(Yii::$app->params['photos']['thumbnailRelativeUrl'], '/');
+        if ($storageRelativeUrl !== '') {
+            $urlParts[] = $storageRelativeUrl;
+        }
+        $urlParts[] = self::getThumbnailFileRelativePath($this->primaryKey, $width, $height, $upscale, $crop, $quality);
+        return implode('/', $urlParts);
+    }
+
+    /**
+     * Возвращает URL уменьшенной фотографии. При этом, если уменьшенная фотография на диске
+     * есть, то возвращает ссылку на статику, отдаваемую веб-сервером напрямую без участия PHP.
+     * Если же уменьшенной фотографии нет, то возвращает ссылку на action, который генерирует 
+     * уменьшенную фотографию на диске и редиректит 
+     *
+     * @param int $width
+     * @param int $height
+     * @param bool $upscale
+     * @param bool $crop
+     * @param int $quality
+     * @return string
+     * @throws \yii\base\InvalidParamException
+     */
+    public function getThumbnailUrl(int $width, int $height, bool $upscale, bool $crop, int $quality)
+    {
+        if (file_exists($this->getThumbnailFile($width, $height, $upscale, $crop, $quality))) {
+            return $this->getStaticThumbnailUrl($width, $height, $upscale, $crop, $quality);
+        } else {
+            return Url::toRoute(['photo/thumbnail', 'id' => $this->primaryKey, 'width' => $width, 'height' => $height, 'upscale' => $upscale, 'crop' => $crop, 'quality' => $quality]);
+        }
+    }
+
+    /**
+     * Создает файл с уменьшенной фотографией
+     *
+     * @param int $width
+     * @param int $height
+     * @param bool $upscale
+     * @param bool $crop
+     * @param int $quality
+     * @throws Exception
+     */
+    public function createThumbnail(int $width, int $height, bool $upscale, bool $crop, int $quality)
+    {
+        $thumbnailFile = $this->getThumbnailFile($width, $height, $upscale, $crop, $quality);
+
+        $image = ImageResize::getImageFromFile(ItemPhoto::getFileById($this->primaryKey));
+        $image = ImageResize::resizeImage($image, $width, $height, $upscale, $crop);
+
+        $dir = dirname($thumbnailFile);
+        if (!file_exists($dir) && !@mkdir($dir, 0777, true) && !is_dir($dir)) {
+            throw new Exception('Failed to create directory "' . $dir . '"');
+        }
+
+        $tempFile = tempnam(Yii::$app->params['photos']['thumbnailTemp'], $this->primaryKey);
+
+        if (file_put_contents($tempFile, ImageResize::getImageJPEG($image, $quality)) === false) {
+            throw new Exception('Failed to create thumbnail file "' . $thumbnailFile . '"');
+        }
+
+        if (!rename($tempFile, $thumbnailFile)) {
+            @unlink($tempFile);
+            throw new Exception('Failed to move temporary file "' . $tempFile . '" to "' . $thumbnailFile . '"');
+        }
+        @unlink($tempFile);
     }
 }

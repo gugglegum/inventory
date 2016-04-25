@@ -26,10 +26,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 }
 
                 echo Html::img($item->primaryPhoto
-                    ? $item->primaryPhoto->getThumbnailUrl(100, 100, [
-                        'crop' => true,
-                        'upscale' => true
-                    ])
+                    ? $item->primaryPhoto->getThumbnailUrl(100, 100, true, true, 90)
                     : Url::to('@web/images/no-fees-icon-B.png'), ['alt' => 'PHOTO']);
 
                 if ($primaryPhoto) {
@@ -83,7 +80,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
 
                 <?php foreach ($item->secondaryPhotos as $photo) { ?>
                     <?= Html::beginTag('a', ['href' => $photo->getUrl(), 'rel' => 'item-photos#' . $item->id, 'class' => 'fancybox']) ?>
-                    <?= Html::img($photo->getThumbnailUrl(48, 48, ['crop' => true, 'upscale' => true])) ?>
+                    <?= Html::img($photo->getThumbnailUrl(48, 48, true, true, 90)) ?>
                     <?= Html::endTag('a') ?>
                 <?php } ?>
 

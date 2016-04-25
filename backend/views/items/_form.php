@@ -42,7 +42,7 @@ $this->registerCssFile('@web/css/upload_photo.css', [], 'upload_photo');
                 echo '<button type="button" class="btn btn-mini btn-sort-up" data-action="' . Html::encode(Url::to(['photo/sort-up'])) . '" data-id="' . $itemPhoto->id . '"><i class="glyphicon glyphicon-arrow-up"></i></button>';
                 echo '<button type="button" class="btn btn-mini btn-sort-down" data-action="' . Html::encode(Url::to(['photo/sort-down'])) . '" data-id="' . $itemPhoto->id . '"><i class="glyphicon glyphicon-arrow-down"></i></button>';
                 echo Html::beginTag('a', ['href' => $itemPhoto->getUrl()]);
-                echo Html::img($itemPhoto->getThumbnailUrl(240, 240), ['alt' => 'Photo']);
+                echo Html::img($itemPhoto->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
                 echo Html::endTag('a');
                 echo Html::endTag('div');
             }

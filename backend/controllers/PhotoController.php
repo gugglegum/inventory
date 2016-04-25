@@ -2,15 +2,20 @@
 
 namespace backend\controllers;
 
-use common\components\ImageResize;
 use common\models\ItemPhoto;
 use Yii;
+use yii\base\Exception;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\HttpException;
 use yii\web\Response;
 
+/**
+ * Управление фотографиями товаров
+ *
+ * @package backend\controllers
+ */
 class PhotoController extends Controller
 {
     /**
@@ -38,20 +43,23 @@ class PhotoController extends Controller
     }
 
     /**
-     * Возвращает уменьшенное изображение в JPEG
+     * Возвращает уменьшенную фотографию предмета
      *
-     * @param $id
-     * @param $width
-     * @param $height
-     * @param null $antiAliasing
-     * @param null $upscale
-     * @param null $crop
+     * Пример запроса:
+     *
+     * GET /photo/thumbnail?id=123&width=
+     *
+     * @param int $id
+     * @param int $width
+     * @param int $height
+     * @param bool $upscale
+     * @param bool $crop
      * @param int $quality
-     * @return string
+     * @return Response
+     * @throws Exception
      * @throws HttpException
-     * @throws \yii\base\Exception
      */
-    public function actionThumbnail($id, $width, $height, $antiAliasing = null, $upscale = null, $crop = null, $quality = 90)
+    public function actionThumbnail(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality)
     {
         /** @var ItemPhoto $photo */
         $photo = ItemPhoto::findOne($id);
@@ -59,25 +67,25 @@ class PhotoController extends Controller
             throw new HttpException(404, 'Photo #' . $id . ' is not found');
         }
 
-        $image = ImageResize::getImageFromFile(ItemPhoto::getFileById($id));
-        $resizeParams = array_filter([
-            'width' => $width,
-            'height' => $height,
-            'antiAliasing' => $antiAliasing,
-            'upscale' => $upscale,
-            'crop' => $crop,
-        ], function($value) {
-            return $value !== null;
-        });
+        $staticThumbnailUrl = $photo->getStaticThumbnailUrl($width, $height, $upscale, $crop, $quality);
+        $thumbnailFile = $photo->getThumbnailFile($width, $height, $upscale, $crop, $quality);
 
-        $image = ImageResize::resizeImage($image, $resizeParams);
-        Yii::$app->response->headers
-            ->add('Content-Type', 'image/jpeg')
-            ->add('Expires', gmdate('D, d M Y H:i:s', time() + 86400 * 7) . ' GMT');
-        Yii::$app->response->format = Response::FORMAT_RAW;
-        return ImageResize::getImageJPEG($image, $quality);
+        if (!file_exists($thumbnailFile)) {
+            $photo->createThumbnail((int) $width, (int) $height, (bool) $upscale, (bool) $crop, (int) $quality);
+        }
+        session_cache_limiter('private_no_expire');
+        header_remove('Pragma');
+        Yii::$app->getResponse()->getHeaders()
+            ->set('Expires', gmdate('D, d M Y H:i:s', time() + 86400 * 7) . ' GMT');
+        return $this->redirect($staticThumbnailUrl);
     }
 
+    /**
+     * Перемещает фотографию предмета в списке фотографий на одну позицию вверх
+     *
+     * @throws HttpException
+     * @throws \yii\db\Exception
+     */
     public function actionSortUp()
     {
         $id = Yii::$app->request->post('id');
@@ -112,6 +120,12 @@ class PhotoController extends Controller
         }
     }
 
+    /**
+     * Перемещает фотографию предмета в списке фотографий на одну позицию внизу
+     *
+     * @throws HttpException
+     * @throws \yii\db\Exception
+     */
     public function actionSortDown()
     {
         $id = Yii::$app->request->post('id');
@@ -146,6 +160,13 @@ class PhotoController extends Controller
         }
     }
 
+    /**
+     * Удаляет фотографию
+     *
+     * @throws HttpException
+     * @throws \Exception
+     * @throws \yii\db\StaleObjectException
+     */
     public function actionDelete()
     {
         $id = Yii::$app->request->post('id');

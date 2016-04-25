@@ -71,39 +71,27 @@ abstract class ImageResize
         return $img;
     }
 
-    public static function resizeImage($image, array $params)
+    public static function resizeImage($image, $width, $height, $upscale, $crop)
     {
-        $defaultParams = [
-            'antiAliasing' => true,
-            'upscale' => false,
-            'crop' => false,
-        ];
-
-        $params += $defaultParams;
-
         $s_img_x = imagesx($image);
         $s_img_y = imagesy($image);
-        if ($params['upscale'] || $params['crop']) {
-            $kx = $params['width'] > 0 ? $s_img_x / $params['width'] : 1;
-            $ky = $params['height'] > 0 ? $s_img_y / $params['height'] : 1;
+        if ($upscale || $crop) {
+            $kx = $width > 0 ? $s_img_x / $width : 1;
+            $ky = $height > 0 ? $s_img_y / $height : 1;
         } else {
-            $kx = ($params['width'] > 0) && ($s_img_x > $params['width']) ? $s_img_x / $params['width'] : 1;
-            $ky = ($params['height'] > 0) && ($s_img_y > $params['height']) ? $s_img_y / $params['height'] : 1;
+            $kx = ($width > 0) && ($s_img_x > $width) ? $s_img_x / $width : 1;
+            $ky = ($height > 0) && ($s_img_y > $height) ? $s_img_y / $height : 1;
         }
-        $k = $params['crop'] ? min($kx, $ky) : max($kx, $ky);
+        $k = $crop ? min($kx, $ky) : max($kx, $ky);
         $d_img_x = round($s_img_x / $k);
         $d_img_y = round($s_img_y / $k);
 
         if ($d_img = imagecreatetruecolor($d_img_x, $d_img_y)) {
-            if ($params['antiAliasing']) {
-                imagecopyresampled($d_img, $image, 0, 0, 0, 0, $d_img_x, $d_img_y, $s_img_x, $s_img_y);
-            } else {
-                imagecopyresized($d_img, $image, 0, 0, 0, 0, $d_img_x, $d_img_y, $s_img_x, $s_img_y);
-            }
+            imagecopyresampled($d_img, $image, 0, 0, 0, 0, $d_img_x, $d_img_y, $s_img_x, $s_img_y);
             imagedestroy($image);
-            return $params['crop'] ? self::cropImageCenter($d_img, $params['width'], $params['height']) : $d_img;
+            return $crop ? self::cropImageCenter($d_img, $width, $height) : $d_img;
         } else {
-            throw new Exception('Can\'t create new image [imagecreatetruecolor()]');
+            throw new Exception('Can\'t create new image with imagecreatetruecolor()');
         }
     }
 

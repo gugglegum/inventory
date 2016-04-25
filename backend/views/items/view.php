@@ -58,7 +58,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                         foreach ($photos as $itemPhoto) {
                             echo Html::beginTag('div', ['class' => 'photo-wrapper']);
                             echo Html::beginTag('a', ['href' => $itemPhoto->getUrl(), 'rel' => 'item-photos', 'class' => 'fancybox']);
-                            echo Html::img($itemPhoto->getThumbnailUrl(240, 240), ['alt' => 'Photo']);
+                            echo Html::img($itemPhoto->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
                             echo Html::endTag('a');
                             echo Html::endTag('div');
                         }
