@@ -10,6 +10,7 @@ return [
         'thumbnailPath' => dirname(dirname(__DIR__)) . '/thumbnails',
         'thumbnailTemp' => dirname(dirname(__DIR__)) . '/thumbnails/temp',
         'thumbnailRelativeUrl' => '/thumbnails',
+        'md5salt' => '',
         'resize' => [
             'width' => 1024,
             'height' => 1024,
