@@ -11,9 +11,9 @@ while ($tmpItem) {
     $path[] = [
         'label' => $tmpItem->name,
         'url' => ['items/view', 'id' => $tmpItem->id],
-        'template' => $tmpItem->parent
+        'template' => empty($path)
             ? '<li class="active">{link}<sup style="margin-left: 3px">#' . Html::encode($tmpItem->id) . "</sup></li>\n"
-            : '<li>{link}<sup style="margin-left: 3px">#' . Html::encode($tmpItem->id) . "</sup></li>\n",
+            : '<li>{link}<sup style="margin-left: 3px; color: #777">#' . Html::encode($tmpItem->id) . "</sup></li>\n",
     ];
     $tmpItem = $tmpItem->parent;
 }
