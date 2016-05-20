@@ -69,6 +69,16 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                         Html::a('', Url::to(['items/update', 'id' => $item->id]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-left: 5px']) ?>
                 </div>
 
+                <?php $secondaryPhotos = $item->secondaryPhotos; if (count($secondaryPhotos) != 0) { ?>
+                <div class="secondary-photos">
+                <?php foreach ($item->secondaryPhotos as $photo) { ?>
+                    <?= Html::beginTag('a', ['href' => $photo->getUrl(), 'rel' => 'item-photos#' . $item->id, 'class' => 'fancybox']) ?>
+                    <?= Html::img($photo->getThumbnailUrl(48, 48, true, true, 90)) ?>
+                    <?= Html::endTag('a') ?>
+                <?php } ?>
+                </div>
+                <?php } ?>
+
                 <?php if (($description = trim($item->description)) != '') { ?>
                 <div class="description"><?php
                     // Выводим укороченное описание, если оно слишком длинное. Заменяем в нём все избыточные белые
@@ -83,10 +93,19 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 ?></div>
                 <?php } ?>
 
-                <?php foreach ($item->secondaryPhotos as $photo) { ?>
-                    <?= Html::beginTag('a', ['href' => $photo->getUrl(), 'rel' => 'item-photos#' . $item->id, 'class' => 'fancybox']) ?>
-                    <?= Html::img($photo->getThumbnailUrl(48, 48, true, true, 90)) ?>
-                    <?= Html::endTag('a') ?>
+                <?php $tags = $item->itemTags; if (count($tags) != 0) { ?>
+                <div class="tags">Метки: <?php
+                    $first = true;
+                    foreach ($tags as $tag) {
+                        if (!$first) {
+                            echo ', ';
+                        }
+                        echo Html::beginTag('a', ['href' => Url::to(['items/search', 'q' => $tag->tag])])
+                            . Html::encode($tag->tag)
+                            . Html::endTag('a');
+                        $first = false;
+                    }
+                ?></div>
                 <?php } ?>
 
                 <div class="child-items">
