@@ -42,13 +42,18 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                     $path = [];
                     $tmpItem = $item;
                     while ($tmpItem) {
-                        $path[] = ['label' => $tmpItem->name, 'url' => ['items/view', 'id' => $tmpItem->id]];
+                        $path[] = [
+                            'id' => $tmpItem->id,
+                            'label' => $tmpItem->name,
+                            'url' => ['items/view', 'id' => $tmpItem->id],
+                        ];
                         $tmpItem = $tmpItem->parent;
                     }
                     for ($i = count($path) - 1; $i > 0; $i--) {
                         echo Html::beginTag('a', ['href' => Url::to($path[$i]['url'])]);
                         echo Html::encode($path[$i]['label']);
                         echo Html::endTag('a');
+                        echo '<sup style="color: #ccc; font-size: 80%;">#' . Html::encode($path[$i]['id']) . '</sup>';
                         if ($i > 1) {
                             echo ' &rarr;&nbsp;';
                         }
