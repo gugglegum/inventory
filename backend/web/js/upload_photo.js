@@ -24,6 +24,7 @@ $(document).ready(function() {
         var file = container.find('.field-item-photos').first().clone();
         file.find('.block').hide();
         file.find('img').attr('src', '');
+        file.find('input[type=file]').val('');
         container.append(file);
         return file;
     };
