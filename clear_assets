@@ -1,0 +1,22 @@
+#!/usr/bin/env php
+<?php
+
+delete_assets(__DIR__ . '/backend/web/assets');
+delete_assets(__DIR__ . '/frontend/web/assets');
+
+function delete_assets($asset_path) {
+    foreach (glob($asset_path . '/*', GLOB_ONLYDIR) as $dir) {
+        if (preg_match('/^[0-9a-z]{1,8}$/', basename($dir))) {
+            $it = new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS);
+            $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+            foreach($files as $file) {
+                if ($file->isDir()){
+                    rmdir($file->getRealPath());
+                } else {
+                    unlink($file->getRealPath());
+                }
+            }
+            rmdir($dir);
+        }
+    }
+}

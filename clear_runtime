@@ -1,0 +1,13 @@
+#!/usr/bin/env php
+<?php
+
+foreach (['backend', 'frontend', 'console'] as $app_dir) {
+    delete_runtime_files(__DIR__ . "/{$app_dir}/runtime/debug/*.data");
+    delete_runtime_files(__DIR__ . "/{$app_dir}/runtime/logs/*.log*");
+}
+
+function delete_runtime_files($path_and_wildcard) {
+    foreach (glob($path_and_wildcard) as $entry) {
+        unlink($entry);
+    }
+}
