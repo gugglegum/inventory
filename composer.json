@@ -15,8 +15,8 @@
     "minimum-stability": "stable",
     "require": {
         "php": ">=5.4.0",
-        "yiisoft/yii2": ">=2.0.6",
-        "yiisoft/yii2-bootstrap": "*",
+        "yiisoft/yii2": "^2.0.8",
+        "yiisoft/yii2-bootstrap": "^2.0.6",
         "yiisoft/yii2-swiftmailer": "*",
         "symfony/polyfill-php70": "^1.1"
     },
@@ -27,8 +27,20 @@
         "yiisoft/yii2-faker": "*"
     },
     "config": {
-        "process-timeout": 1800
+        "allow-plugins": {
+            "yiisoft/yii2-composer" : true
+        },
+        "process-timeout": 1800,
+        "fxp-asset": {
+            "enabled": false
+        }
     },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ],
     "extra": {
         "asset-installer-paths": {
             "npm-asset-library": "vendor/npm",
