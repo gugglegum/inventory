@@ -73,7 +73,7 @@ class PhotoController extends Controller
         if (!file_exists($thumbnailFile)) {
             $photo->createThumbnail((int) $width, (int) $height, (bool) $upscale, (bool) $crop, (int) $quality);
         }
-        session_cache_limiter('private_no_expire');
+//        session_cache_limiter('private_no_expire');
         header_remove('Pragma');
         Yii::$app->getResponse()->getHeaders()
             ->set('Expires', gmdate('D, d M Y H:i:s', time() + 86400 * 7) . ' GMT');
