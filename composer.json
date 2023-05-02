@@ -14,9 +14,9 @@
     },
     "minimum-stability": "stable",
     "require": {
-        "php": ">=5.4.0",
-        "yiisoft/yii2": "^2.0.8",
-        "yiisoft/yii2-bootstrap": "^2.0.6",
+        "php": ">=7.0.0",
+        "yiisoft/yii2": "^2.0.47",
+        "yiisoft/yii2-bootstrap": "^2.0.11",
         "yiisoft/yii2-swiftmailer": "*",
         "symfony/polyfill-php70": "^1.1"
     },
