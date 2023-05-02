@@ -58,9 +58,11 @@ class Item extends ActiveRecord
         return [
             [['name', 'isContainer'], 'required'],
             [['parentId', 'isContainer'], 'integer'],
-            [['description'], 'filter', 'filter' => 'trim'],
+            [['parentId'], 'checkParentExists'],
+            [['parentId'], 'checkParentIsNotLooped'],
+            [['name', 'description'], 'filter', 'filter' => 'trim'],
             [['description'], 'string'],
-            [['name'], 'string', 'max' => 100]
+            [['name'], 'string', 'max' => 100],
         ];
     }
 
@@ -94,6 +96,38 @@ class Item extends ActiveRecord
             return false;
         }
     }
+
+    /**
+     * Проверяет новый parentId на существование предмета с таким ID
+     *
+     * @param $attribute
+     * @return void
+     */
+    public function checkParentExists($attribute)
+    {
+        if ($this->parentId != null && $this->parent == null) {
+            $this->addError($attribute, 'Родительский предмет не существует');
+        }
+    }
+
+    /**
+     * Проверяет новый parentId на отсутствие петли в цепочке родительских предметов, т.е. когда мы делаем parentId равным id
+     * или равным ID какого-то из дочерних предметов.
+     *
+     * @param $attribute
+     * @return void
+     */
+    public function checkParentIsNotLooped($attribute)
+    {
+        $parentItem = $this->parent;
+        while ($parentItem != null) {
+            if ($parentItem->id == $this->id) {
+                $this->addError($attribute, 'Родительский предмет является одновременно дочерним (что образует бесконечную цепочку вложенности предметов)');
+            }
+            $parentItem = $parentItem->parent;
+        }
+    }
+
 
     /**
      * @param array $tags
