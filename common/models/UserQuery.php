@@ -11,7 +11,7 @@ use yii\db\ActiveQuery;
  */
 class UserQuery extends ActiveQuery
 {
-    public function active()
+    public function active(): static
     {
         $this->andWhere('[[status]] = :status', ['status' => User::STATUS_ACTIVE]);
         return $this;
@@ -21,7 +21,7 @@ class UserQuery extends ActiveQuery
      * @inheritdoc
      * @return User[]|array
      */
-    public function all($db = null)
+    public function all($db = null): array
     {
         return parent::all($db);
     }
@@ -30,7 +30,7 @@ class UserQuery extends ActiveQuery
      * @inheritdoc
      * @return User|array|null
      */
-    public function one($db = null)
+    public function one($db = null): User|array|null
     {
         return parent::one($db);
     }

@@ -14,11 +14,15 @@
     },
     "minimum-stability": "stable",
     "require": {
-        "php": ">=7.0.0",
+        "php": ">=8.0.0",
         "yiisoft/yii2": "^2.0.47",
         "yiisoft/yii2-bootstrap": "^2.0.11",
         "yiisoft/yii2-swiftmailer": "*",
-        "symfony/polyfill-php70": "^1.1"
+        "symfony/polyfill-php70": "^1.1",
+        "ext-gd": "*",
+        "ext-exif": "*",
+        "ext-mbstring": "*",
+        "ext-pdo_mysql": "*"
     },
     "require-dev": {
         "yiisoft/yii2-codeception": "*",

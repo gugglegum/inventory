@@ -30,7 +30,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                     : Url::to('@web/images/no-fees-icon-B.png'), ['alt' => 'PHOTO']);
 
                 if ($primaryPhoto) {
-                    Html::endTag('a');
+                    echo Html::endTag('a');
                 }
 
                 ?>

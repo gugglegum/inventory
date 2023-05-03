@@ -6,7 +6,12 @@ use yii\base\Exception;
 
 abstract class ImageResize
 {
-    public static function getImageJPEG($image, $JPEGQuality = 75)
+    /**
+     * @param \GdImage $image
+     * @param int $JPEGQuality
+     * @return string
+     */
+    public static function getImageJPEG(\GdImage $image, int $JPEGQuality = 75): string
     {
         ob_start();
         imagejpeg($image, null, $JPEGQuality);
@@ -15,7 +20,12 @@ abstract class ImageResize
         return $image;
     }
 
-    public static function getImageFromFile($imagePath)
+    /**
+     * @param string $imagePath
+     * @return \GdImage
+     * @throws Exception
+     */
+    public static function getImageFromFile(string $imagePath): \GdImage
     {
         if (!is_file($imagePath)) {
             throw new Exception("Image file '{$imagePath}' is not found");
@@ -47,7 +57,11 @@ abstract class ImageResize
         }
     }
 
-    private static function _imagecreatefromjpegexif($filename)
+    /**
+     * @param string $filename
+     * @return \GdImage
+     */
+    private static function _imagecreatefromjpegexif(string $filename): \GdImage
     {
         $img = imagecreatefromjpeg($filename);
         if ($img) {
@@ -55,13 +69,13 @@ abstract class ImageResize
             if ($exif && isset($exif['Orientation'])) {
                 $ort = $exif['Orientation'];
                 if ($ort == 6 || $ort == 5) {
-                    $img = imagerotate($img, 270, null);
+                    $img = imagerotate($img, 270, 0);
                 }
                 if ($ort == 3 || $ort == 4) {
-                    $img = imagerotate($img, 180, null);
+                    $img = imagerotate($img, 180, 0);
                 }
                 if ($ort == 8 || $ort == 7) {
-                    $img = imagerotate($img, 90, null);
+                    $img = imagerotate($img, 90, 0);
                 }
                 if ($ort == 5 || $ort == 4 || $ort == 7) {
                     imageflip($img, IMG_FLIP_HORIZONTAL);
@@ -71,7 +85,16 @@ abstract class ImageResize
         return $img;
     }
 
-    public static function resizeImage($image, $width, $height, $upscale, $crop)
+    /**
+     * @param \GdImage $image
+     * @param int $width
+     * @param int $height
+     * @param bool $upscale
+     * @param bool $crop
+     * @return \GdImage
+     * @throws Exception
+     */
+    public static function resizeImage(\GdImage $image, int $width, int $height, bool $upscale, bool $crop): \GdImage
     {
         $s_img_x = imagesx($image);
         $s_img_y = imagesy($image);
@@ -95,12 +118,18 @@ abstract class ImageResize
         }
     }
 
-    public static function cropImageCenter($srcImage, $width, $height)
+    /**
+     * @param \GdImage $srcImage
+     * @param int $width
+     * @param int $height
+     * @return \GdImage
+     */
+    public static function cropImageCenter(\GdImage $srcImage, int $width, int $height): \GdImage
     {
         $dstImage = imagecreatetruecolor($width, $height);
         $srcWidth = imagesx($srcImage);
         $srcHeight = imagesy($srcImage);
-        imagecopy($dstImage, $srcImage, 0, 0, (int) ($srcWidth - $width) / 2, (int) ($srcHeight - $height) / 2, $width, $height);
+        imagecopy($dstImage, $srcImage, 0, 0, ($srcWidth - $width) / 2, ($srcHeight - $height) / 2, $width, $height);
         return $dstImage;
     }
 }

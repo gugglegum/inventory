@@ -20,7 +20,7 @@ class ItemTagQuery extends ActiveQuery
      * @inheritdoc
      * @return ItemTag[]|array
      */
-    public function all($db = null)
+    public function all($db = null): array
     {
         return parent::all($db);
     }
@@ -29,7 +29,7 @@ class ItemTagQuery extends ActiveQuery
      * @inheritdoc
      * @return ItemTag|array|null
      */
-    public function one($db = null)
+    public function one($db = null): ItemTag|array|null
     {
         return parent::one($db);
     }

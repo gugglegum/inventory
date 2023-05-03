@@ -11,6 +11,5 @@
  */
 
 $this->registerCssFile('@web/fancybox/jquery.fancybox.css', ['media' => 'screen'], 'fancybox');
-$this->registerJsFile('@web/fancybox/jquery.fancybox.pack.js', ['depends' => [\yii\web\JqueryAsset::className()]], 'fancybox');
-$this->registerJsFile('@web/js/fancybox.init.js', ['depends' => [\yii\web\JqueryAsset::className()]], 'fancybox.init');
-
+$this->registerJsFile('@web/fancybox/jquery.fancybox.pack.js', ['depends' => [\yii\web\JqueryAsset::class]], 'fancybox');
+$this->registerJsFile('@web/js/fancybox.init.js', ['depends' => [\yii\web\JqueryAsset::class]], 'fancybox.init');

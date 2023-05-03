@@ -34,7 +34,7 @@ class ValidateErrorsFormatter
      * @param Model $model              Модель (форма), при валидации которой возникли ошибки
      * @return string                   Сообщение об ошибки для подстановки Exception
      */
-    public static function getMessage(Model $model, $text = '%MODEL% validated with errors:')
+    public static function getMessage(Model $model, $text = '%MODEL% validated with errors:'): string
     {
         return str_replace(['%MODEL%'], [get_class($model)], $text)
             . "\n" . self::allErrors($model)
@@ -49,7 +49,7 @@ class ValidateErrorsFormatter
      * @param string $suffix            OPTIONAL Суффикс элемента списка
      * @return string                   Строка со списком ошибок
      */
-    public static function allErrors(Model $model, $prefix = ' * ', $suffix = "\n")
+    public static function allErrors(Model $model, string $prefix = ' * ', string $suffix = "\n"): string
     {
         $errors = [];
         foreach ($model->getErrors() as $attribute => $attributeErrors) {
@@ -68,7 +68,7 @@ class ValidateErrorsFormatter
      * @param string $suffix            OPTIONAL Суффикс элемента списка
      * @return string                   Строка со списком ошибок
      */
-    public static function firstErrors(Model $model, $prefix = ' * ', $suffix = "\n")
+    public static function firstErrors(Model $model, string $prefix = ' * ', string $suffix = "\n"): string
     {
         $errors = [];
         foreach ($model->getFirstErrors() as $attribute => $error) {
@@ -84,7 +84,7 @@ class ValidateErrorsFormatter
      * @param string $text              OPTIONAL Шаблон ошибки
      * @return string                   Строка с первой ошибкой валидации
      */
-    public static function firstError(Model $model, $text = '%FIELD%: %ERROR%')
+    public static function firstError(Model $model, string $text = '%FIELD%: %ERROR%'): string
     {
         $firstErrors = $model->getFirstErrors();
         return str_replace(['%MODEL%', '%FIELD%', '%ERROR%'], [get_class($model), key($firstErrors), current($firstErrors)], $text);
@@ -96,7 +96,7 @@ class ValidateErrorsFormatter
      * @param string $suffix            OPTIONAL Суффикс элемента списка
      * @return string                   Строка со списком полей и их значений
      */
-    public static function allFields(Model $model, $prefix = ' * ', $suffix = "\n")
+    public static function allFields(Model $model, string $prefix = ' * ', string $suffix = "\n"): string
     {
         $fields = [];
         foreach ($model->attributes as $attribute => $value) {

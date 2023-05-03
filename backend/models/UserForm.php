@@ -3,8 +3,8 @@ namespace backend\models;
 
 use common\models\User;
 use yii\base\Exception;
+use yii\base\InvalidConfigException;
 use yii\base\Model;
-use Yii;
 
 /**
  * Create/Edit user form
@@ -24,7 +24,7 @@ class UserForm extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             ['username', 'filter', 'filter' => 'trim'],
@@ -48,7 +48,7 @@ class UserForm extends Model
      * @return User
      * @throws Exception
      */
-    public function getUser()
+    public function getUser(): User
     {
         if (! $this->_user instanceof User) {
             throw new Exception('User property not initialized');
@@ -59,7 +59,7 @@ class UserForm extends Model
     /**
      * @param User $user
      */
-    public function setUser(User $user)
+    public function setUser(User $user): void
     {
         $this->_user = $user;
         $this->username = $this->_user->username;
@@ -67,7 +67,11 @@ class UserForm extends Model
         $this->status = $this->_user->status;
     }
 
-    public function save()
+    /**
+     * @throws InvalidConfigException
+     * @throws Exception
+     */
+    public function save(): bool
     {
         if ($this->validate()) {
             $user = $this->getUser();
@@ -84,7 +88,10 @@ class UserForm extends Model
         return false;
     }
 
-    public function getIsNewRecord()
+    /**
+     * @throws Exception
+     */
+    public function getIsNewRecord(): bool
     {
         return $this->getUser()->isNewRecord;
     }

@@ -11,7 +11,7 @@ use yii\widgets\ActiveForm;
 /* @var $goto string */
 
 
-$this->registerJsFile('@web/js/upload_photo.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
+$this->registerJsFile('@web/js/upload_photo.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 $this->registerCssFile('@web/css/upload_photo.css', [], 'upload_photo');
 
 ?>

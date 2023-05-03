@@ -27,14 +27,13 @@ use yii\helpers\Url;
  */
 class ItemPhoto extends ActiveRecord
 {
-    private $_assignedFile;
-    private $_tempFile;
-    private $_image;
+    private ?string $assignedFile = null;
+    private ?string $tempFile = null;
 
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'items_photos';
     }
@@ -42,11 +41,11 @@ class ItemPhoto extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             [
-                'class' => TimestampBehavior::className(),
+                'class' => TimestampBehavior::class,
                 'createdAtAttribute' => 'created',
                 'updatedAtAttribute' => 'updated',
             ],
@@ -56,7 +55,7 @@ class ItemPhoto extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['itemId'], 'required'],
@@ -69,7 +68,7 @@ class ItemPhoto extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'id' => 'ID фотографии',
@@ -86,33 +85,36 @@ class ItemPhoto extends ActiveRecord
 
     public function __destruct()
     {
-        if ($this->_tempFile !== null) {
-            @unlink($this->_tempFile);
+        if ($this->tempFile !== null) {
+            @unlink($this->tempFile);
         }
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getItem()
+    public function getItem(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(Item::className(), ['id' => 'itemId']);
+        return $this->hasOne(Item::class, ['id' => 'itemId']);
     }
 
     /**
      * @inheritdoc
      * @return ItemPhotoQuery the active query used by this AR class.
      */
-    public static function find()
+    public static function find(): ItemPhotoQuery
     {
         return new ItemPhotoQuery(get_called_class());
     }
 
-    public function beforeSave($insert)
+    /**
+     * @throws Exception
+     */
+    public function beforeSave($insert): bool
     {
         if (parent::beforeSave($insert)) {
             if ($insert) {
-                if (! $this->_assignedFile) {
+                if (! $this->assignedFile) {
                     throw new Exception('File must be assigned before save');
                 }
                 $maxSortIndex = (new Query())
@@ -128,7 +130,10 @@ class ItemPhoto extends ActiveRecord
         }
     }
 
-    public function afterSave($insert, $changedAttributes)
+    /**
+     * @throws Exception
+     */
+    public function afterSave($insert, $changedAttributes): void
     {
         parent::afterSave($insert, $changedAttributes);
 
@@ -138,23 +143,23 @@ class ItemPhoto extends ActiveRecord
             if (!file_exists($dir) && !@mkdir($dir, 0777, true) && !is_dir($dir)) {
                 throw new Exception('Failed to create directory "' . $dir . '"');
             }
-            if (!rename($this->_tempFile, $file)) {
-                throw new Exception('Failed to move photo file from "' . $this->_tempFile . '" to "' . $file);
+            if (!rename($this->tempFile, $file)) {
+                throw new Exception('Failed to move photo file from "' . $this->tempFile . '" to "' . $file);
             }
         }
     }
 
-    public function afterDelete()
+    public function afterDelete(): void
     {
         parent::afterDelete();
         @unlink($this->getFile());
     }
 
     /**
-     * @param $file
+     * @param string $file
      * @throws Exception
      */
-    public function assignFile($file)
+    public function assignFile(string $file): void
     {
         if (! file_exists($file)) {
             throw new Exception('File "' . $file . '" doesn\'t exists"');
@@ -162,31 +167,31 @@ class ItemPhoto extends ActiveRecord
         if (! is_readable($file)) {
             throw new Exception('File "' . $file . '" can\'t be read');
         }
-        $this->_assignedFile = $file;
+        $this->assignedFile = $file;
 
-        $this->_image = ImageResize::resizeImage(
-            ImageResize::getImageFromFile($this->_assignedFile),
+        $image = ImageResize::resizeImage(
+            ImageResize::getImageFromFile($this->assignedFile),
             Yii::$app->params['photos']['resize']['width'],
             Yii::$app->params['photos']['resize']['height'],
             Yii::$app->params['photos']['resize']['upscale'],
             Yii::$app->params['photos']['resize']['crop']
         );
 
-        $this->_tempFile = tempnam(Yii::$app->params['photos']['storageTemp'], 'inv');
+        $this->tempFile = tempnam(Yii::$app->params['photos']['storageTemp'], 'inv');
 
-        imagejpeg($this->_image, $this->_tempFile, Yii::$app->params['photos']['resize']['quality']);
+        imagejpeg($image, $this->tempFile, Yii::$app->params['photos']['resize']['quality']);
 
-        if (($md5 = md5_file($this->_tempFile)) === false) {
-            throw new Exception('Failed to calculate MD5 sum of file "' . $this->_tempFile . '"');
+        if (($md5 = md5_file($this->tempFile)) === false) {
+            throw new Exception('Failed to calculate MD5 sum of file "' . $this->tempFile . '"');
         }
         $this->md5 = $md5;
-        if (($size = @filesize($this->_tempFile)) === false) {
-            throw new Exception('Failed to get file size of file "' . $this->_tempFile . '"');
+        if (($size = @filesize($this->tempFile)) === false) {
+            throw new Exception('Failed to get file size of file "' . $this->tempFile . '"');
         }
         $this->size = $size;
 
-        $this->width = imagesx($this->_image);
-        $this->height = imagesy($this->_image);
+        $this->width = imagesx($image);
+        $this->height = imagesy($image);
     }
 
     /**
@@ -195,7 +200,7 @@ class ItemPhoto extends ActiveRecord
      * @param int $id
      * @return string
      */
-    private static function getFileRelativePath(int $id)
+    private static function getFileRelativePath(int $id): string
     {
         $hash = md5(Yii::$app->params['photos']['md5salt'] . $id);
         $hash = substr_replace($hash, '/', 2, 0);
@@ -214,7 +219,7 @@ class ItemPhoto extends ActiveRecord
      * @param int $quality
      * @return string
      */
-    private static function getThumbnailFileRelativePath(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality)
+    private static function getThumbnailFileRelativePath(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality): string
     {
         $suffixes = ["q{$quality}"];
         if ($upscale) {
@@ -235,7 +240,7 @@ class ItemPhoto extends ActiveRecord
      * @param int $id
      * @return string
      */
-    public static function getFileById(int $id)
+    public static function getFileById(int $id): string
     {
         return Yii::$app->params['photos']['storagePath'] . '/' . self::getFileRelativePath($id);
     }
@@ -245,7 +250,7 @@ class ItemPhoto extends ActiveRecord
      *
      * @return string
      */
-    public function getFile()
+    public function getFile(): string
     {
         return self::getFileById($this->primaryKey);
     }
@@ -261,7 +266,7 @@ class ItemPhoto extends ActiveRecord
      * @param int $quality
      * @return string
      */
-    public static function getThumbnailFileById(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality)
+    public static function getThumbnailFileById(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality): string
     {
         return Yii::$app->params['photos']['thumbnailPath'] . '/' . self::getThumbnailFileRelativePath($id, $width, $height, $upscale, $crop, $quality);
     }
@@ -276,7 +281,7 @@ class ItemPhoto extends ActiveRecord
      * @param int $quality
      * @return string
      */
-    public function getThumbnailFile(int $width, int $height, bool $upscale, bool $crop, int $quality)
+    public function getThumbnailFile(int $width, int $height, bool $upscale, bool $crop, int $quality): string
     {
         return self::getThumbnailFileById($this->primaryKey, $width, $height, $upscale, $crop, $quality);
     }
@@ -286,7 +291,7 @@ class ItemPhoto extends ActiveRecord
      *
      * @return string
      */
-    public function getUrl()
+    public function getUrl(): string
     {
         $urlParts = [];
         $urlParts[] = Yii::$app->request->baseUrl;
@@ -306,9 +311,9 @@ class ItemPhoto extends ActiveRecord
      * @param bool $upscale
      * @param bool $crop
      * @param int $quality
-     * @return mixed
+     * @return string
      */
-    public function getStaticThumbnailUrl(int $width, int $height, bool $upscale, bool $crop, int $quality)
+    public function getStaticThumbnailUrl(int $width, int $height, bool $upscale, bool $crop, int $quality): string
     {
         $urlParts = [];
         $urlParts[] = Yii::$app->request->baseUrl;
@@ -334,7 +339,7 @@ class ItemPhoto extends ActiveRecord
      * @return string
      * @throws \yii\base\InvalidParamException
      */
-    public function getThumbnailUrl(int $width, int $height, bool $upscale, bool $crop, int $quality)
+    public function getThumbnailUrl(int $width, int $height, bool $upscale, bool $crop, int $quality): string
     {
         if (file_exists($this->getThumbnailFile($width, $height, $upscale, $crop, $quality))) {
             return $this->getStaticThumbnailUrl($width, $height, $upscale, $crop, $quality);
@@ -353,7 +358,7 @@ class ItemPhoto extends ActiveRecord
      * @param int $quality
      * @throws Exception
      */
-    public function createThumbnail(int $width, int $height, bool $upscale, bool $crop, int $quality)
+    public function createThumbnail(int $width, int $height, bool $upscale, bool $crop, int $quality): void
     {
         $thumbnailFile = $this->getThumbnailFile($width, $height, $upscale, $crop, $quality);
 

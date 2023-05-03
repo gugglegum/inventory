@@ -14,7 +14,7 @@ class ItemForm extends Model
     public $created;
     public $updated;
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [['parentId', 'name', 'isContainer'], 'required'],

@@ -1,5 +1,0 @@
-#!/usr/bin/env php
-<?php
-
-mkdir(__DIR__ . "/thumbnails");
-mkdir(__DIR__ . "/thumbnails/temp");

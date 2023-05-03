@@ -5,13 +5,15 @@ namespace backend\controllers;
 use Yii;
 use common\models\User;
 use common\models\UserSearch;
-use yii\base\InvalidParamException;
+use yii\base\Exception;
+use yii\base\InvalidConfigException;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use backend\models\UserForm;
+use yii\web\Response;
 
 /**
  * UsersController implements the CRUD actions for User model.
@@ -21,11 +23,11 @@ class UsersController extends Controller
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             'access' => [
-                'class' => AccessControl::className(),
+                'class' => AccessControl::class,
                 'rules' => [
                     [
                         'allow' => true,
@@ -34,7 +36,7 @@ class UsersController extends Controller
                 ],
             ],
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['post'],
                 ],
@@ -44,10 +46,9 @@ class UsersController extends Controller
 
     /**
      * Lists all User models.
-     * @return mixed
-     * @throws InvalidParamException if the view file or the layout file does not exist.
+     * @return Response|string
      */
-    public function actionIndex()
+    public function actionIndex(): Response|string
     {
         $searchModel = new UserSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
@@ -60,12 +61,11 @@ class UsersController extends Controller
 
     /**
      * Displays a single User model.
-     * @param string $id
-     * @return mixed
-     * @throws InvalidParamException if the view file or the layout file does not exist.
+     * @param int $id
+     * @return Response|string
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionView($id)
+    public function actionView(int $id): Response|string
     {
         return $this->render('view', [
             'model' => $this->findModel($id),
@@ -75,10 +75,11 @@ class UsersController extends Controller
     /**
      * Creates a new User model.
      * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return mixed
-     * @throws InvalidParamException if the view file or the layout file does not exist.
+     * @return Response|string
+     * @throws Exception
+     * @throws InvalidConfigException
      */
-    public function actionCreate()
+    public function actionCreate(): Response|string
     {
         $user = new User();
         $form = new UserForm();
@@ -96,12 +97,13 @@ class UsersController extends Controller
     /**
      * Updates an existing User model.
      * If update is successful, the browser will be redirected to the 'view' page.
-     * @param string $id
-     * @return mixed
-     * @throws InvalidParamException if the view file or the layout file does not exist.
+     * @param int $id
+     * @return Response|string
+     * @throws Exception
+     * @throws InvalidConfigException
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionUpdate($id)
+    public function actionUpdate(int $id): Response|string
     {
         $user = $this->findModel($id);
         $form = new UserForm();
@@ -119,14 +121,13 @@ class UsersController extends Controller
     /**
      * Deletes an existing User model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param string $id
-     * @return mixed
+     * @param int $id
+     * @return Response|string
      * @throws NotFoundHttpException if the model cannot be found
      * @throws StaleObjectException if [[optimisticLock|optimistic locking]] is enabled and the data
-     * being deleted is outdated.
-     * @throws \Exception in case delete failed.
+     * @throws \Throwable
      */
-    public function actionDelete($id)
+    public function actionDelete(int $id): Response|string
     {
         $this->findModel($id)->delete();
 
@@ -136,11 +137,11 @@ class UsersController extends Controller
     /**
      * Finds the User model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param string $id
+     * @param int $id
      * @return User the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    protected function findModel($id)
+    protected function findModel(int $id): User
     {
         if (($model = User::findOne($id)) !== null) {
             return $model;

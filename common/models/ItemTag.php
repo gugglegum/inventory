@@ -2,7 +2,6 @@
 
 namespace common\models;
 
-use Yii;
 use yii\db\ActiveRecord;
 
 /**
@@ -18,7 +17,7 @@ class ItemTag extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'items_tags';
     }
@@ -26,7 +25,7 @@ class ItemTag extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['itemId', 'tag'], 'required'],
@@ -38,7 +37,7 @@ class ItemTag extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'itemId' => 'ID предмета',
@@ -49,16 +48,16 @@ class ItemTag extends ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getItem()
+    public function getItem(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(Item::className(), ['id' => 'itemId']);
+        return $this->hasOne(Item::class, ['id' => 'itemId']);
     }
 
     /**
      * @inheritdoc
      * @return ItemTagQuery the active query used by this AR class.
      */
-    public static function find()
+    public static function find(): ItemTagQuery
     {
         return new ItemTagQuery(get_called_class());
     }

@@ -21,11 +21,11 @@ class PhotoController extends Controller
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             'access' => [
-                'class' => AccessControl::className(),
+                'class' => AccessControl::class,
                 'rules' => [
                     [
                         'allow' => true,
@@ -34,7 +34,7 @@ class PhotoController extends Controller
                 ],
             ],
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['post'],
                 ],
@@ -59,7 +59,7 @@ class PhotoController extends Controller
      * @throws Exception
      * @throws HttpException
      */
-    public function actionThumbnail(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality)
+    public function actionThumbnail(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality): Response
     {
         /** @var ItemPhoto $photo */
         $photo = ItemPhoto::findOne($id);
@@ -71,7 +71,7 @@ class PhotoController extends Controller
         $thumbnailFile = $photo->getThumbnailFile($width, $height, $upscale, $crop, $quality);
 
         if (!file_exists($thumbnailFile)) {
-            $photo->createThumbnail((int) $width, (int) $height, (bool) $upscale, (bool) $crop, (int) $quality);
+            $photo->createThumbnail($width, $height, $upscale, $crop, $quality);
         }
 //        session_cache_limiter('private_no_expire');
         header_remove('Pragma');
@@ -86,7 +86,7 @@ class PhotoController extends Controller
      * @throws HttpException
      * @throws \yii\db\Exception
      */
-    public function actionSortUp()
+    public function actionSortUp(): void
     {
         $id = Yii::$app->request->post('id');
         if (!$id) {
@@ -118,7 +118,7 @@ class PhotoController extends Controller
      * @throws HttpException
      * @throws \yii\db\Exception
      */
-    public function actionSortDown()
+    public function actionSortDown(): void
     {
         $id = Yii::$app->request->post('id');
         if (!$id) {
@@ -150,7 +150,7 @@ class PhotoController extends Controller
      * @return void
      * @throws \yii\db\Exception
      */
-    private function swapSortIndexes(ItemPhoto $photo1, ItemPhoto $photo2)
+    private function swapSortIndexes(ItemPhoto $photo1, ItemPhoto $photo2): void
     {
         $transaction = ItemPhoto::getDb()->beginTransaction();
         $prevSortIndex = $photo2->sortIndex;
@@ -166,11 +166,12 @@ class PhotoController extends Controller
     /**
      * Удаляет фотографию
      *
+     * @return void
      * @throws HttpException
-     * @throws \Exception
+     * @throws \Throwable
      * @throws \yii\db\StaleObjectException
      */
-    public function actionDelete()
+    public function actionDelete(): void
     {
         $id = Yii::$app->request->post('id');
         if (!$id) {

@@ -21,7 +21,7 @@ class ItemQuery extends ActiveQuery
      * @inheritdoc
      * @return Item[]|array
      */
-    public function all($db = null)
+    public function all($db = null): array
     {
         return parent::all($db);
     }
@@ -30,7 +30,7 @@ class ItemQuery extends ActiveQuery
      * @inheritdoc
      * @return Item|array|null
      */
-    public function one($db = null)
+    public function one($db = null): array|Item|null
     {
         return parent::one($db);
     }

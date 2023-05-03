@@ -2,9 +2,10 @@
 
 namespace common\models;
 
-use Yii;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
+use yii\db\Exception;
+use yii\db\StaleObjectException;
 
 /**
  * Предмет
@@ -31,7 +32,7 @@ class Item extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'items';
     }
@@ -39,11 +40,11 @@ class Item extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             [
-                'class' => TimestampBehavior::className(),
+                'class' => TimestampBehavior::class,
                 'createdAtAttribute' => 'created',
                 'updatedAtAttribute' => 'updated',
             ],
@@ -53,7 +54,7 @@ class Item extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['name', 'isContainer'], 'required'],
@@ -69,7 +70,7 @@ class Item extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'id' => 'ID предмета',
@@ -82,7 +83,12 @@ class Item extends ActiveRecord
         ];
     }
 
-    public function beforeDelete()
+    /**
+     * @return bool
+     * @throws StaleObjectException
+     * @throws \Throwable
+     */
+    public function beforeDelete(): bool
     {
         if (parent::beforeDelete()) {
             foreach ($this->items as $item) {
@@ -103,7 +109,7 @@ class Item extends ActiveRecord
      * @param $attribute
      * @return void
      */
-    public function checkParentExists($attribute)
+    public function checkParentExists($attribute): void
     {
         if ($this->parentId != null && $this->parent == null) {
             $this->addError($attribute, 'Родительский предмет не существует');
@@ -117,7 +123,7 @@ class Item extends ActiveRecord
      * @param $attribute
      * @return void
      */
-    public function checkParentIsNotLooped($attribute)
+    public function checkParentIsNotLooped($attribute): void
     {
         $parentItem = $this->parent;
         while ($parentItem != null) {
@@ -133,7 +139,7 @@ class Item extends ActiveRecord
      * @param array $tags
      * @throws \yii\db\Exception
      */
-    public function saveTags(array $tags)
+    public function saveTags(array $tags): void
     {
         // Удаляем тегов, которых больше нет
         self::getDb()->createCommand()
@@ -148,93 +154,103 @@ class Item extends ActiveRecord
         }
     }
 
-    public function saveTagsFromString($tagsString)
+    /**
+     * @param string $tagsString
+     * @return void
+     * @throws \yii\db\Exception
+     */
+    public function saveTagsFromString(string $tagsString): void
     {
         $tags = preg_split('/\s*,\s*/', $tagsString, -1, PREG_SPLIT_NO_EMPTY);
         $this->saveTags($tags);
     }
 
     /**
-     * @return array
+     * @return string[]
      * @throws \yii\db\Exception
      */
-    public function fetchTags()
+    public function fetchTags(): array
     {
         return self::getDb()->createCommand('SELECT tag FROM ' . ItemTag::tableName() . ' WHERE itemId = :itemId ORDER BY tag ASC', ['itemId' => $this->id])->queryColumn();
     }
 
-    public function fetchTagsAsString($separator = ', ')
+    /**
+     * @param string $separator
+     * @return string
+     * @throws Exception
+     */
+    public function fetchTagsAsString(string $separator = ', '): string
     {
         $tags = $this->fetchTags();
         return implode($separator, $tags);
     }
 
-        /**
+    /**
      * @return \yii\db\ActiveQuery
      */
-    public function getItemRelations()
+    public function getItemRelations(): \yii\db\ActiveQuery
     {
-        return $this->hasMany(ItemRelation::className(), ['srcItemId' => 'id']);
+        return $this->hasMany(ItemRelation::class, ['srcItemId' => 'id']);
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getItemBackRelations()
+    public function getItemBackRelations(): \yii\db\ActiveQuery
     {
-        return $this->hasMany(ItemRelation::className(), ['dstItemId' => 'id']);
+        return $this->hasMany(ItemRelation::class, ['dstItemId' => 'id']);
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getParent()
+    public function getParent(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(Item::className(), ['id' => 'parentId']);
+        return $this->hasOne(Item::class, ['id' => 'parentId']);
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getItems()
+    public function getItems(): \yii\db\ActiveQuery
     {
-        return $this->hasMany(Item::className(), ['parentId' => 'id'])->orderBy(['isContainer' => SORT_DESC, 'id' => SORT_ASC]);
+        return $this->hasMany(Item::class, ['parentId' => 'id'])->orderBy(['isContainer' => SORT_DESC, 'id' => SORT_ASC]);
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getItemPhotos()
+    public function getItemPhotos(): \yii\db\ActiveQuery
     {
-        return $this->hasMany(ItemPhoto::className(), ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC]);
+        return $this->hasMany(ItemPhoto::class, ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC]);
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getPrimaryPhoto()
+    public function getPrimaryPhoto(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(ItemPhoto::className(), ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC])->limit(1);
+        return $this->hasOne(ItemPhoto::class, ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC])->limit(1);
     }
 
-    public function getSecondaryPhotos()
+    public function getSecondaryPhotos(): \yii\db\ActiveQuery
     {
-        return $this->hasMany(ItemPhoto::className(), ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC])->offset(1);
+        return $this->hasMany(ItemPhoto::class, ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC])->offset(1);
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getItemTags()
+    public function getItemTags(): \yii\db\ActiveQuery
     {
-        return $this->hasMany(ItemTag::className(), ['itemId' => 'id']);
+        return $this->hasMany(ItemTag::class, ['itemId' => 'id']);
     }
 
     /**
      * @inheritdoc
      * @return ItemQuery the active query used by this AR class.
      */
-    public static function find()
+    public static function find(): ItemQuery
     {
         return new ItemQuery(get_called_class());
     }

@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 namespace backend\controllers;
 
 use backend\models\ItemTagsForm;
@@ -8,12 +9,12 @@ use Yii;
 use common\models\Item;
 use common\models\ItemPhoto;
 use yii\base\Exception;
-use yii\base\InvalidParamException;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\Response;
 
 /**
  * ItemsController implements the CRUD actions for Item model.
@@ -23,11 +24,11 @@ class ItemsController extends Controller
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             'access' => [
-                'class' => AccessControl::className(),
+                'class' => AccessControl::class,
                 'rules' => [
                     [
                         'allow' => true,
@@ -36,7 +37,7 @@ class ItemsController extends Controller
                 ],
             ],
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['post'],
                 ],
@@ -46,10 +47,9 @@ class ItemsController extends Controller
 
     /**
      * Lists all Item models.
-     * @return mixed
-     * @throws InvalidParamException if the view file or the layout file does not exist.
+     * @return Response|string
      */
-    public function actionIndex()
+    public function actionIndex(): Response|string
     {
         $rootItems = Item::find()->where('parentId IS NULL')->orderBy(['id' => SORT_ASC])->all();
 
@@ -58,7 +58,10 @@ class ItemsController extends Controller
         ]);
     }
 
-    public function actionSearch()
+    /**
+     * @return Response|string
+     */
+    public function actionSearch(): Response|string
     {
         $queryString = Yii::$app->request->getQueryParam('q', '');
 
@@ -99,18 +102,17 @@ class ItemsController extends Controller
 
     /**
      * Displays a single Item model.
-     * @param string $id
-     * @return mixed
+     * @param int $id
+     * @return Response|string
      * @throws NotFoundHttpException
-     * @throws InvalidParamException if the view file or the layout file does not exist.
      */
-    public function actionView($id)
+    public function actionView(int $id): Response|string
     {
         $model = $this->findModel($id);
 
         return $this->render('view', [
             'model' => $model,
-            'parent' => $model->parentId ? $this->findModel($model->parentId) : null,
+            'parent' => $model->parentId ? $this->findModel((int) $model->parentId) : null,
             'children' => $model->items,
         ]);
     }
@@ -118,13 +120,11 @@ class ItemsController extends Controller
     /**
      * Creates a new Item model.
      * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return mixed
-     * @throws InvalidParamException if the view file or the layout file does not exist.
-     * @throws \yii\base\Exception
-     * @throws \yii\db\Exception
+     * @return Response|string
+     * @throws Exception
      * @throws NotFoundHttpException
      */
-    public function actionCreate()
+    public function actionCreate(): Response|string
     {
         $item = new Item();
 
@@ -140,9 +140,7 @@ class ItemsController extends Controller
         } else {
             $parent = null;
         }
-        if ($isContainer = (bool) Yii::$app->request->getQueryParam('isContainer')) {
-            $item->isContainer = $isContainer;
-        }
+        $item->isContainer = (bool) Yii::$app->request->getQueryParam('isContainer');
 
         $goto = Yii::$app->request->post('goto', Yii::$app->request->getQueryParam('goto', 'view'));
 
@@ -186,14 +184,12 @@ class ItemsController extends Controller
     /**
      * Updates an existing Item model.
      * If update is successful, the browser will be redirected to the 'view' page.
-     * @param string $id
-     * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
-     * @throws InvalidParamException if the view file or the layout file does not exist.
-     * @throws \yii\base\Exception
-     * @throws \yii\db\Exception
+     * @param int $id
+     * @return Response|string
+     * @throws Exception
+     * @throws NotFoundHttpException
      */
-    public function actionUpdate($id)
+    public function actionUpdate(int $id): Response|string
     {
         $item = $this->findModel($id);
 
@@ -211,7 +207,7 @@ class ItemsController extends Controller
                 $tmpNames = $_FILES['photos']['tmp_name'];
 
                 foreach ($tmpNames as $photoId => $photoValue) {
-                    if ($photoValue === '') {
+                    if ($photoValue === '') { // Check "upload_max_filesize"
                         continue;
                     }
                     if (array_key_exists($photoId, $tmpNames)) {
@@ -233,13 +229,13 @@ class ItemsController extends Controller
     /**
      * Deletes an existing Item model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param string $id
-     * @return mixed
+     * @param int $id
+     * @return Response|string
      * @throws NotFoundHttpException if the model cannot be found
-     * @throws \Exception
+     * @throws \Throwable
      * @throws \yii\db\StaleObjectException
      */
-    public function actionDelete($id)
+    public function actionDelete(int $id): Response|string
     {
         $model = $this->findModel($id);
         $parentId = $model->parentId;
@@ -251,12 +247,11 @@ class ItemsController extends Controller
      * Импорт предметов в контейнер
      *
      * @param int $parentId
-     * @return string
-     * @throws InvalidParamException if the view file or the layout file does not exist.
+     * @return Response|string
      * @throws Exception
      * @throws HttpException
      */
-    public function actionImport($parentId)
+    public function actionImport(int $parentId): Response|string
     {
         if (! $parent = Item::findOne($parentId) ) {
             throw new HttpException(404, "Item with ID={$parentId} not found");
@@ -272,12 +267,7 @@ class ItemsController extends Controller
         $line = 1;
         $item = [];
 
-        /**
-         * @param string $key
-         * @param string $value
-         * @throws Exception
-         */
-        $addProperty = function($key, $value) use (&$item) {
+        $addProperty = function(string $key, string $value) use (&$item) {
             if (!in_array($key, ['description', 'tags', 'container'], true)) {
                 throw new Exception('Unknown property "' . $key . '"');
             }
@@ -397,11 +387,11 @@ class ItemsController extends Controller
     /**
      * Finds the Item model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param string $id
+     * @param int $id
      * @return Item the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    protected function findModel($id)
+    protected function findModel(int $id): Item
     {
         if (($model = Item::findOne($id)) !== null) {
             return $model;

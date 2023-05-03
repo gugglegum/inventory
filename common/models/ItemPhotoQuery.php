@@ -21,7 +21,7 @@ class ItemPhotoQuery extends ActiveQuery
      * @inheritdoc
      * @return ItemPhoto[]|array
      */
-    public function all($db = null)
+    public function all($db = null): array
     {
         return parent::all($db);
     }
@@ -30,7 +30,7 @@ class ItemPhotoQuery extends ActiveQuery
      * @inheritdoc
      * @return ItemPhoto|array|null
      */
-    public function one($db = null)
+    public function one($db = null): ItemPhoto|array|null
     {
         return parent::one($db);
     }

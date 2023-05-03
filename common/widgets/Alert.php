@@ -47,7 +47,7 @@ class Alert extends \yii\bootstrap\Widget
      */
     public $closeButton = [];
 
-    public function init()
+    public function init(): void
     {
         parent::init();
 

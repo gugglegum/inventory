@@ -2,8 +2,6 @@
 
 namespace common\models;
 
-use Yii;
-use yii\base\InvalidParamException;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 
@@ -15,7 +13,7 @@ class UserSearch extends User
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['id', 'status', 'created', 'updated'], 'integer'],
@@ -26,7 +24,7 @@ class UserSearch extends User
     /**
      * @inheritdoc
      */
-    public function scenarios()
+    public function scenarios(): array
     {
         // bypass scenarios() implementation in the parent class
         return Model::scenarios();
@@ -38,9 +36,8 @@ class UserSearch extends User
      * @param array $params
      *
      * @return ActiveDataProvider
-     * @throws InvalidParamException if the current scenario is unknown.
      */
-    public function search($params)
+    public function search(array $params): ActiveDataProvider
     {
         $query = User::find();
 

@@ -2,7 +2,6 @@
 
 namespace common\models;
 
-use Yii;
 use yii\db\ActiveRecord;
 
 /**
@@ -22,7 +21,7 @@ class ItemRelation extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'items_relations';
     }
@@ -30,7 +29,7 @@ class ItemRelation extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['srcItemId', 'dstItemId', 'type', 'description', 'created'], 'required'],
@@ -42,7 +41,7 @@ class ItemRelation extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'srcItemId' => 'Исходный предмет',
@@ -56,24 +55,24 @@ class ItemRelation extends ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getSrcItem()
+    public function getSrcItem(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(Item::className(), ['id' => 'srcItemId']);
+        return $this->hasOne(Item::class, ['id' => 'srcItemId']);
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getDstItem()
+    public function getDstItem(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(Item::className(), ['id' => 'dstItemId']);
+        return $this->hasOne(Item::class, ['id' => 'dstItemId']);
     }
 
     /**
      * @inheritdoc
      * @return ItemRelationQuery the active query used by this AR class.
      */
-    public static function find()
+    public static function find(): ItemRelationQuery
     {
         return new ItemRelationQuery(get_called_class());
     }

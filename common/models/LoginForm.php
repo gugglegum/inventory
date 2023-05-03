@@ -2,8 +2,6 @@
 namespace common\models;
 
 use Yii;
-use yii\base\InvalidConfigException;
-use yii\base\InvalidParamException;
 use yii\base\Model;
 
 /**
@@ -21,7 +19,7 @@ class LoginForm extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             // username and password are both required
@@ -38,12 +36,9 @@ class LoginForm extends Model
      * This method serves as the inline validation for password.
      *
      * @param string $attribute the attribute currently being validated
-     * @param array $params the additional name-value pairs given in the rule
-     * @throws InvalidParamException if the current scenario is unknown.
-     * @throws InvalidConfigException when an unsupported password hash strategy is configured.
+     * @param array|null $params the additional name-value pairs given in the rule
      */
-    public function validatePassword($attribute, /** @noinspection PhpUnusedParameterInspection */
-                                     $params)
+    public function validatePassword(string $attribute, /** @noinspection PhpUnusedParameterInspection */ ?array $params): void
     {
         if (!$this->hasErrors()) {
             $user = $this->getUser();
@@ -57,9 +52,8 @@ class LoginForm extends Model
      * Logs in a user using the provided username and password.
      *
      * @return boolean whether the user is logged in successfully
-     * @throws InvalidParamException if the current scenario is unknown.
      */
-    public function login()
+    public function login(): bool
     {
         if ($this->validate()) {
             return Yii::$app->user->login($this->getUser(), $this->rememberMe ? 86400 * 30 : 0);
@@ -73,7 +67,7 @@ class LoginForm extends Model
      *
      * @return User|null
      */
-    protected function getUser()
+    protected function getUser(): ?User
     {
         if ($this->_user === null) {
             $this->_user = User::findByUsername($this->username);

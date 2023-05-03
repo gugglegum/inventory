@@ -6,6 +6,7 @@ use yii\filters\AccessControl;
 use yii\web\Controller;
 use common\models\LoginForm;
 use yii\filters\VerbFilter;
+use yii\web\Response;
 
 /**
  * Site controller
@@ -15,11 +16,11 @@ class SiteController extends Controller
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             'access' => [
-                'class' => AccessControl::className(),
+                'class' => AccessControl::class,
                 'rules' => [
                     [
                         'actions' => ['login', 'error'],
@@ -33,7 +34,7 @@ class SiteController extends Controller
                 ],
             ],
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'logout' => ['post'],
                 ],
@@ -44,7 +45,7 @@ class SiteController extends Controller
     /**
      * @inheritdoc
      */
-    public function actions()
+    public function actions(): array
     {
         return [
             'error' => [
@@ -53,12 +54,15 @@ class SiteController extends Controller
         ];
     }
 
-    public function actionIndex()
+    public function actionIndex(): \yii\web\Response
     {
         return $this->redirect(['items/index']);
     }
 
-    public function actionLogin()
+    /**
+     * @return Response|string
+     */
+    public function actionLogin(): Response|string
     {
         if (!\Yii::$app->user->isGuest) {
             return $this->goHome();
@@ -74,7 +78,10 @@ class SiteController extends Controller
         }
     }
 
-    public function actionLogout()
+    /**
+     * @return Response|string
+     */
+    public function actionLogout(): Response|string
     {
         Yii::$app->user->logout();
 

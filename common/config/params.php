@@ -4,11 +4,11 @@ return [
     'supportEmail' => 'support@example.com',
     'user.passwordResetTokenExpire' => 3600,
     'photos' => [
-        'storagePath' => dirname(dirname(__DIR__)) . '/photos',
-        'storageTemp' => dirname(dirname(__DIR__)) . '/photos/temp',
+        'storagePath' => dirname(__DIR__, 2) . '/photos',
+        'storageTemp' => dirname(__DIR__, 2) . '/photos/temp',
         'storageRelativeUrl' => '/photos',
-        'thumbnailPath' => dirname(dirname(__DIR__)) . '/thumbnails',
-        'thumbnailTemp' => dirname(dirname(__DIR__)) . '/thumbnails/temp',
+        'thumbnailPath' => dirname(__DIR__, 2) . '/thumbnails',
+        'thumbnailTemp' => dirname(__DIR__, 2) . '/thumbnails/temp',
         'thumbnailRelativeUrl' => '/thumbnails',
         'md5salt' => '',
         'resize' => [

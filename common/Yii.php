@@ -35,8 +35,6 @@ Yii::$container = new yii\di\Container;
 /**
  * Class BaseApplication
  * Used for properties that are identical for both WebApplication and ConsoleApplication
- *
- * @property gugglegum\Yii2\Extension\CookieLanguageSelector\Component $cookieLanguageSelector
  */
 abstract class BaseApplication extends yii\base\Application
 {

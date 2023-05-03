@@ -8,7 +8,7 @@ class ItemTagsForm extends Model
 {
     public $tags;
 
-    public function rules()
+    public function rules(): array
     {
         return [
             ['tags', 'string'],
@@ -18,7 +18,7 @@ class ItemTagsForm extends Model
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'tags' => 'Метки',
