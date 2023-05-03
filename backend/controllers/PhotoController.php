@@ -108,15 +108,7 @@ class PhotoController extends Controller
             ->one();
 
         if ($prevPhoto instanceof ItemPhoto) {
-            $transaction = ItemPhoto::getDb()->beginTransaction();
-            $prevSortIndex = $prevPhoto->sortIndex;
-            $prevPhoto->sortIndex = -1;
-            $prevPhoto->save();
-            $prevPhoto->sortIndex = $photo->sortIndex;
-            $photo->sortIndex = $prevSortIndex;
-            $photo->save();
-            $prevPhoto->save();
-            $transaction->commit();
+            $this->swapSortIndexes($photo, $prevPhoto);
         }
     }
 
@@ -148,16 +140,27 @@ class PhotoController extends Controller
             ->one();
 
         if ($nextPhoto instanceof ItemPhoto) {
-            $transaction = ItemPhoto::getDb()->beginTransaction();
-            $nextSortIndex = $nextPhoto->sortIndex;
-            $nextPhoto->sortIndex = -1;
-            $nextPhoto->save();
-            $nextPhoto->sortIndex = $photo->sortIndex;
-            $photo->sortIndex = $nextSortIndex;
-            $photo->save();
-            $nextPhoto->save();
-            $transaction->commit();
+            $this->swapSortIndexes($photo, $nextPhoto);
         }
+    }
+
+    /**
+     * @param ItemPhoto $photo1
+     * @param ItemPhoto $photo2
+     * @return void
+     * @throws \yii\db\Exception
+     */
+    private function swapSortIndexes(ItemPhoto $photo1, ItemPhoto $photo2)
+    {
+        $transaction = ItemPhoto::getDb()->beginTransaction();
+        $prevSortIndex = $photo2->sortIndex;
+        $photo2->sortIndex = -1;
+        $photo2->save();
+        $photo2->sortIndex = $photo1->sortIndex;
+        $photo1->sortIndex = $prevSortIndex;
+        $photo1->save();
+        $photo2->save();
+        $transaction->commit();
     }
 
     /**
