@@ -331,7 +331,7 @@ class ItemsController extends Controller
                         $addProperty($key, $value);
                         break;
 
-                    case '@' :
+                    case '#' :
                         $key = 'tags';
                         $value = trim(mb_substr($str, 1));
                         $addProperty($key, $value);
