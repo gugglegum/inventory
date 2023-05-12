@@ -10,8 +10,8 @@ use yii\widgets\ActiveForm;
 /* @var $tagsForm \backend\models\ItemTagsForm */
 /* @var $goto string */
 
-
 $this->registerJsFile('@web/js/upload_photo.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerCssFile('@web/css/item-form.css', [], 'item-form');
 $this->registerCssFile('@web/css/upload_photo.css', [], 'upload_photo');
 
 ?>
@@ -26,6 +26,7 @@ $this->registerCssFile('@web/css/upload_photo.css', [], 'upload_photo');
     <?= $form->field($model, 'name')->textInput(['maxlength' => true, 'tabindex' => 1]) ?>
     <?= $form->field($model, 'description')->textarea(['rows' => 4, 'tabindex' => 2]) ?>
     <?= $form->field($model, 'parentId')->textInput(['maxlength' => true, 'tabindex' => 3]) ?>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#pickContainerModal" onclick="let iframe = $('#pickContainerIframe'); iframe.attr('src', iframe.data('base-src') + encodeURIComponent($('#item-parentid').val()));" style="margin-bottom: 16px;">Выбрать...</button>
     <?= $form->field($tagsForm, 'tags')->textInput(['tabindex' => 4]) ?>
     <?= $form->field($model, 'isContainer')->checkbox(['tabindex' => 5]) ?>
 
@@ -81,4 +82,18 @@ $this->registerCssFile('@web/css/upload_photo.css', [], 'upload_photo');
 
     <?php ActiveForm::end(); ?>
 
+</div>
+<!-- Modal -->
+<div class="modal fade" id="pickContainerModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Выбор родительского контейнера</h4>
+            </div>
+            <div class="modal-body">
+                <iframe id="pickContainerIframe" data-base-src="<?= Html::encode(Url::to(['items/pick-container', 'id' => ''])) ?>"></iframe>
+            </div>
+        </div>
+    </div>
 </div>

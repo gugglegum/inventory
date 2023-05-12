@@ -14,6 +14,7 @@ table.container-items td.details {
 }
 table.container-items td.details .path {
     font-size: 80%;
+    line-height: 1.8em;
 }
 table.container-items td.details .name {
     font-size: 150%;
@@ -35,4 +36,25 @@ table.container-items td.details .tags {
 table.container-items td.details .child-items {
     font-size: 80%;
     margin: 0.25em 0;
+}
+
+#itemSearchForm {
+    margin: 1.5em 0;
+}
+#itemSearchForm input#query {
+    width: 19em;
+}
+table.container-items td.details a.view-link {
+    font-size: 80%;
+    vertical-align: center;
+}
+
+.pick-container {
+    font-size: 80%;
+}
+.pick-container #itemSearchForm input#query {
+    width: 20em;
+}
+.pick-container table.container-items td.details .name {
+    margin: 0.3em 0;
 }

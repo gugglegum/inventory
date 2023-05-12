@@ -59,6 +59,56 @@ class ItemsController extends Controller
     }
 
     /**
+     * @param string|null $id
+     * @return Response|string
+     */
+    public function actionPickContainer(string $id = null): Response|string
+    {
+//        $containerId = Yii::$app->request->getQueryParam('id', null);
+        $query = Item::find()->where('isContainer != 0');
+        $parentContainer = $id ? (clone $query)->andWhere('id = :containerId', ['containerId' => $id])->one() : null;
+        $containers = $id
+            ? (clone $query)->andWhere('parentId = :containerId', ['containerId' => $id])->all()
+            : (clone $query)->andWhere('parentId IS NULL')->all();
+        $this->layout = 'blank';
+        return $this->render('pick-container', [
+            'parentContainerId' => $id,
+            'parentContainer' => $parentContainer,
+            'containers' => $containers,
+        ]);
+    }
+
+    public function actionSearchContainer(string $q): Response|string
+    {
+        $queryString = Yii::$app->request->getQueryParam('q', '');
+        $queryWords = array_filter(preg_split('/[\s,]+/', $queryString, -1, PREG_SPLIT_NO_EMPTY), function($value) { return $value !== ''; });
+        $containers = [];
+        if (count($queryWords) > 0) {
+            $query = Item::find()->where('isContainer != 0');
+            $i = 0;
+            $hasPositiveCondition = false;
+            foreach ($queryWords as $queryWord) {
+                if ($queryWord[0] !== '-') {
+                    $query->andWhere("name LIKE :tagMask{$i} OR id = :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
+                    $hasPositiveCondition = true;
+                } else {
+                    $queryWord = mb_substr($queryWord, 1);
+                    $query->andWhere("name NOT LIKE :tagMask{$i} AND id != :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
+                }
+                $i++;
+            }
+            if ($hasPositiveCondition) {
+                $containers = $query->all();
+            }
+        }
+        $this->layout = 'blank';
+        return $this->render('search-container', [
+            'containers' => $containers,
+            'query' => $queryString,
+        ]);
+    }
+
+    /**
      * @return Response|string
      */
     public function actionSearch(): Response|string

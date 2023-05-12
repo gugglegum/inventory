@@ -7,7 +7,7 @@ use yii\helpers\Url;
 /* @var $query string */
 
 ?>
-<form action="<?= Html::encode(Url::to(['items/search'])) ?>" id="itemSearchForm">
+<form action="<?= Html::encode(Url::to(['items/search-container'])) ?>" id="itemSearchForm">
     <div>
         <label for="query">Я ищу:</label>
         <input id="query" type="text" name="q" value="<?= Html::encode($query) ?>" />
