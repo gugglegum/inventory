@@ -6,3 +6,6 @@
 #pickContainerModal .modal-body {
     height: 550px;
 }
+#btnTogglePickContainerModal {
+    margin-bottom: 16px;
+}
