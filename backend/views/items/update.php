@@ -10,6 +10,8 @@ $this->title = $model->name;
 $this->render('_breadcrumbs', ['model' => $model]);
 $this->params['breadcrumbs'][] = 'Редактирование';
 
+$this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
+
 ?>
 <div class="item-update">
 
