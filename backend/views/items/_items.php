@@ -53,7 +53,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                         echo Html::beginTag('a', ['href' => Url::to($path[$i]['url'])]);
                         echo Html::encode($path[$i]['label']);
                         echo Html::endTag('a');
-                        echo '<sup style="color: #ccc; font-size: 80%;">#' . Html::encode($path[$i]['id']) . '</sup>';
+                        echo '<sup>#' . Html::encode($path[$i]['id']) . '</sup>';
                         if ($i > 1) {
                             echo ' &rarr;&nbsp;';
                         }
@@ -65,7 +65,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 <div class="name">
                     <?= Html::beginTag('a', ['href' => Url::to(['items/view', 'id' => $item->id])])
                         . Html::encode($item->name)
-                        . Html::endTag('a') ?>&nbsp;<sup style="color: #ccc; font-size: 60%;">#<?= Html::encode($item->id) ?></sup><?=
+                        . Html::endTag('a') ?>&nbsp;<sup>#<?= Html::encode($item->id) ?></sup><?=
                         Html::a('', Url::to(['items/update', 'id' => $item->id]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-left: 5px']) ?>
                 </div>
 
@@ -73,7 +73,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 <div class="secondary-photos">
                 <?php foreach ($item->secondaryPhotos as $photo) { ?>
                     <?= Html::beginTag('a', ['href' => $photo->getUrl(), 'rel' => 'item-photos#' . $item->id, 'class' => 'fancybox']) ?>
-                    <?= Html::img($photo->getThumbnailUrl(48, 48, true, true, 90)) ?>
+                    <?= Html::img($photo->getThumbnailUrl(48, 48, true, true, 90), ['alt' => 'Photo']) ?>
                     <?= Html::endTag('a') ?>
                 <?php } ?>
                 </div>

@@ -16,8 +16,16 @@ table.container-items td.details .path {
     font-size: 80%;
     line-height: 1.8em;
 }
+table.container-items td.details .path sup {
+    color: #ccc;
+    font-size: 80%;
+}
 table.container-items td.details .name {
     font-size: 150%;
+}
+table.container-items td.details .name sup {
+    color: #ccc;
+    font-size: 60%;
 }
 table.container-items td.details a.edit-link {
     font-size: 50%;

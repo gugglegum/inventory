@@ -12,6 +12,7 @@ use yii\widgets\ActiveForm;
 
 $this->registerJsFile('@web/js/upload_photo.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 $this->registerJsFile('@web/js/item-form.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerCssFile('@web/css/items.css', [], 'items');
 $this->registerCssFile('@web/css/item-form.css', [], 'item-form');
 $this->registerCssFile('@web/css/upload_photo.css', [], 'upload_photo');
 
@@ -27,7 +28,9 @@ $this->registerCssFile('@web/css/upload_photo.css', [], 'upload_photo');
     <?= $form->field($model, 'name')->textInput(['maxlength' => true, 'tabindex' => 1]) ?>
     <?= $form->field($model, 'description')->textarea(['rows' => 4, 'tabindex' => 2]) ?>
     <?= $form->field($model, 'parentId')->textInput(['maxlength' => true, 'tabindex' => 3]) ?>
-    <button type="button" id="btnTogglePickContainerModal" class="btn btn-primary" data-toggle="modal" data-target="#pickContainerModal">Выбрать...</button>
+    <button type="button" style="float: left" id="btnTogglePickContainerModal" class="btn" data-toggle="modal" data-target="#pickContainerModal">Выбрать...</button>
+    <div id="divParentPreview"></div>
+    <div class="clearfix"></div>
     <?= $form->field($tagsForm, 'tags')->textInput(['tabindex' => 4]) ?>
     <?= $form->field($model, 'isContainer')->checkbox(['tabindex' => 5]) ?>
 
@@ -57,9 +60,6 @@ $this->registerCssFile('@web/css/upload_photo.css', [], 'upload_photo');
     <label class="control-label">Добавить фотографии</label>
     <ol class="form-group" id="PhotosContainer">
         <li class="field-item-photos">
-            <!--<div class="block" style="">
-                <img />
-            </div>-->
             <div class="clearfix"></div>
             <input class="custom-file-input" type="file" name="photos[]" tabindex="6" />
         </li>

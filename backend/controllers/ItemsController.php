@@ -10,6 +10,7 @@ use common\models\Item;
 use common\models\ItemPhoto;
 use yii\base\Exception;
 use yii\filters\AccessControl;
+use yii\helpers\Url;
 use yii\web\Controller;
 use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
@@ -431,6 +432,37 @@ class ItemsController extends Controller
             'errorLine' => $errorLine,
             'errorStr' => $errorStr,
             'errorMsg' => $errorMsg,
+        ]);
+    }
+
+    /**
+     * @param int $id
+     * @return Response
+     * @throws NotFoundHttpException
+     * @throws \yii\db\Exception
+     */
+    public function actionJsonPreview(int $id): Response
+    {
+        $model = $this->findModel($id);
+
+        $secondaryPhotos = [];
+        foreach ($model->secondaryPhotos as $photo) {
+            $secondaryPhotos[] = [
+                'photo' => $photo->getUrl(),
+                'thumbnail' => $photo->getThumbnailUrl(48, 48, true, true, 90)
+            ];
+        }
+        return $this->asJson([
+            'id' => $model->id,
+            'name' => $model->name,
+            'description' => $model->description,
+            'url' => Url::to(['items/view', 'id' => $model->id]),
+            'primaryPhoto' => $model->primaryPhoto ? [
+                'photo' => $model->primaryPhoto->getUrl(),
+                'thumbnail' => $model->primaryPhoto->getThumbnailUrl(100, 100, true, true, 90),
+            ] : null,
+            'secondaryPhotos' => $secondaryPhotos,
+            'tags' => $model->fetchTags(),
         ]);
     }
 

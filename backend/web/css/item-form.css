@@ -8,4 +8,23 @@
 }
 #btnTogglePickContainerModal {
     margin-bottom: 16px;
+    margin-right: 32px;
+}
+
+#divParentPreview {
+    min-height: 115px;
+}
+/* override items.css */
+#divParentPreview table.container-items {
+    margin-top: -5px;
+}
+#divParentPreview table.container-items tr {
+    border-bottom: none;
+}
+#divParentPreview table.container-items td.thumbnail {
+    margin: 5px 0;
+}
+#divParentPreview table.container-items td.details {
+    padding-top: 0;
+    padding-bottom: 0;
 }
