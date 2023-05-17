@@ -13,7 +13,8 @@ $this->title = $model->name;
 $this->render('_breadcrumbs', ['model' => $model]);
 unset($this->params['breadcrumbs'][count($this->params['breadcrumbs']) - 1]['url']);
 
-$this->registerCssFile('@web/css/upload_photo.css', [], 'upload_photo');
+$this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
+$this->registerCssFile('@web/css/item-view.css', ['appendTimestamp' => true], 'item-view');
 
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 

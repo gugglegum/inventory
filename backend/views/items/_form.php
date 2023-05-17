@@ -10,11 +10,11 @@ use yii\widgets\ActiveForm;
 /* @var $tagsForm \backend\models\ItemTagsForm */
 /* @var $goto string */
 
-$this->registerJsFile('@web/js/upload_photo.js', ['depends' => [\yii\web\JqueryAsset::class]]);
-$this->registerJsFile('@web/js/item-form.js', ['depends' => [\yii\web\JqueryAsset::class]]);
-$this->registerCssFile('@web/css/items.css', [], 'items');
-$this->registerCssFile('@web/css/item-form.css', [], 'item-form');
-$this->registerCssFile('@web/css/upload_photo.css', [], 'upload_photo');
+$this->registerJsFile('@web/js/upload_photo.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerJsFile('@web/js/item-form.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items');
+$this->registerCssFile('@web/css/item-form.css', ['appendTimestamp' => true], 'item-form');
+$this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 
 ?>
 

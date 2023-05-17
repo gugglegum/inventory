@@ -10,7 +10,7 @@ use common\models\Item;
 /* @var $containers Item[] */
 /* @var $query string */
 
-$this->registerJsFile('@web/js/pick-container.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+$this->registerJsFile('@web/js/pick-container.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]]);
 
 $this->title = 'Выбор контейнера';
 $this->render('_breadcrumbs', ['model' => null]);

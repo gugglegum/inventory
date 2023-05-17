@@ -6,7 +6,7 @@ use yii\helpers\Url;
 /** @var $containers \common\models\Item[] */
 /** @var $isSearch boolean */
 
-$this->registerCssFile('@web/css/items.css', [], 'items');
+$this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items');
 
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 
