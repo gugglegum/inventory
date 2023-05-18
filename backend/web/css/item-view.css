@@ -19,7 +19,7 @@
     flex-grow: 1;
     flex-basis: 70%;
     box-sizing: border-box;
-    padding-left: 2em;
+    padding-left: 2%;
     border-left: 1px solid #eee;
     border-top: 1px solid #eee;
 }
