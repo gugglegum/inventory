@@ -62,7 +62,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 <dd><?= Html::encode(date('d.m.Y H:i', $model->created)) ?></dd>
             </dl>
             <dl>
-                <dt>Последнее изменение:</dt>
+                <dt>Дата изменения:</dt>
                 <dd><?= Html::encode(date('d.m.Y H:i', $model->updated)) ?></dd>
             </dl>
             <h3>Фотографии</h3>
