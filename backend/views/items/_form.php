@@ -34,6 +34,15 @@ $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true],
     <?= $form->field($tagsForm, 'tags')->textInput(['tabindex' => 4]) ?>
     <?= $form->field($model, 'isContainer')->checkbox(['tabindex' => 5]) ?>
 
+    <div class="form-group">
+        <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => 7]) ?>
+        <?= Html::a('Отмена', Url::to(
+            $model->isNewRecord
+                ? $model->parentId !== null ? ['items/view', 'id' => $model->parentId] : ['items/index']
+                : ['items/view', 'id' => $model->id]
+        ), ['class' => 'btn btn-warning', 'tabindex' => 8, 'style' => 'margin-left: 1em']) ?>
+    </div>
+
     <label class="control-label">Фотографии</label>
     <?php
         $photos = $model->itemPhotos;
