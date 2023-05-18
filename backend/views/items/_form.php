@@ -28,7 +28,7 @@ $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true],
     <?= $form->field($model, 'name')->textInput(['maxlength' => true, 'tabindex' => 1]) ?>
     <?= $form->field($model, 'description')->textarea(['rows' => 4, 'tabindex' => 2]) ?>
     <?= $form->field($model, 'parentId')->textInput(['maxlength' => true, 'tabindex' => 3]) ?>
-    <button type="button" style="float: left" id="btnTogglePickContainerModal" class="btn" data-toggle="modal" data-target="#pickContainerModal">Выбрать...</button>
+    <button type="button" style="float: left" id="btnTogglePickContainerModal" class="btn" data-toggle="modal" data-target="#pickContainerModal">Сменить...</button>
     <div id="divParentPreview"></div>
     <div class="clearfix"></div>
     <?= $form->field($tagsForm, 'tags')->textInput(['tabindex' => 4]) ?>
