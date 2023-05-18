@@ -21,10 +21,17 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php if ($query !== '') { ?>
     <h3>Результаты поиска</h3>
 
+    <?php if (!empty($items)) { ?>
+    <p>Всего найдено предметов: <?= count($items) ?></p>
     <?= $this->render('_items', [
         'items' => $items,
-        'isSearch' => true,
+        'showPath' => true,
+        'showChildren' => true,
     ]) ?>
+    <?php } else { ?>
+        <p>Ничего не нашлось.</p>
+    <?php } ?>
+
     <?php } ?>
 
 </div>

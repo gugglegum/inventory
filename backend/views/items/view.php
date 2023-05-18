@@ -88,10 +88,15 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
         <div id="item-children">
             <h2>Предметы в этом контейнере</h2>
 
+            <?php if (!empty($children)) { ?>
             <?= $this->render('_items', [
                 'items' => $children,
-                'isSearch' => false,
+                'showPath' => false,
+                'showChildren' => true,
             ]) ?>
+            <?php } else { ?>
+                <p>Здесь пока ничего нет.</p>
+            <?php } ?>
 
             <p style="margin-top: 1em"><?php
             if ($model->isContainer) {

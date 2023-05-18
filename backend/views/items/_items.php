@@ -4,17 +4,14 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 
 /** @var $items \common\models\Item[] */
-/** @var $isSearch boolean */
+/** @var $showPath boolean */
+/** @var $showChildren boolean */
 
 $this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items');
 
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 
 ?>
-<?php if (!empty($items)) { ?>
-<?php if ($isSearch) { ?>
-<p>Всего найдено предметов: <?= count($items) ?></p>
-<?php } ?>
 <table class="container-items">
     <?php foreach ($items as $item) { ?>
         <tr>
@@ -36,7 +33,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 ?>
             </td>
             <td class="details">
-                <?php if ($isSearch) { ?>
+                <?php if ($showPath) { ?>
                 <div class="path">
                     <?php
                     $path = [];
@@ -108,6 +105,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 ?></div>
                 <?php } ?>
 
+                <?php if ($showChildren) { ?>
                 <div class="child-items">
                 <?php $i = 0; foreach ($item->items as $childItem) {
                     if ($i > 0) {
@@ -119,13 +117,8 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                     $i++;
                 } ?>
                 </div>
+                <?php } ?>
             </td>
         </tr>
     <?php } ?>
 </table>
-<?php if (!$isSearch) { ?>
-<p>Всего предметов: <?= count($items) ?></p>
-<?php } ?>
-<?php } else { ?>
-<p><?= $isSearch ? 'Ничего не нашлось' : 'Здесь пока ничего нет' ?>.</p>
-<?php } ?>

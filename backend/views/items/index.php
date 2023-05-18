@@ -15,10 +15,15 @@ $this->render('_breadcrumbs', ['model' => null]);
     <?= $this->render('_searchForm', ['query' => '', 'containerSearch' => false]) ?>
     <h1>Корневые контейнеры</h1>
 
+    <?php if (!empty($rootItems)) { ?>
     <?= $this->render('_items', [
         'items' => $rootItems,
-        'isSearch' => false,
+        'showPath' => false,
+        'showChildren' => true,
     ]) ?>
+    <?php } else { ?>
+        <p>Здесь пока ничего нет.</p>
+    <?php } ?>
 
     <p><?= Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить контейнер', ['items/create', 'isContainer' => 1], ['class' => 'btn btn-success']) ?></p>
 
