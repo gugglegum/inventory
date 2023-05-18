@@ -43,7 +43,7 @@ $(document).ready(function() {
                 'success': function (data/*, textStatus, jqXHR*/) {
                     $('#divParentPreview').html(data.content);
 
-                    $("#tableParentPreview .fancybox").fancybox({
+                    $("#divParentPreview .fancybox").fancybox({
                         padding : 0,
                         //closeBtn		: false,
                         openEffect      : 'none',
