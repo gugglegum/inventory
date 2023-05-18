@@ -19,79 +19,93 @@ $this->registerCssFile('@web/css/item-view.css', ['appendTimestamp' => true], 'i
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 
 ?>
-<div class="item-view">
+<div id="item-view">
 
-    <?= $this->render('_searchForm', ['query' => '']) ?>
+    <?= $this->render('_searchForm', ['query' => '', 'containerSearch' => false]) ?>
 
     <h1><?= Html::encode($this->title) ?>&nbsp;<sup style="color: #ccc">#<?= Html::encode($model->id) ?></sup></h1>
 
-    <div style="float: left; margin-right: 2em; min-width: 270px; max-width: 35%;">
-        <p style="float: right">
+    <dl id="item-description">
+        <div id="lnkEdit">
             <?= Html::a('<i class="glyphicon glyphicon-edit" style="margin-right: 5px;"></i> Изменить', ['update', 'id' => $model->id]/*, ['class' => 'btn btn-link']*/) ?>
-        </p>
-        <dl>
-            <dt>Описание</dt>
-            <dd><?= trim($model->description) !== '' ? nl2br(Html::encode($model->description)) : '<em>Нет описания</em>' ?></dd>
+        </div>
+        <dt>Описание</dt>
+        <dd><?= trim($model->description) !== '' ? nl2br(Html::encode($model->description)) : '<em>Нет описания</em>' ?></dd>
+    </dl>
 
-            <dt>Контейнер?</dt>
-            <dd><em><?= $model->isContainer ? 'Да' : 'Нет' ?></em></dd>
-
-            <dt>Метки</dt>
-            <dd><?php
-
-                $i = 0;
-                foreach ($model->fetchTags() as $tag) {
-                    if ($i > 0) {
-                        echo ', ';
-                    }
-                    echo Html::a($tag, Url::to(['items/search', 'q' => $tag]));
-                    $i++;
-                }
-
-                ?></dd>
-
-            <dt>Фотографии</dt>
-            <dd>
-                <?php
-                    $photos = $model->itemPhotos;
-                    if (count($photos) !== 0) {
-                        echo Html::beginTag('div', ['class' => 'uploaded-photos']);
-                        foreach ($photos as $itemPhoto) {
-                            echo Html::beginTag('div', ['class' => 'photo-wrapper']);
-                            echo Html::beginTag('a', ['href' => $itemPhoto->getUrl(), 'rel' => 'item-photos', 'class' => 'fancybox']);
-                            echo Html::img($itemPhoto->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
-                            echo Html::endTag('a');
-                            echo Html::endTag('div');
+    <div class="columns-container">
+        <div id="item-info">
+            <dl>
+                <dt>Контейнер: </dt>
+                <dd><em><?= $model->isContainer ? 'Да' : 'Нет' ?></em></dd>
+            </dl>
+            <dl>
+                <dt>Метки:</dt>
+                <dd><?php
+                    $tags = $model->fetchTags();
+                    if (count($tags) > 0) {
+                        $i = 0;
+                        foreach ($tags as $tag) {
+                            if ($i > 0) {
+                                echo ', ';
+                            }
+                            echo Html::a($tag, Url::to(['items/search', 'q' => $tag]));
+                            $i++;
                         }
-                        echo '<div class="clearfix"></div>';
+                    } else {
+                        echo '<em>Нет</em>';
+                    }
+                    ?></dd>
+            </dl>
+            <dl>
+                <dt>Дата создания:</dt>
+                <dd><?= Html::encode(date('d.m.Y H:i', $model->created)) ?></dd>
+            </dl>
+            <dl>
+                <dt>Последнее изменение:</dt>
+                <dd><?= Html::encode(date('d.m.Y H:i', $model->updated)) ?></dd>
+            </dl>
+            <h3>Фотографии</h3>
+            <?php
+                $photos = $model->itemPhotos;
+                if (count($photos) !== 0) {
+                    echo Html::beginTag('div', ['class' => 'uploaded-photos']);
+                    foreach ($photos as $itemPhoto) {
+                        echo Html::beginTag('div', ['class' => 'photo-wrapper']);
+                        echo Html::beginTag('a', ['href' => $itemPhoto->getUrl(), 'rel' => 'item-photos', 'class' => 'fancybox']);
+                        echo Html::img($itemPhoto->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
+                        echo Html::endTag('a');
+                        echo '<div class="upload-date">' . Html::encode(date('d.m.Y H:i', $itemPhoto->created)) . '</div>';
                         echo Html::endTag('div');
                     }
-                ?>
-            </dd>
-        </dl>
+                    echo '<div class="clearfix"></div>';
+                    echo Html::endTag('div');
+                }
+            ?>
+        </div>
+
+        <?php if ($model->isContainer || count($children) > 0) { ?>
+        <div id="item-children">
+            <h2>Предметы в этом контейнере</h2>
+
+            <?= $this->render('_items', [
+                'items' => $children,
+                'isSearch' => false,
+            ]) ?>
+
+            <p style="margin-top: 1em"><?php
+            if ($model->isContainer) {
+                echo Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить предмет внутрь', ['items/create', 'parentId' => $model->id], ['class' => 'btn btn-success']);
+            }
+            ?></p>
+
+            <?= $this->render('_importForm', [
+                'parent' => $model,
+                'text' => '',
+            ]) ?>
+        </div>
+        <?php } ?>
     </div>
-
-    <?php if ($model->isContainer || count($children) > 0) { ?>
-    <div style="float: left; max-width: 60%; padding-left: 2em; border-left: 1px solid #eee; border-top: 1px solid #eee;">
-        <h2>Предметы в этом контейнере</h2>
-
-        <?= $this->render('_items', [
-            'items' => $children,
-            'isSearch' => false,
-        ]) ?>
-
-        <p style="margin-top: 1em"><?php
-        if ($model->isContainer) {
-            echo Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить предмет внутрь', ['items/create', 'parentId' => $model->id], ['class' => 'btn btn-success']);
-        }
-        ?></p>
-
-        <?= $this->render('_importForm', [
-            'parent' => $model,
-            'text' => '',
-        ]) ?>
-    </div>
-    <?php } ?>
 
     <div class="clearfix"></div>
 

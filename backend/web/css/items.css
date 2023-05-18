@@ -46,12 +46,6 @@ table.container-items td.details .child-items {
     margin: 0.25em 0;
 }
 
-#itemSearchForm {
-    margin: 1.5em 0;
-}
-#itemSearchForm input#query {
-    width: 19em;
-}
 table.container-items td.details a.view-link {
     font-size: 80%;
     vertical-align: center;
@@ -59,9 +53,6 @@ table.container-items td.details a.view-link {
 
 .pick-container {
     font-size: 80%;
-}
-.pick-container #itemSearchForm input#query {
-    width: 20em;
 }
 .pick-container table.container-items td.details .name {
     margin: 0.3em 0;

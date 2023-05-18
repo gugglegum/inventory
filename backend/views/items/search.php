@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <h1><?= Html::encode($this->title) ?></h1>
 
-    <?= $this->render('_searchForm', ['query' => $query]) ?>
+    <?= $this->render('_searchForm', ['query' => $query, 'containerSearch' => false]) ?>
 
     <?php if ($query !== '') { ?>
     <h3>Результаты поиска</h3>

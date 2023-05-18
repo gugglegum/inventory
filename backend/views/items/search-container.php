@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 'renderToolbar']);
 ?>
 <div class="pick-container">
-    <?= $this->render('_searchContainerForm', ['query' => $query]) ?>
+    <?= $this->render('_searchForm', ['query' => $query, 'containerSearch' => true]) ?>
 
     <?php if ($query !== '') { ?>
         <h3>Результаты поиска</h3>

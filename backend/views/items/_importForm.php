@@ -7,11 +7,13 @@ use yii\helpers\Url;
 /* @var $parent common\models\Item */
 /* @var $text string */
 
+$this->registerCssFile('@web/css/import-form.css', ['appendTimestamp' => true], 'import-form');
+
 ?>
-<?= Html::beginForm(Url::to(['items/import', 'parentId' => $parent->id]), 'post', ['style' => "margin: 1.5em 0;"]) ?>
+<?= Html::beginForm(Url::to(['items/import', 'parentId' => $parent->id]), 'post', ['id' => 'formImportItems', 'style' => "margin: 1.5em 0;"]) ?>
     <div>
         <label for="text">Импорт из текста:</label><br />
-        <?= Html::textarea('text', $text, ['cols' => 100, 'rows' => 12, 'style' => 'font-size: 90%']) ?><br />
+        <?= Html::textarea('text', $text, ['rows' => 12, 'style' => 'font-size: 90%']) ?><br />
         <?= Html::checkbox('confirm', false, ['label' => 'Подтвердить добавление']) ?><br />
         <?= Html::submitInput('Импорт') ?>
     </div>

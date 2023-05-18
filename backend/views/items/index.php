@@ -12,7 +12,7 @@ $this->render('_breadcrumbs', ['model' => null]);
 ?>
 <div class="item-index">
 
-    <?= $this->render('_searchForm', ['query' => '']) ?>
+    <?= $this->render('_searchForm', ['query' => '', 'containerSearch' => false]) ?>
     <h1>Корневые контейнеры</h1>
 
     <?= $this->render('_items', [
