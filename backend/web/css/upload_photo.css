@@ -25,6 +25,8 @@
     padding: 10px;
     border: 1px solid #ccc;
     margin: 5px;
+    min-width: 200px;
+    min-height: 200px;
 }
 
 .uploaded-photos .btn-sort-up {
