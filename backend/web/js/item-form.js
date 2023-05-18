@@ -78,5 +78,5 @@ $(document).ready(function() {
         updateTimeoutId = window.setTimeout(updateParentPreview, 300);
     });
 
-    updateParentPreview();
+    window.setTimeout(updateParentPreview, 0); // setTimeout() solves a bug in Chrome with old parent preview when navigating history back after selecting different parent
 });
