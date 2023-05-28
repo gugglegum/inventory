@@ -24,7 +24,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
     <?= $this->render('_searchForm', [
         'query' => '',
         'containerSearch' => false,
-        'showExtraOptions' => true,
+        'showExtraOptions' => $model->isContainer && count($children) > 0,
         'searchInside' => false,
         'containerId' => $containerId,
     ]) ?>
