@@ -12,7 +12,13 @@ $this->render('_breadcrumbs', ['model' => null]);
 ?>
 <div class="item-index">
 
-    <?= $this->render('_searchForm', ['query' => '', 'containerSearch' => false]) ?>
+    <?= $this->render('_searchForm', [
+        'query' => '',
+        'containerSearch' => false,
+        'showExtraOptions' => false,
+        'searchInside' => false,
+        'containerId' => null,
+    ]) ?>
     <h1>Корневые контейнеры</h1>
 
     <?php if (!empty($rootItems)) { ?>
@@ -20,6 +26,7 @@ $this->render('_breadcrumbs', ['model' => null]);
         'items' => $rootItems,
         'showPath' => false,
         'showChildren' => true,
+        'containerId' => null,
     ]) ?>
     <?php } else { ?>
         <p>Здесь пока ничего нет.</p>

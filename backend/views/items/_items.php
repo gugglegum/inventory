@@ -3,9 +3,11 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-/** @var $items \common\models\Item[] */
-/** @var $showPath boolean */
-/** @var $showChildren boolean */
+/** @var \common\models\Item[] $items */
+/** @var array $paths */
+/** @var bool $showPath  */
+/** @var bool $showChildren */
+/** @var ?int $containerId */
 
 $this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items');
 
@@ -36,21 +38,12 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 <?php if ($showPath) { ?>
                 <div class="path">
                     <?php
-                    $path = [];
-                    $tmpItem = $item;
-                    while ($tmpItem) {
-                        $path[] = [
-                            'id' => $tmpItem->id,
-                            'label' => $tmpItem->name,
-                            'url' => ['items/view', 'id' => $tmpItem->id],
-                        ];
-                        $tmpItem = $tmpItem->parent;
-                    }
+                    $path = $paths[$item->id];
                     for ($i = count($path) - 1; $i > 0; $i--) {
                         echo Html::beginTag('a', ['href' => Url::to($path[$i]['url'])]);
                         echo Html::encode($path[$i]['label']);
                         echo Html::endTag('a');
-                        echo '<sup>#' . Html::encode($path[$i]['id']) . '</sup>';
+                        echo ' <sup>#' . Html::encode($path[$i]['id']) . '</sup>';
                         if ($i > 1) {
                             echo ' &rarr;&nbsp;';
                         }

@@ -3,10 +3,11 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-/* @var $this yii\web\View */
-/* @var $model common\models\Item */
-/* @var $parent common\models\Item */
-/* @var $children common\models\Item[] */
+/** @var yii\web\View $this */
+/** @var common\models\Item $model */
+/** @var common\models\Item $parent */
+/** @var common\models\Item[] $children */
+/** @var int $containerId title */
 
 $this->title = $model->name;
 
@@ -21,7 +22,13 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
 ?>
 <div id="item-view">
 
-    <?= $this->render('_searchForm', ['query' => '', 'containerSearch' => false]) ?>
+    <?= $this->render('_searchForm', [
+        'query' => '',
+        'containerSearch' => false,
+        'showExtraOptions' => true,
+        'searchInside' => false,
+        'containerId' => $containerId,
+    ]) ?>
 
     <h1><?= Html::encode($this->title) ?>&nbsp;<sup style="color: #ccc">#<?= Html::encode($model->id) ?></sup></h1>
 
@@ -93,6 +100,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 'items' => $children,
                 'showPath' => false,
                 'showChildren' => true,
+                'containerId' => null,
             ]) ?>
             <?php } else { ?>
                 <p>Здесь пока ничего нет.</p>

@@ -8,6 +8,7 @@
 }
 #itemSearchForm div label {
     margin-right: 0.25em;
+    margin-top: 3px;
     margin-bottom: 5px;
 }
 #itemSearchForm div input[type=text] {
@@ -18,4 +19,12 @@
 }
 #itemSearchForm div input[type=submit] {
     margin-bottom: 5px;
+}
+#itemSearchForm #divExtraSearchOptions input[type=checkbox] {
+    margin-left: 3.6em;
+}
+#itemSearchForm #divExtraSearchOptions label {
+    margin-top: 7px;
+    padding-left: 0.25em;
+    font-weight: normal;
 }

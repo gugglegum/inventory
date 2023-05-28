@@ -115,6 +115,7 @@ class ItemsController extends Controller
     public function actionSearch(): Response|string
     {
         $queryString = Yii::$app->request->getQueryParam('q', '');
+        $containerId = Yii::$app->request->getQueryParam('c');
 
         $queryWords = array_filter(preg_split('/[\s,]+/', $queryString, -1, PREG_SPLIT_NO_EMPTY), function($value) { return $value !== ''; });
 
@@ -145,10 +146,47 @@ class ItemsController extends Controller
             }
         }
 
+        $paths = [];
+        $tmpItems = [];
+        foreach ($items as $item) {
+            $doSkipItem = (bool) $containerId;
+            $path = $this->getItemPathForView($item);
+            if ($containerId) {
+                foreach ($path as $pathItem) {
+                    if ($pathItem['id'] == $containerId) {
+                        $doSkipItem = false;
+                    }
+                }
+            }
+            if (!$doSkipItem) {
+                $tmpItems[] = $item;
+                $paths[$item->id] = $path;
+            }
+        }
+        $items = $tmpItems;
+
         return $this->render('search', [
             'items' => $items,
+            'paths' => $paths,
             'query' => $queryString,
+            'searchInside' => (bool) $containerId,
+            'containerId' => (int) $containerId,
         ]);
+    }
+
+    private function getItemPathForView(Item $item): array
+    {
+        $path = [];
+        $tmpItem = $item;
+        while ($tmpItem) {
+            $path[] = [
+                'id' => $tmpItem->id,
+                'label' => $tmpItem->name,
+                'url' => ['items/view', 'id' => $tmpItem->id],
+            ];
+            $tmpItem = $tmpItem->parent;
+        }
+        return $path;
     }
 
     /**
@@ -165,6 +203,7 @@ class ItemsController extends Controller
             'model' => $model,
             'parent' => $model->parentId ? $this->findModel((int) $model->parentId) : null,
             'children' => $model->items,
+            'containerId' => $id,
         ]);
     }
 
@@ -447,8 +486,12 @@ class ItemsController extends Controller
         return $this->asJson([
             'content' => $this->renderPartial('_items', [
                 'items' => [$model],
+                'paths' => [
+                    $model->id => $this->getItemPathForView($model),
+                ],
                 'showPath' => true,
                 'showChildren' => false,
+                'containerId' => null,
             ]),
         ]);
     }
