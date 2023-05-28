@@ -5,7 +5,6 @@ use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var common\models\Item $model */
-/** @var common\models\Item $parent */
 /** @var common\models\Item[] $children */
 /** @var int $containerId title */
 

@@ -10,7 +10,6 @@ use common\models\Item;
 use common\models\ItemPhoto;
 use yii\base\Exception;
 use yii\filters\AccessControl;
-use yii\helpers\Url;
 use yii\web\Controller;
 use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
@@ -202,7 +201,6 @@ class ItemsController extends Controller
 
         return $this->render('view', [
             'model' => $model,
-            'parent' => $model->parentId ? $this->findModel((int) $model->parentId) : null,
             'children' => $model->items,
             'containerId' => $id,
         ]);
