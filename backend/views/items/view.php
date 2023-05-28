@@ -1,5 +1,6 @@
 <?php
 
+use s9e\TextFormatter\Bundles\Fatdown as TextFormatter;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
@@ -33,10 +34,10 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
 
     <dl id="item-description">
         <div id="lnkEdit">
-            <?= Html::a('<i class="glyphicon glyphicon-edit" style="margin-right: 5px;"></i> Изменить', ['update', 'id' => $model->id]/*, ['class' => 'btn btn-link']*/) ?>
+            <?= Html::a('<i class="glyphicon glyphicon-edit" style="margin-right: 5px;"></i> Изменить', ['update', 'id' => $model->id]) ?>
         </div>
         <dt>Описание</dt>
-        <dd><?= trim($model->description) !== '' ? nl2br(Html::encode($model->description)) : '<em>Нет описания</em>' ?></dd>
+        <dd><?= trim($model->description) !== '' ? nl2br(TextFormatter::render(TextFormatter::parse(Html::encode($model->description)))) : '<em>Нет описания</em>' ?></dd>
     </dl>
 
     <div class="columns-container">
