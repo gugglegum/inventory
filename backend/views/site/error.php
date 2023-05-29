@@ -13,6 +13,14 @@ $this->title = $name;
 
     <h1><?= Html::encode($this->title) ?></h1>
 
+    <?= $this->render('/items/_searchForm', [
+        'query' => '',
+        'containerSearch' => false,
+        'showExtraOptions' => false,
+        'searchInside' => false,
+        'containerId' => null,
+    ]) ?>
+
     <div class="alert alert-danger">
         <?= nl2br(Html::encode($message)) ?>
     </div>
