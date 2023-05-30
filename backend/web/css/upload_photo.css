@@ -16,10 +16,24 @@
     max-height: 100px;
 }
 
-.uploaded-photos .photo-wrapper {
+form .uploaded-photos {
+    display: block;
+}
+form .uploaded-photos .photo-wrapper {
     position: relative;
     float: left;
     clear: left;
+}
+
+.uploaded-photos {
+    display: flex;
+    flex-wrap: wrap;
+    box-sizing: border-box;
+}
+.uploaded-photos .photo-wrapper {
+    flex-grow: 1;
+    box-sizing: border-box;
+    position: relative;
 }
 .uploaded-photos .photo-wrapper img {
     padding: 10px;
