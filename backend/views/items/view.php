@@ -37,7 +37,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
             <?= Html::a('<i class="glyphicon glyphicon-edit" style="margin-right: 5px;"></i> Изменить', ['update', 'id' => $model->id]) ?>
         </div>
         <dt>Описание</dt>
-        <dd><?= trim($model->description) !== '' ? nl2br(TextFormatter::render(TextFormatter::parse(Html::encode($model->description)))) : '<em>Нет описания</em>' ?></dd>
+        <dd><?= trim($model->description) !== '' ? TextFormatter::render(TextFormatter::parse(preg_replace('/(?<![\r\n])\r\n?(?![\r\n])/u', "<br>\n", Html::encode($model->description)))) : '<em>Нет описания</em>' ?></dd>
     </dl>
 
     <div class="columns-container">
