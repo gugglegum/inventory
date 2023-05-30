@@ -26,11 +26,11 @@
 
 #item-view .columns-container #item-info .uploaded-photos .photo-wrapper .upload-date {
     position: absolute;
-    right: 25px;
+    left: 25px;
     bottom: 20px;
     font-size: 70%;
-    color: #000;
-    text-shadow: 1px 1px 1px #666, -1px -1px 1px #999;
+    color: #fff;
+    text-shadow: 1px 1px 1px #666, -1px -1px 1px #eee;
 }
 
 #item-view .columns-container #item-info dl {
