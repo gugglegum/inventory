@@ -29,8 +29,8 @@
     right: 25px;
     bottom: 20px;
     font-size: 70%;
-    color: #fff;
-    text-shadow: 1px 1px 1px #666, -1px -1px 1px #eee;
+    color: #e6e6e6;
+    text-shadow: 1px 1px 1px #666, -1px -1px 1px #999;
 }
 
 #item-view .columns-container #item-info dl {
