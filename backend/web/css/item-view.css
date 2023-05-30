@@ -26,7 +26,7 @@
 
 #item-view .columns-container #item-info .uploaded-photos .photo-wrapper .upload-date {
     position: absolute;
-    left: 25px;
+    right: 25px;
     bottom: 20px;
     font-size: 70%;
     color: #fff;

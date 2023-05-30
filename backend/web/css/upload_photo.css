@@ -31,14 +31,18 @@ form .uploaded-photos .photo-wrapper {
     box-sizing: border-box;
 }
 .uploaded-photos .photo-wrapper {
-    flex-grow: 1;
+    flex-grow: 0;
     box-sizing: border-box;
     position: relative;
 }
-.uploaded-photos .photo-wrapper img {
-    padding: 10px;
+.uploaded-photos .photo-wrapper .photo-frame {
+    display: block;
     border: 1px solid #ccc;
+    position: relative;
+    padding: 10px;
     margin: 5px;
+}
+.uploaded-photos .photo-wrapper img {
     min-width: 200px;
     min-height: 200px;
 }

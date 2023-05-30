@@ -79,10 +79,12 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                     echo Html::beginTag('div', ['class' => 'uploaded-photos']);
                     foreach ($photos as $itemPhoto) {
                         echo Html::beginTag('div', ['class' => 'photo-wrapper']);
+                        echo Html::beginTag('div', ['class' => 'photo-frame']);
                         echo Html::beginTag('a', ['href' => $itemPhoto->getUrl(), 'rel' => 'item-photos', 'class' => 'fancybox']);
                         echo Html::img($itemPhoto->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
                         echo Html::endTag('a');
                         echo '<div class="upload-date">' . Html::encode(date('d.m.Y H:i', $itemPhoto->created)) . '</div>';
+                        echo Html::endTag('div');
                         echo Html::endTag('div');
                     }
                     echo '<div class="clearfix"></div>';
