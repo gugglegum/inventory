@@ -89,11 +89,13 @@ class ItemsController extends Controller
             $hasPositiveCondition = false;
             foreach ($queryWords as $queryWord) {
                 if ($queryWord[0] !== '-') {
-                    $query->andWhere("name LIKE :tagMask{$i} OR id = :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
+                    $query->leftJoin(["t{$i}" => 'items_tags'], "t{$i}.itemId = id");
+                    $query->andWhere("t{$i}.tag LIKE :tagMask{$i} OR name LIKE :tagMask{$i} OR description LIKE :tagMask{$i} OR id = :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
                     $hasPositiveCondition = true;
                 } else {
+                    $query->leftJoin(["t{$i}" => 'items_tags'], "t{$i}.itemId = id AND t{$i}.tag LIKE :tagMask{$i}");
                     $queryWord = mb_substr($queryWord, 1);
-                    $query->andWhere("name NOT LIKE :tagMask{$i} AND id != :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
+                    $query->andWhere("t{$i}.tag IS NULL AND name NOT LIKE :tagMask{$i} AND description NOT LIKE :tagMask{$i} AND id != :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
                 }
                 $i++;
             }
@@ -124,23 +126,18 @@ class ItemsController extends Controller
             $i = 0;
             $hasPositiveCondition = false;
             foreach ($queryWords as $queryWord) {
-//                $query->joinWith('itemTags');
                 if ($queryWord[0] !== '-') {
                     $query->leftJoin(["t{$i}" => 'items_tags'], "t{$i}.itemId = id");
                     $query->andWhere("t{$i}.tag LIKE :tagMask{$i} OR name LIKE :tagMask{$i} OR description LIKE :tagMask{$i} OR id = :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
-//                    $query->andWhere("t{$i}.tag LIKE :tagMask{$i}", [/*"tag{$i}" => $queryWord, */"tagMask{$i}" => '%' . $queryWord . '%']);
                     $hasPositiveCondition = true;
                 } else {
                     $query->leftJoin(["t{$i}" => 'items_tags'], "t{$i}.itemId = id AND t{$i}.tag LIKE :tagMask{$i}");
                     $queryWord = mb_substr($queryWord, 1);
                     $query->andWhere("t{$i}.tag IS NULL AND name NOT LIKE :tagMask{$i} AND description NOT LIKE :tagMask{$i} AND id != :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
-//                    $query->andWhere("t{$i}.tag NOT LIKE :tagMask{$i}", [/*"tag{$i}" => $queryWord, */"tagMask{$i}" => '%' . $queryWord . '%']);
                 }
                 $i++;
             }
-
 //            var_dump($query->createCommand()->getRawSql());die;
-
             if ($hasPositiveCondition) {
                 $items = $query->all();
             }
