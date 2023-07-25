@@ -64,7 +64,6 @@ class ItemsController extends Controller
      */
     public function actionPickContainer(string $id = null): Response|string
     {
-//        $containerId = Yii::$app->request->getQueryParam('id', null);
         $query = Item::find()->where('isContainer != 0');
         $parentContainer = $id ? (clone $query)->andWhere('id = :containerId', ['containerId' => $id])->one() : null;
         $containers = $id
@@ -99,6 +98,7 @@ class ItemsController extends Controller
                 }
                 $i++;
             }
+            $query->groupBy('items.id');
             if ($hasPositiveCondition) {
                 $containers = $query->all();
             }
@@ -137,6 +137,7 @@ class ItemsController extends Controller
                 }
                 $i++;
             }
+            $query->groupBy('items.id');
 //            var_dump($query->createCommand()->getRawSql());die;
             if ($hasPositiveCondition) {
                 $items = $query->all();
@@ -145,19 +146,28 @@ class ItemsController extends Controller
 
         $paths = [];
         $tmpItems = [];
+        $maxResults = 2000;
+        $isMoreThan = false;
+        $i = 0;
         foreach ($items as $item) {
+            if ($i >= $maxResults) {
+                $isMoreThan = true;
+                break;
+            }
             $doSkipItem = (bool) $containerId;
             $path = $this->getItemPathForView($item);
             if ($containerId) {
                 foreach ($path as $pathItem) {
                     if ($pathItem['id'] == $containerId) {
                         $doSkipItem = false;
+                        break;
                     }
                 }
             }
             if (!$doSkipItem) {
                 $tmpItems[] = $item;
                 $paths[$item->id] = $path;
+                $i++;
             }
         }
         $items = $tmpItems;
@@ -168,6 +178,7 @@ class ItemsController extends Controller
             'query' => $queryString,
             'searchInside' => (bool) $containerId,
             'containerId' => (int) $containerId,
+            'isMoreThan' => $isMoreThan,
         ]);
     }
 

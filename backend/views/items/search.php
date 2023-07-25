@@ -10,6 +10,7 @@ use common\models\Item;
 /** @var string $query */
 /** @var bool $searchInside */
 /** @var ?int $containerId */
+/** @var bool $isMoreThan */
 
 $this->title = 'Поиск';
 $this->render('_breadcrumbs', ['model' => null]);
@@ -43,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <h3>Результаты поиска</h3>
 
     <?php if (!empty($items)) { ?>
-    <p>Всего найдено предметов: <?= count($items) ?></p>
+    <p>Всего найдено предметов: <?= count($items) ?><?= $isMoreThan ? ' (часть результатов не отображается)' : '' ?></p>
     <?= $this->render('_items', [
         'items' => $items,
         'paths' => $paths,
