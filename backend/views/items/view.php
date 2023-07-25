@@ -104,6 +104,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 'showChildren' => true,
                 'containerId' => null,
             ]) ?>
+                <p>Всего предметов: <?= count($children) ?></p>
             <?php } else { ?>
                 <p>Здесь пока ничего нет.</p>
             <?php } ?>
