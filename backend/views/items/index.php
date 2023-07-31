@@ -12,13 +12,27 @@ $this->render('_breadcrumbs', ['model' => null]);
 ?>
 <div class="item-index">
 
-    <?= $this->render('_searchForm', [
-        'query' => '',
-        'containerSearch' => false,
-        'showExtraOptions' => false,
-        'searchInside' => false,
-        'containerId' => null,
-    ]) ?>
+
+    <div id="searchFormGroup">
+        <div id="searchFormWrapper">
+            <?= $this->render('_searchForm', [
+                'query' => '',
+                'containerSearch' => false,
+                'showExtraOptions' => false,
+                'searchInside' => false,
+                'containerId' => null,
+            ]) ?>
+        </div>
+
+        <div id="idFormWrapper">
+            <?= $this->render('_itemIdForm', [
+                'id' => '',
+                'prevItem' => null,
+                'nextItem' => null,
+            ]) ?>
+        </div>
+    </div>
+
     <h1>Корневые контейнеры</h1>
 
     <?php if (!empty($rootItems)) { ?>

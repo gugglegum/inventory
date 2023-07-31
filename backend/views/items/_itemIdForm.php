@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 
 /** @var yii\web\View $this */
-/** @var int $id */
+/** @var string $id */
 /** @var ?common\models\Item $prevItem */
 /** @var ?common\models\Item $nextItem */
 
