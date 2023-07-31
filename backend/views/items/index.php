@@ -12,7 +12,6 @@ $this->render('_breadcrumbs', ['model' => null]);
 ?>
 <div class="item-index">
 
-
     <div id="searchFormGroup">
         <div id="searchFormWrapper">
             <?= $this->render('_searchForm', [
@@ -25,7 +24,7 @@ $this->render('_breadcrumbs', ['model' => null]);
         </div>
 
         <div id="idFormWrapper">
-            <?= $this->render('_itemIdForm', [
+            <?= $this->render('_idForm', [
                 'id' => '',
                 'prevItem' => null,
                 'nextItem' => null,

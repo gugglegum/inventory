@@ -37,7 +37,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
         </div>
 
         <div id="idFormWrapper">
-            <?= $this->render('_itemIdForm', [
+            <?= $this->render('_idForm', [
                 'id' => (string) $model->id,
                 'prevItem' => $prevItem,
                 'nextItem' => $nextItem,
