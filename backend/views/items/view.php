@@ -8,6 +8,8 @@ use yii\helpers\Url;
 /** @var common\models\Item $model */
 /** @var common\models\Item[] $children */
 /** @var int $containerId title */
+/** @var ?common\models\Item $prevItem */
+/** @var ?common\models\Item $nextItem */
 
 $this->title = $model->name;
 
@@ -16,19 +18,32 @@ unset($this->params['breadcrumbs'][count($this->params['breadcrumbs']) - 1]['url
 
 $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 $this->registerCssFile('@web/css/item-view.css', ['appendTimestamp' => true], 'item-view');
+$this->registerJsFile('@web/js/item-view.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]], 'item-view');
 
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 
 ?>
 <div id="item-view">
 
-    <?= $this->render('_searchForm', [
-        'query' => '',
-        'containerSearch' => false,
-        'showExtraOptions' => $model->isContainer && count($children) > 0,
-        'searchInside' => false,
-        'containerId' => $containerId,
-    ]) ?>
+    <div id="searchFormGroup">
+        <div id="searchFormWrapper">
+            <?= $this->render('_searchForm', [
+                'query' => '',
+                'containerSearch' => false,
+                'showExtraOptions' => $model->isContainer && count($children) > 0,
+                'searchInside' => false,
+                'containerId' => $containerId,
+            ]) ?>
+        </div>
+
+        <div id="idFormWrapper">
+            <?= $this->render('_itemIdForm', [
+                'id' => (int) $model->id,
+                'prevItem' => $prevItem,
+                'nextItem' => $nextItem,
+            ]) ?>
+        </div>
+    </div>
 
     <h1><?= Html::encode($this->title) ?>&nbsp;<sup style="color: #ccc">#<?= Html::encode($model->id) ?></sup></h1>
 

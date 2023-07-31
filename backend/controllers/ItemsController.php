@@ -207,10 +207,15 @@ class ItemsController extends Controller
     {
         $model = $this->findModel($id);
 
+        $prevItem = Item::find()->where('id < :id', ['id' => $id])->orderBy('id DESC')->limit(1)->one();
+        $nextItem = Item::find()->where('id > :id', ['id' => $id])->orderBy('id ASC')->limit(1)->one();
+
         return $this->render('view', [
             'model' => $model,
             'children' => $model->items,
             'containerId' => $id,
+            'prevItem' => $prevItem,
+            'nextItem' => $nextItem,
         ]);
     }
 

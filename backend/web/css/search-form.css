@@ -1,10 +1,10 @@
 #itemSearchForm {
-    margin: 1.5em 0;
+    margin: 0.5em 0;
     max-width: 40em;
 }
-#itemSearchForm div {
+#itemSearchForm > div {
     display: flex;
-    flex-wrap: wrap;
+    white-space: nowrap;
 }
 #itemSearchForm div label {
     margin-right: 0.25em;
@@ -27,4 +27,26 @@
     margin-top: 7px;
     padding-left: 0.25em;
     font-weight: normal;
+}
+
+#idForm {
+    box-sizing: border-box;
+    float: right;
+    margin-top: 0.5em;
+    margin-left: 2em;
+    max-width: 12em;
+    white-space: nowrap;
+}
+#idForm input#inputId {
+    width: 4em;
+}
+#searchFormGroup {
+    display: flex;
+    flex-wrap: wrap-reverse;
+}
+#searchFormWrapper {
+    flex-grow: 100;
+}
+#idFormWrapper {
+    flex-grow: 1;
 }
