@@ -137,7 +137,8 @@ class ItemsController extends Controller
                 }
                 $i++;
             }
-            $query->groupBy('items.id');
+            $query->groupBy('items.id')
+                ->orderBy('items.isContainer DESC, items.id ASC');
 //            var_dump($query->createCommand()->getRawSql());die;
             if ($hasPositiveCondition) {
                 $items = $query->all();
