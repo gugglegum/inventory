@@ -32,8 +32,8 @@ $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true],
     <div id="divParentPreview"></div>
     <div class="clearfix"></div>
     <?= $form->field($tagsForm, 'tags')->textInput(['tabindex' => 5]) ?>
-    <?= $form->field($model, 'priority')->textInput(['maxlength' => true, 'tabindex' => 6]) ?>
     <?= $form->field($model, 'isContainer')->checkbox(['tabindex' => 7]) ?>
+    <?= $form->field($model, 'priority')->textInput(['maxlength' => true, 'tabindex' => 6]) ?>
 
     <div class="form-group">
         <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => 8]) ?>

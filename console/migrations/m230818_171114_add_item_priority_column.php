@@ -12,7 +12,7 @@ class m230818_171114_add_item_priority_column extends Migration
      */
     public function up()
     {
-        $this->addColumn('items', 'priority', "INT DEFAULT 0 COMMENT 'Приоритет сортировки' AFTER `description`");
+        $this->addColumn('items', 'priority', "INT DEFAULT 0 COMMENT 'Приоритет сортировки' AFTER `isContainer`");
         $this->createIndex('priority', 'items', 'priority');
     }
 

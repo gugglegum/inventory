@@ -14,8 +14,8 @@ use yii\db\StaleObjectException;
  * @property string $parentId
  * @property string $name
  * @property string $description
- * @property integer $priority
  * @property integer $isContainer
+ * @property integer $priority
  * @property integer $created
  * @property integer $updated
  *
@@ -79,8 +79,8 @@ class Item extends ActiveRecord
             'parentId' => 'ID родительского предмета-контейнера',
             'name' => 'Наименование',
             'description' => 'Описание',
-            'priority' => 'Приоритет сортировки',
             'isContainer' => 'Является ли предмет контейнером?',
+            'priority' => 'Приоритет сортировки',
             'created' => 'Время создания',
             'updated' => 'Время последнего изменения',
         ];
