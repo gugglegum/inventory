@@ -2,19 +2,6 @@
     padding-bottom: 1em;
     margin-bottom: 1em;
 }
-#PhotosContainer .field-item-photos .block {
-    display: none;
-    background: #fff;
-    float: left;
-    border: 1px solid #ccc;
-    padding: 5px;
-    margin-top: 1em;
-    margin-bottom: 0.25em;
-}
-#PhotosContainer .field-item-photos .block img {
-    max-width: 100px;
-    max-height: 100px;
-}
 
 form .uploaded-photos {
     display: block;

@@ -72,7 +72,6 @@ $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true],
     <label class="control-label">Добавить фотографии</label>
     <ol class="form-group" id="PhotosContainer">
         <li class="field-item-photos">
-            <div class="clearfix"></div>
             <input class="custom-file-input" type="file" name="photos[]" tabindex="10" />
         </li>
     </ol>
