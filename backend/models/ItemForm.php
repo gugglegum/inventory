@@ -10,6 +10,7 @@ class ItemForm extends Model
     public $parentId;
     public $name;
     public $description;
+    public $priority;
     public $isContainer;
     public $created;
     public $updated;

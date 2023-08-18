@@ -28,19 +28,20 @@ $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true],
     <?= $form->field($model, 'name')->textInput(['maxlength' => true, 'tabindex' => 1]) ?>
     <?= $form->field($model, 'description')->textarea(['rows' => 4, 'tabindex' => 2]) ?>
     <?= $form->field($model, 'parentId')->textInput(['maxlength' => true, 'tabindex' => 3]) ?>
-    <button type="button" style="float: left" id="btnTogglePickContainerModal" class="btn" data-toggle="modal" data-target="#pickContainerModal">Сменить...</button>
+    <button type="button" style="float: left" id="btnTogglePickContainerModal" class="btn" data-toggle="modal" data-target="#pickContainerModal" tabindex="4">Сменить...</button>
     <div id="divParentPreview"></div>
     <div class="clearfix"></div>
-    <?= $form->field($tagsForm, 'tags')->textInput(['tabindex' => 4]) ?>
-    <?= $form->field($model, 'isContainer')->checkbox(['tabindex' => 5]) ?>
+    <?= $form->field($tagsForm, 'tags')->textInput(['tabindex' => 5]) ?>
+    <?= $form->field($model, 'priority')->textInput(['maxlength' => true, 'tabindex' => 6]) ?>
+    <?= $form->field($model, 'isContainer')->checkbox(['tabindex' => 7]) ?>
 
     <div class="form-group">
-        <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => 7]) ?>
+        <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => 8]) ?>
         <?= Html::a('Отмена', Url::to(
             $model->isNewRecord
                 ? $model->parentId !== null ? ['items/view', 'id' => $model->parentId] : ['items/index']
                 : ['items/view', 'id' => $model->id]
-        ), ['class' => 'btn btn-warning', 'tabindex' => 8, 'style' => 'margin-left: 1em']) ?>
+        ), ['class' => 'btn btn-warning', 'tabindex' => 9, 'style' => 'margin-left: 1em']) ?>
     </div>
 
     <label class="control-label">Фотографии</label>
@@ -72,17 +73,17 @@ $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true],
     <ol class="form-group" id="PhotosContainer">
         <li class="field-item-photos">
             <div class="clearfix"></div>
-            <input class="custom-file-input" type="file" name="photos[]" tabindex="6" />
+            <input class="custom-file-input" type="file" name="photos[]" tabindex="10" />
         </li>
     </ol>
 
     <div class="form-group">
-        <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => 7]) ?>
+        <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => 11]) ?>
         <?= Html::a('Отмена', Url::to(
             $model->isNewRecord
                 ? $model->parentId !== null ? ['items/view', 'id' => $model->parentId] : ['items/index']
                 : ['items/view', 'id' => $model->id]
-        ), ['class' => 'btn btn-warning', 'tabindex' => 8, 'style' => 'margin-left: 1em']) ?>
+        ), ['class' => 'btn btn-warning', 'tabindex' => 12, 'style' => 'margin-left: 1em']) ?>
     </div>
 
     <?php if ($model->isNewRecord) { ?>

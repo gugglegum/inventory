@@ -51,7 +51,7 @@ class ItemsController extends Controller
      */
     public function actionIndex(): Response|string
     {
-        $rootItems = Item::find()->where('parentId IS NULL')->orderBy(['id' => SORT_ASC])->all();
+        $rootItems = Item::find()->where('parentId IS NULL')->orderBy(['priority' => SORT_DESC, 'id' => SORT_ASC])->all();
 
         return $this->render('index', [
             'rootItems' => $rootItems,
@@ -213,7 +213,7 @@ class ItemsController extends Controller
 
         return $this->render('view', [
             'model' => $model,
-            'children' => $model->items,
+            'children' => $model->getItems()->orderBy(['priority' => SORT_DESC, 'id' => SORT_ASC])->all(),
             'containerId' => $id,
             'prevItem' => $prevItem,
             'nextItem' => $nextItem,
