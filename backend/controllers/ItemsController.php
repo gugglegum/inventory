@@ -213,7 +213,7 @@ class ItemsController extends Controller
 
         return $this->render('view', [
             'model' => $model,
-            'children' => $model->getItems()->orderBy(['priority' => SORT_DESC, 'id' => SORT_ASC])->all(),
+            'children' => $model->getItems()->orderBy(['priority' => SORT_DESC, 'isContainer' => SORT_DESC, 'id' => SORT_ASC])->all(),
             'containerId' => $id,
             'prevItem' => $prevItem,
             'nextItem' => $nextItem,
