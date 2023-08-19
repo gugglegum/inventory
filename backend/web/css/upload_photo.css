@@ -30,8 +30,7 @@ form .uploaded-photos .photo-wrapper {
     margin: 5px;
 }
 .uploaded-photos .photo-wrapper img {
-    min-width: 200px;
-    min-height: 200px;
+    min-width: 240px;
 }
 
 .uploaded-photos .btn-sort-up {
