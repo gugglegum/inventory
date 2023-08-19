@@ -40,6 +40,12 @@
 #idForm input#inputId {
     width: 4em;
 }
+#idForm .glyphicon-arrow-left {
+    margin-right: 0.75em;
+}
+#idForm .glyphicon-arrow-right {
+    margin-left: 0.75em;
+}
 #searchFormGroup {
     display: flex;
     flex-wrap: wrap-reverse;
