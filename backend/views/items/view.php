@@ -22,6 +22,10 @@ $this->registerJsFile('@web/js/item-view.js', ['appendTimestamp' => true, 'depen
 
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 
+$description = trim($model->description) !== '' ? TextFormatter::render(TextFormatter::parse(preg_replace('/(?<![\r\n])\r\n?(?![\r\n])/u', "\n<br>\n", Html::encode($model->description)))) : '<em>Нет описания</em>';
+// Выделяем ссылками упоминания ID предметов вида "#1234"
+$description = preg_replace_callback('/(?<=[\s,.;()])(#(\d+))(?=[\s.,;()])/', function(array $matches) { return '<a href="' . Html::encode(Url::to(['items/view', 'id' => $matches[2]])) . '">' . $matches[1] . '</a>'; }, $description);
+
 ?>
 <div id="item-view">
 
@@ -52,7 +56,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
             <?= Html::a('<i class="glyphicon glyphicon-edit" style="margin-right: 5px;"></i> Изменить', ['update', 'id' => $model->id]) ?>
         </div>
         <dt>Описание</dt>
-        <dd><?= trim($model->description) !== '' ? TextFormatter::render(TextFormatter::parse(preg_replace('/(?<![\r\n])\r\n?(?![\r\n])/u', "\n<br>\n", Html::encode($model->description)))) : '<em>Нет описания</em>' ?></dd>
+        <dd><?= $description ?></dd>
     </dl>
 
     <div class="columns-container">
@@ -110,6 +114,19 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
 
         <?php if ($model->isContainer || count($children) > 0) { ?>
         <div id="item-children">
+
+            <div class="dropdown" style="float:right">
+                <span class="dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                    <div id="optionDots"><i class="glyphicon glyphicon-option-vertical" ></i></div>
+                </span>
+                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu1">
+                    <li><a id="menuItemGroupOperation"><span class="glyphicon glyphicon-th-list"></span> Групповые операции</a></li>
+                    <li><a id="menuItemCheckAll"><span class="glyphicon glyphicon-check"></span> Выделить все</a></li>
+                    <li><a id="menuItemUncheckAll"><span class="glyphicon glyphicon-unchecked"></span> Снять все</a></li>
+                </ul>
+            </div>
+
+
             <h2>Предметы в этом контейнере</h2>
 
             <?php if (!empty($children)) { ?>
