@@ -15,11 +15,10 @@ use common\models\Item;
 $this->title = 'Поиск';
 $this->render('_breadcrumbs', ['model' => null]);
 $this->params['breadcrumbs'][] = $this->title;
+$this->title .= ' «' . $query . '»'; // чтоб в хлебных крошках запрос не отображался
 
 ?>
 <div class="item-search">
-
-    <h1><?= Html::encode($this->title) ?></h1>
 
     <div id="searchFormGroup">
         <div id="searchFormWrapper">
