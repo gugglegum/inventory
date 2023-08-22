@@ -21,13 +21,25 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <h1><?= Html::encode($this->title) ?></h1>
 
-    <?= $this->render('_searchForm', [
-        'query' => $query,
-        'containerSearch' => false,
-        'showExtraOptions' => (bool) $containerId,
-        'searchInside' => $searchInside,
-        'containerId' => $containerId,
-    ]) ?>
+    <div id="searchFormGroup">
+        <div id="searchFormWrapper">
+            <?= $this->render('_searchForm', [
+                'query' => $query,
+                'containerSearch' => false,
+                'showExtraOptions' => (bool) $containerId,
+                'searchInside' => $searchInside,
+                'containerId' => $containerId,
+            ]) ?>
+        </div>
+
+        <div id="idFormWrapper">
+            <?= $this->render('_idForm', [
+                'id' => '',
+                'prevItem' => null,
+                'nextItem' => null,
+            ]) ?>
+        </div>
+    </div>
 
     <?php
     if ($containerId) {
