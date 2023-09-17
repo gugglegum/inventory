@@ -39,7 +39,16 @@ class ItemsController extends Controller
             'verbs' => [
                 'class' => VerbFilter::class,
                 'actions' => [
-                    'delete' => ['post'],
+                    'index' => ['get'],
+                    'pick-container' => ['get'],
+                    'search-container' => ['get'],
+                    'search' => ['get'],
+                    'view' => ['get'],
+                    'create' => ['get', 'post'],
+                    'update' => ['get', 'post'],
+                    'delete' => ['get', 'post'],
+                    'import' => ['post'],
+                    'json-preview' => ['get'],
                 ],
             ],
         ];
@@ -341,10 +350,17 @@ class ItemsController extends Controller
      */
     public function actionDelete(int $id): Response|string
     {
-        $model = $this->findModel($id);
-        $parentId = $model->parentId;
-        $model->delete();
-        return $this->redirect($parentId ? ['items/view', 'id' => $parentId] : ['items/index']);
+        $item = $this->findModel($id);
+
+        if (Yii::$app->request->isPost) {
+            $parentId = $item->parentId;
+            $item->delete();
+            return $this->redirect($parentId ? ['items/view', 'id' => $parentId] : ['items/index']);
+        } else {
+            return $this->render('delete', [
+                'model' => $item,
+            ]);
+        }
     }
 
     /**
