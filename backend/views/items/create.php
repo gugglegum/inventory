@@ -11,6 +11,8 @@ use yii\helpers\Html;
 $this->title = 'Создание ' . ($model->isContainer ? 'контейнера' : 'предмета');
 $this->render('_breadcrumbs', ['model' => $parent]);
 $this->params['breadcrumbs'][] = $this->title;
+
+$this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 ?>
 <div class="item-create">
 
