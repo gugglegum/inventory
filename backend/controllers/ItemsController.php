@@ -230,6 +230,7 @@ class ItemsController extends Controller
     public function actionCreate(): Response|string
     {
         $item = new Item();
+        $item->priority = 0;
 
         $tagsForm = new ItemTagsForm();
 
