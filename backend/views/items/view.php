@@ -158,12 +158,6 @@ $description = preg_replace_callback('/(?<=[\s,.;()])(#(\d+))(?=[\s.,;()])/', fu
     <div class="clearfix"></div>
 
     <p style="margin-top: 3em">
-        <?= Html::a('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
-                'method' => 'post',
-            ],
-        ]) ?>
+        <?= Html::a('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', ['delete', 'id' => $model->id]) ?>
     </p>
 </div>
