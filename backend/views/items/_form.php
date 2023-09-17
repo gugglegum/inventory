@@ -16,6 +16,7 @@ $this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items
 $this->registerCssFile('@web/css/item-form.css', ['appendTimestamp' => true], 'item-form');
 $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 
+$tabIndex = 1;
 ?>
 
 <div class="item-form" style="margin-bottom: 10em;">
@@ -25,23 +26,29 @@ $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true],
         'id' => 'ItemForm',
     ]); ?>
 
-    <?= $form->field($model, 'name')->textInput(['maxlength' => true, 'tabindex' => 1]) ?>
-    <?= $form->field($model, 'description')->textarea(['rows' => 4, 'tabindex' => 2]) ?>
-    <?= $form->field($model, 'parentId')->textInput(['maxlength' => true, 'tabindex' => 3]) ?>
-    <button type="button" style="float: left" id="btnTogglePickContainerModal" class="btn" data-toggle="modal" data-target="#pickContainerModal" tabindex="4">Сменить...</button>
+    <?= $form->field($model, 'name')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
+    <?= $form->field($model, 'description')->textarea(['rows' => 4, 'tabindex' => $tabIndex++]) ?>
+    <?= $form->field($model, 'parentId')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
+    <button type="button" style="float: left" id="btnTogglePickContainerModal" class="btn" data-toggle="modal" data-target="#pickContainerModal" tabindex="<?= $tabIndex++ ?>">Сменить...</button>
     <div id="divParentPreview"></div>
     <div class="clearfix"></div>
-    <?= $form->field($tagsForm, 'tags')->textInput(['tabindex' => 5]) ?>
-    <?= $form->field($model, 'isContainer')->checkbox(['tabindex' => 7]) ?>
-    <?= $form->field($model, 'priority')->textInput(['maxlength' => true, 'tabindex' => 6]) ?>
+    <?= $form->field($tagsForm, 'tags')->textInput(['tabindex' => $tabIndex++]) ?>
+    <?= $form->field($model, 'isContainer')->checkbox(['tabindex' => $tabIndex++]) ?>
+    <?= $form->field($model, 'priority')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
 
     <div class="form-group">
-        <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => 8]) ?>
-        <?= Html::a('Отмена', Url::to(
+        <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
+        <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
             $model->isNewRecord
                 ? $model->parentId !== null ? ['items/view', 'id' => $model->parentId] : ['items/index']
                 : ['items/view', 'id' => $model->id]
-        ), ['class' => 'btn btn-warning', 'tabindex' => 9, 'style' => 'margin-left: 1em']) ?>
+        ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
+        <?php if (!$model->isNewRecord) { ?>
+            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'id' => $model->id], [
+                'style' => 'margin-left: 1em',
+                'tabindex' => $tabIndex++,
+            ]) ?>
+        <?php } ?>
     </div>
 
     <label class="control-label">Фотографии</label>
@@ -72,23 +79,29 @@ $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true],
     <label class="control-label">Добавить фотографии</label>
     <ol class="form-group" id="PhotosContainer">
         <li class="field-item-photos">
-            <input class="custom-file-input" type="file" name="photos[]" tabindex="10" />
+            <input class="custom-file-input" type="file" name="photos[]" tabindex="<?= $tabIndex++ ?>" />
         </li>
     </ol>
 
     <div class="form-group">
-        <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => 11]) ?>
-        <?= Html::a('Отмена', Url::to(
+        <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
+        <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
             $model->isNewRecord
                 ? $model->parentId !== null ? ['items/view', 'id' => $model->parentId] : ['items/index']
                 : ['items/view', 'id' => $model->id]
-        ), ['class' => 'btn btn-warning', 'tabindex' => 12, 'style' => 'margin-left: 1em']) ?>
+        ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
+        <?php if (!$model->isNewRecord) { ?>
+            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'id' => $model->id], [
+                'style' => 'margin-left: 1em',
+                'tabindex' => $tabIndex++,
+            ]) ?>
+        <?php } ?>
     </div>
 
     <?php if ($model->isNewRecord) { ?>
     <div>
         <label for="goto">После создания:</label>
-        <select id="goto" name="goto">
+        <select id="goto" name="goto" tabindex="<?= $tabIndex++ ?>">
         <?= Html::renderSelectOptions($goto, [
             'view' => 'перейти к просмотру',
             'create' => 'перейти к созданию ещё одного',
