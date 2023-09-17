@@ -106,6 +106,14 @@ class Item extends ActiveRecord
         }
     }
 
+    public function beforeSave($insert): bool
+    {
+        if (trim($this->priority) == '') {
+            $this->priority = 0;
+        }
+        return parent::beforeSave($insert);
+    }
+
     /**
      * Проверяет новый parentId на существование предмета с таким ID
      *
