@@ -10,10 +10,11 @@ use common\models\Item;
 /** @var string $query */
 /** @var bool $searchInside */
 /** @var ?int $containerId */
+/** @var ?Item $container */
 /** @var bool $isMoreThan */
 
 $this->title = 'Поиск';
-$this->render('_breadcrumbs', ['model' => null]);
+$this->render('_breadcrumbs', ['model' => $container]);
 $this->params['breadcrumbs'][] = $this->title;
 $this->title .= ' «' . $query . '»'; // чтоб в хлебных крошках запрос не отображался
 
@@ -41,10 +42,6 @@ $this->title .= ' «' . $query . '»'; // чтоб в хлебных крошк�
     </div>
 
     <?php
-    if ($containerId) {
-        /** @var Item $container */
-        $container = Item::findOne($containerId);
-    }
     if ($containerId && $container) { ?>
         <p>Поиск внутри контейнера <a href="<?= Html::encode(Url::to(['items/view', 'id' => $container->id])) ?>"><?= Html::encode($container->name); ?></a> <sup style="color: #ccc">#<?= $container->id ?></sup>,
             но можно <a href="<?= Html::encode(Url::to(['items/search', 'q' => $query])) ?>">поискать везде</a>.

@@ -121,11 +121,14 @@ class ItemsController extends Controller
 
     /**
      * @return Response|string
+     * @throws NotFoundHttpException
      */
     public function actionSearch(): Response|string
     {
         $queryString = Yii::$app->request->getQueryParam('q', '');
         $containerId = Yii::$app->request->getQueryParam('c');
+
+        $container = $containerId !== null ? $this->findModel((int) $containerId) : null;
 
         $queryWords = array_filter(preg_split('/[\s,]+/', $queryString, -1, PREG_SPLIT_NO_EMPTY), function($value) { return $value !== ''; });
 
@@ -188,6 +191,7 @@ class ItemsController extends Controller
             'query' => $queryString,
             'searchInside' => (bool) $containerId,
             'containerId' => (int) $containerId,
+            'container' => $container,
             'isMoreThan' => $isMoreThan,
         ]);
     }
@@ -538,7 +542,7 @@ class ItemsController extends Controller
         if (($model = Item::findOne($id)) !== null) {
             return $model;
         } else {
-            throw new NotFoundHttpException('The requested page does not exist.');
+            throw new NotFoundHttpException("The requested item #{$id} does not exist");
         }
     }
 }
