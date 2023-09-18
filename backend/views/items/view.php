@@ -24,7 +24,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
 
 $description = trim($model->description) !== '' ? TextFormatter::render(TextFormatter::parse(preg_replace('/(?<![\r\n])\r\n?(?![\r\n])/u', "\n<br>\n", Html::encode($model->description)))) : '<em>Нет описания</em>';
 // Выделяем ссылками упоминания ID предметов вида "#1234"
-$description = preg_replace_callback('/(?<=[\s,.;()])(#(\d+))(?=[\s.,;()])/', function(array $matches) { return '<a href="' . Html::encode(Url::to(['items/view', 'id' => $matches[2]])) . '">' . $matches[1] . '</a>'; }, $description);
+$description = preg_replace_callback('/(?<=[\s.,;()<>{}\[\]]|^)(#(\d+))(?=[\s.,;()<>{}\[\]]|$)/', function(array $matches) { return '<a href="' . Html::encode(Url::to(['items/view', 'id' => $matches[2]])) . '">' . $matches[1] . '</a>'; }, $description);
 
 ?>
 <div id="item-view">
