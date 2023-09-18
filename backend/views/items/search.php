@@ -35,6 +35,7 @@ $this->title .= ' «' . $query . '»'; // чтоб в хлебных крошк�
         <div id="idFormWrapper">
             <?= $this->render('_idForm', [
                 'id' => '',
+                'item' => null,
                 'prevItem' => null,
                 'nextItem' => null,
             ]) ?>

@@ -43,6 +43,7 @@ $description = preg_replace_callback('/(?<=[\s.,;()<>{}\[\]]|^)(#(\d+))(?=[\s.,;
         <div id="idFormWrapper">
             <?= $this->render('_idForm', [
                 'id' => (string) $model->id,
+                'item' => $model,
                 'prevItem' => $prevItem,
                 'nextItem' => $nextItem,
             ]) ?>

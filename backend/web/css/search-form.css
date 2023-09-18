@@ -34,11 +34,14 @@
     float: right;
     margin-top: 0.5em;
     margin-left: 2em;
-    max-width: 12em;
+    max-width: 13.3em;
     white-space: nowrap;
 }
 #idForm input#inputId {
     width: 4em;
+}
+#idForm .glyphicon-arrow-up {
+    margin-right: 0.75em;
 }
 #idForm .glyphicon-arrow-left {
     margin-right: 0.75em;

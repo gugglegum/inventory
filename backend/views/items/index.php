@@ -26,6 +26,7 @@ $this->render('_breadcrumbs', ['model' => null]);
         <div id="idFormWrapper">
             <?= $this->render('_idForm', [
                 'id' => '',
+                'item' => null,
                 'prevItem' => null,
                 'nextItem' => null,
             ]) ?>
