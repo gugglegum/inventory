@@ -108,6 +108,8 @@ $description = preg_replace_callback('/(?<=[\s.,;()<>{}\[\]]|^)(#(\d+))(?=[\s.,;
                     }
                     echo '<div class="clearfix"></div>';
                     echo Html::endTag('div');
+                } else {
+                    echo "<p class='hint-block'><em>Нет фотографий</em></p>\n";
                 }
             ?>
         </div>
