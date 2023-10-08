@@ -48,6 +48,11 @@ abstract class ImageResize
                         throw new Exception('Unable to open image file (PNG)');
                     }
                     break;
+                case 18 :
+                    if (!($image = @imagecreatefromwebp($imagePath))) {
+                        throw new Exception('Unable to open image file (WebP)');
+                    }
+                    break;
                 default :
                     throw new Exception('Unsupported image format');
             }
