@@ -60,7 +60,7 @@ class ItemsController extends Controller
      */
     public function actionIndex(): Response|string
     {
-        $rootItems = Item::find()->where('parentId IS NULL')->orderBy(['priority' => SORT_DESC, 'id' => SORT_ASC])->all();
+        $rootItems = Item::find()->where('parentId IS NULL')->orderBy(['priority' => SORT_DESC, 'isContainer' => SORT_DESC, 'id' => SORT_ASC])->all();
 
         return $this->render('index', [
             'rootItems' => $rootItems,
@@ -73,7 +73,7 @@ class ItemsController extends Controller
      */
     public function actionPickContainer(string $id = null): Response|string
     {
-        $query = Item::find()->where('isContainer != 0');
+        $query = Item::find()->where('isContainer != 0')->orderBy(['priority' => SORT_DESC, 'id' => SORT_ASC]);
         $parentContainer = $id ? (clone $query)->andWhere('id = :containerId', ['containerId' => $id])->one() : null;
         $containers = $id
             ? (clone $query)->andWhere('parentId = :containerId', ['containerId' => $id])->all()
