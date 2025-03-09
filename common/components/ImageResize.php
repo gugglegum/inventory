@@ -134,7 +134,7 @@ abstract class ImageResize
         $dstImage = imagecreatetruecolor($width, $height);
         $srcWidth = imagesx($srcImage);
         $srcHeight = imagesy($srcImage);
-        imagecopy($dstImage, $srcImage, 0, 0, ($srcWidth - $width) / 2, ($srcHeight - $height) / 2, $width, $height);
+        imagecopy($dstImage, $srcImage, 0, 0, (int) round(($srcWidth - $width) / 2), (int) round(($srcHeight - $height) / 2), $width, $height);
         return $dstImage;
     }
 }
