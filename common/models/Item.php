@@ -108,7 +108,7 @@ class Item extends ActiveRecord
 
     public function beforeSave($insert): bool
     {
-        if (trim($this->priority) == '') {
+        if (trim((string) $this->priority) === '') {
             $this->priority = 0;
         }
         return parent::beforeSave($insert);
