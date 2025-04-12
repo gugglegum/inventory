@@ -485,9 +485,7 @@ class ItemsController extends Controller
                 $itemModel->name = $item['name'];
                 $itemModel->parentId = $parent->id;
                 $itemModel->isContainer = !empty($item['container']) ? '1' : '0';
-                if (isset($item['description'])) {
-                    $itemModel->description = $item['description'];
-                }
+                $itemModel->description = $item['description'] ?? '';
                 if (!$itemModel->save()) {
                     throw new Exception(ValidateErrorsFormatter::getMessage($itemModel));
                 }
