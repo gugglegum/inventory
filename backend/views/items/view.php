@@ -18,7 +18,7 @@ unset($this->params['breadcrumbs'][count($this->params['breadcrumbs']) - 1]['url
 
 $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 $this->registerCssFile('@web/css/item-view.css', ['appendTimestamp' => true], 'item-view');
-$this->registerJsFile('@web/js/item-view.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]], 'item-view');
+//$this->registerJsFile('@web/js/item-view.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]], 'item-view');
 
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 
