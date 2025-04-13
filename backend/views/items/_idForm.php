@@ -22,3 +22,8 @@ $tabIndex = 4;
     <button type="submit" tabindex="<?= $tabIndex++ ?>"><span class="glyphicon glyphicon-triangle-right" aria-hidden="true"></span></button>
     <?php if ($nextItem) { ?><a href="<?= Html::encode(Url::to(['items/view', 'id' => $nextItem->id])) ?>" tabindex="<?= $tabIndex++ ?>"><span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span></a><?php } else { ?><span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span><?php } ?>
 </form>
+<script>
+    document.getElementById('inputId').addEventListener('focus', function() {
+        this.select();
+    });
+</script>
