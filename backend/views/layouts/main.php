@@ -34,7 +34,7 @@ AppAsset::register($this);
         'brandLabel' => 'Inventory',
         'brandUrl' => Yii::$app->homeUrl,
         'options' => [
-            'class' => 'navbar-inverse navbar-fixed-top',
+            'class' => 'navbar-inverse navbar-static-top',
         ],
     ]);
     $menuItems = [
