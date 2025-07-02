@@ -71,7 +71,7 @@ class ItemsController extends Controller
      * @param string|null $id
      * @return Response|string
      */
-    public function actionPickContainer(string $id = null): Response|string
+    public function actionPickContainer(?string $id = null): Response|string
     {
         $query = Item::find()->where('isContainer != 0')->orderBy(['priority' => SORT_DESC, 'id' => SORT_ASC]);
         $parentContainer = $id ? (clone $query)->andWhere('id = :containerId', ['containerId' => $id])->one() : null;
