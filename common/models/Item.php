@@ -64,7 +64,7 @@ class Item extends ActiveRecord
             [['parentId'], 'checkParentIsNotLooped'],
             [['name', 'description'], 'filter', 'filter' => 'trim'],
             [['description'], 'string'],
-            [['name'], 'string', 'max' => 100],
+            [['name'], 'string', 'max' => 200],
             [['priority'], 'integer'],
         ];
     }
