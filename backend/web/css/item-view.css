@@ -1,6 +1,9 @@
 #item-view #item-description {
     max-width: 60em;
 }
+#item-view h1 {
+    font-size: 30px;
+}
 #item-view #item-description #lnkEdit {
     float: right;
 }
@@ -22,6 +25,13 @@
     padding-left: 2%;
     border-left: 1px solid #eee;
     border-top: 1px solid #eee;
+}
+#item-view .columns-container #item-children #optionDots {
+    float: right;
+    margin: 10px;
+}
+#item-view .columns-container #item-children #optionDots:hover {
+    text-shadow: 0 0 15px #000;
 }
 
 #item-view .columns-container #item-info .uploaded-photos .photo-wrapper .upload-date {
