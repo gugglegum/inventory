@@ -22,7 +22,7 @@ $this->registerCssFile('@web/css/item-view.css', ['appendTimestamp' => true], 'i
 
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 
-$description = trim($model->description);
+$description = trim((string) $model->description);
 if ($description !== '') {
     //$description = Html::encode($description);
     //$description = preg_replace('/(?<![\r\n])\r\n?(?![\r\n])/u', "\n<br>\n", $description);
