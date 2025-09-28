@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 
 /** @var \common\models\Item[] $items */
-/** @var array $paths */
+/** @var array $paths (optional) */
 /** @var bool $showPath  */
 /** @var bool $showChildren */
 /** @var ?int $containerId */
@@ -100,15 +100,18 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
 
                 <?php if ($showChildren) { ?>
                 <div class="child-items">
-                <?php $i = 0; foreach ($item->getItems()->orderBy(['priority' => SORT_DESC, 'isContainer' => SORT_DESC, 'id' => SORT_ASC])->all() as $childItem) {
-                    if ($i > 0) {
-                        echo ', ';
-                    }
-                    echo Html::beginTag('a', ['href' => Url::to(['items/view', 'id' => $childItem->id])]);
-                    echo Html::encode($childItem->name);
-                    echo Html::endTag('a');
-                    $i++;
-                } ?>
+                <?php
+                    $i = 0;
+                    /** @var \common\models\Item $childItem */
+                    foreach ($item->getItems()->orderBy(['priority' => SORT_DESC, 'isContainer' => SORT_DESC, 'id' => SORT_ASC])->all() as $childItem) {
+                        if ($i > 0) {
+                            echo ', ';
+                        }
+                        echo Html::beginTag('a', ['href' => Url::to(['items/view', 'id' => $childItem->id])]);
+                        echo Html::encode($childItem->name);
+                        echo Html::endTag('a');
+                        $i++;
+                    } ?>
                 </div>
                 <?php } ?>
             </td>
