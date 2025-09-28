@@ -69,7 +69,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 </div>
                 <?php } ?>
 
-                <?php if (($description = trim($item->description)) != '') { ?>
+                <?php if (($description = trim((string) $item->description)) != '') { ?>
                 <div class="description"><?php
                     // Выводим укороченное описание, если оно слишком длинное. Заменяем в нём все избыточные белые
                     // пробелы на обычные пробелы.
