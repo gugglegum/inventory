@@ -35,7 +35,7 @@ class ItemPhoto extends ActiveRecord
      */
     public static function tableName(): string
     {
-        return 'items_photos';
+        return 'item_photo';
     }
 
     /**

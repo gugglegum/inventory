@@ -23,7 +23,7 @@ class ItemRelation extends ActiveRecord
      */
     public static function tableName(): string
     {
-        return 'items_relations';
+        return 'item_relation';
     }
 
     /**

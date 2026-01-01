@@ -19,7 +19,7 @@ class ItemTag extends ActiveRecord
      */
     public static function tableName(): string
     {
-        return 'items_tags';
+        return 'item_tag';
     }
 
     /**

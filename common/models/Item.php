@@ -35,7 +35,7 @@ class Item extends ActiveRecord
      */
     public static function tableName(): string
     {
-        return 'items';
+        return 'item';
     }
 
     /**
