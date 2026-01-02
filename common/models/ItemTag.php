@@ -5,7 +5,7 @@ namespace common\models;
 use yii\db\ActiveRecord;
 
 /**
- * This is the model class for table "items_tags".
+ * This is the model class for table "item_tag".
  *
  * @property string $itemId
  * @property string $tag

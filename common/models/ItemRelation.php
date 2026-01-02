@@ -5,7 +5,7 @@ namespace common\models;
 use yii\db\ActiveRecord;
 
 /**
- * This is the model class for table "items_relations".
+ * This is the model class for table "item_relation".
  *
  * @property string $srcItemId
  * @property string $dstItemId

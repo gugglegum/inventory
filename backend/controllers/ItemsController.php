@@ -5,6 +5,7 @@ namespace backend\controllers;
 
 use backend\models\ItemTagsForm;
 use common\helpers\ValidateErrorsFormatter;
+use common\models\ItemTag;
 use Yii;
 use common\models\Item;
 use common\models\ItemPhoto;
@@ -97,17 +98,17 @@ class ItemsController extends Controller
             $hasPositiveCondition = false;
             foreach ($queryWords as $queryWord) {
                 if ($queryWord[0] !== '-') {
-                    $query->leftJoin(["t{$i}" => 'items_tags'], "t{$i}.itemId = id");
+                    $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = id");
                     $query->andWhere("t{$i}.tag LIKE :tagMask{$i} OR name LIKE :tagMask{$i} OR description LIKE :tagMask{$i} OR id = :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
                     $hasPositiveCondition = true;
                 } else {
-                    $query->leftJoin(["t{$i}" => 'items_tags'], "t{$i}.itemId = id AND t{$i}.tag LIKE :tagMask{$i}");
+                    $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = id AND t{$i}.tag LIKE :tagMask{$i}");
                     $queryWord = mb_substr($queryWord, 1);
                     $query->andWhere("t{$i}.tag IS NULL AND name NOT LIKE :tagMask{$i} AND description NOT LIKE :tagMask{$i} AND id != :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
                 }
                 $i++;
             }
-            $query->groupBy('items.id');
+            $query->groupBy(Item::tableName() . '.id');
             if ($hasPositiveCondition) {
                 $containers = $query->all();
             }
@@ -139,18 +140,18 @@ class ItemsController extends Controller
             $hasPositiveCondition = false;
             foreach ($queryWords as $queryWord) {
                 if ($queryWord[0] !== '-') {
-                    $query->leftJoin(["t{$i}" => 'items_tags'], "t{$i}.itemId = id");
+                    $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = id");
                     $query->andWhere("t{$i}.tag LIKE :tagMask{$i} OR name LIKE :tagMask{$i} OR description LIKE :tagMask{$i} OR id = :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
                     $hasPositiveCondition = true;
                 } else {
-                    $query->leftJoin(["t{$i}" => 'items_tags'], "t{$i}.itemId = id AND t{$i}.tag LIKE :tagMask{$i}");
+                    $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = id AND t{$i}.tag LIKE :tagMask{$i}");
                     $queryWord = mb_substr($queryWord, 1);
                     $query->andWhere("t{$i}.tag IS NULL AND name NOT LIKE :tagMask{$i} AND description NOT LIKE :tagMask{$i} AND id != :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
                 }
                 $i++;
             }
-            $query->groupBy('items.id')
-                ->orderBy('items.isContainer DESC, items.id ASC');
+            $query->groupBy(Item::tableName() . '.id')
+                ->orderBy(Item::tableName() . '.isContainer DESC, ' . Item::tableName() . '.id ASC');
 //            var_dump($query->createCommand()->getRawSql());die;
             if ($hasPositiveCondition) {
                 $items = $query->all();
