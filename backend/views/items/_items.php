@@ -116,7 +116,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 </div>
                 <?php } ?>
             </td>
-            <td><label><input name="item_check[<?= $item->id ?>]" type="checkbox"></label></td>
+<!--            <td><label><input name="item_check[--><?php //= $item->id ?><!--]" type="checkbox"></label></td>-->
         </tr>
     <?php } ?>
 </table>
