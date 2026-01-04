@@ -105,12 +105,20 @@ if ($description !== '') {
                     ?></dd>
             </dl>
             <dl>
+                <dt>Создатель:</dt>
+                <dd><?= $model->createdByUser ? Html::encode($model->createdByUser->username) : '<em>Неизвестно</em>' ?></dd>
+            </dl>
+            <dl>
                 <dt>Дата создания:</dt>
                 <dd><?= Html::encode(date('d.m.Y H:i', $model->created)) ?></dd>
             </dl>
             <dl>
+                <dt>Последним изменил(а):</dt>
+                <dd><?= $model->updatedByUser ? Html::encode($model->updatedByUser->username) : (($model->updated !== null && $model->created !== $model->updated) ? '<em>Неизвестно</em>' : '<em>Никто</em>') ?></dd>
+            </dl>
+            <dl>
                 <dt>Дата изменения:</dt>
-                <dd><?= Html::encode(date('d.m.Y H:i', $model->updated)) ?></dd>
+                <dd><?= ($model->updated !== null && $model->created !== $model->updated) ? Html::encode(date('d.m.Y H:i', $model->updated)) : '<em>Не было изменений</em>' ?></dd>
             </dl>
             <h3>Фотографии</h3>
             <?php
