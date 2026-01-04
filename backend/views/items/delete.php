@@ -46,6 +46,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'method' => 'post',
         ],
     ]) ?>
+    <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(['items/view', 'repoId' => $repo->id, 'id' => $model->itemId]), ['style' => 'margin-left: 1em']) ?>
     <?php ActiveForm::end(); ?>
 
 </div>
