@@ -1,16 +1,19 @@
 <?php
 
+use common\models\Item;
+use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-/* @var $this yii\web\View */
-/* @var $parent common\models\Item */
-/* @var $text string */
+/** @var \yii\web\View $this */
+/** @var Item $parent */
+/** @var string $text */
+/** @var Repo $repo */
 
 $this->registerCssFile('@web/css/import-form.css', ['appendTimestamp' => true], 'import-form');
 
 ?>
-<?= Html::beginForm(Url::to(['items/import', 'parentId' => $parent->id]), 'post', ['id' => 'formImportItems', 'style' => "margin: 1.5em 0;"]) ?>
+<?= Html::beginForm(Url::to(['items/import', 'repoId' => $repo->id, 'parentItemId' => $parent->itemId]), 'post', ['id' => 'formImportItems', 'style' => "margin: 1.5em 0;"]) ?>
     <div>
         <label for="text">Импорт из текста:</label><br />
         <?= Html::textarea('text', $text, ['rows' => 12, 'style' => 'font-size: 90%']) ?><br />

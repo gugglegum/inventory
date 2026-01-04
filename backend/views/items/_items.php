@@ -1,9 +1,10 @@
 <?php
 
+use common\models\Item;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-/** @var \common\models\Item[] $items */
+/** @var Item[] $items */
 /** @var array $paths (optional) */
 /** @var bool $showPath  */
 /** @var bool $showChildren */
@@ -16,7 +17,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
 ?>
 <table class="container-items">
     <?php foreach ($items as $item) { ?>
-        <tr>
+        <tr id="<?= 'item' . $item->repoId . '-' . $item->itemId ?>">
             <td class="thumbnail">
                 <?php
                 $primaryPhoto = $item->primaryPhoto;
@@ -43,7 +44,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                         echo Html::beginTag('a', ['href' => Url::to($path[$i]['url'])]);
                         echo Html::encode($path[$i]['label']);
                         echo Html::endTag('a');
-                        echo ' <sup>#' . Html::encode($path[$i]['id']) . '</sup>';
+                        echo ' <sup>' . Html::encode($path[$i]['repoId']) . '#' . Html::encode($path[$i]['itemId']) . '</sup>';
                         if ($i > 1) {
                             echo ' &rarr;&nbsp;';
                         }
@@ -53,10 +54,10 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 <?php } ?>
 
                 <div class="name">
-                    <?= Html::beginTag('a', ['href' => Url::to(['items/view', 'id' => $item->id])])
+                    <?= Html::beginTag('a', ['href' => Url::to(['items/view', 'repoId' => $item->repoId, 'id' => $item->itemId])])
                         . Html::encode($item->name)
-                        . Html::endTag('a') ?>&nbsp;<sup>#<?= Html::encode($item->id) ?></sup><?=
-                        Html::a('', Url::to(['items/update', 'id' => $item->id]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-left: 5px']) ?>
+                        . Html::endTag('a') ?>&nbsp;<sup><?= Html::encode($item->repoId) ?>#<?= Html::encode($item->itemId) ?></sup><?=
+                        Html::a('', Url::to(['items/update', 'repoId' => $item->repoId, 'id' => $item->itemId]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-left: 5px']) ?>
                 </div>
 
                 <?php $secondaryPhotos = $item->secondaryPhotos; if (count($secondaryPhotos) != 0) { ?>
@@ -90,7 +91,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                         if (!$first) {
                             echo ', ';
                         }
-                        echo Html::beginTag('a', ['href' => Url::to(['items/search', 'q' => $tag->tag])])
+                        echo Html::beginTag('a', ['href' => Url::to(['items/search', 'repoId' => $item->repoId, 'q' => $tag->tag])])
                             . Html::encode($tag->tag)
                             . Html::endTag('a');
                         $first = false;
@@ -102,12 +103,12 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 <div class="child-items">
                 <?php
                     $i = 0;
-                    /** @var \common\models\Item $childItem */
+                    /** @var Item $childItem */
                     foreach ($item->getItems()->orderBy(['priority' => SORT_DESC, 'isContainer' => SORT_DESC, 'id' => SORT_ASC])->all() as $childItem) {
                         if ($i > 0) {
                             echo ', ';
                         }
-                        echo Html::beginTag('a', ['href' => Url::to(['items/view', 'id' => $childItem->id])]);
+                        echo Html::beginTag('a', ['href' => Url::to(['items/view', 'repoId' => $item->repoId, 'id' => $childItem->itemId])]);
                         echo Html::encode($childItem->name);
                         echo Html::endTag('a');
                         $i++;
@@ -115,6 +116,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 </div>
                 <?php } ?>
             </td>
+            <td><label><input name="item_check[<?= $item->id ?>]" type="checkbox"></label></td>
         </tr>
     <?php } ?>
 </table>

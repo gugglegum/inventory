@@ -1,26 +1,29 @@
 <?php
 
+use common\models\Item;
+use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
 /* @var $this yii\web\View */
 
-/* @var $text string */
-/* @var $parent \common\models\Item */
-/* @var $items array[] */
-/* @var $errorLine int */
-/* @var $errorStr string */
-/* @var $errorMsg string */
+/** @var string $text */
+/** @var Item $parent */
+/** @var Repo $repo */
+/** @var array[] $items */
+/** @var int $errorLine */
+/** @var string $errorStr */
+/** @var string $errorMsg */
 
 $this->title = 'Импорт предметов';
-$this->render('_breadcrumbs', ['model' => $parent]);
+$this->render('/_breadcrumbs', ['item' => $parent, 'repo' => $repo]);
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 
 <h1><?= Html::encode($this->title) ?></h1>
 
-<p>В контейнер <?= Html::a($parent->name, Url::to(['items/view', 'id' => $parent->id])) ?>&nbsp;<sup style="color: #999;">#<?= Html::encode($parent->id) ?></sup>
+<p>В контейнер <?= Html::a($parent->name, Url::to(['items/view', 'repoId' => $repo->id, 'id' => $parent->itemId])) ?>&nbsp;<sup style="color: #999;">#<?= Html::encode($parent->id) ?></sup>
     планируется добавить следующие предметы. Проверьте всё ли правильно, исправьте если необходимо, отметьте галочку
     &laquo;подтвердить добавление&raquo; и нажмите &laquo;Импорт&raquo;.</p>
 
@@ -52,6 +55,7 @@ foreach ($items as $item) {
 
 <?= $this->render('_importForm', [
     'parent' => $parent,
+    'repo' => $repo,
     'text' => $text,
 ]) ?>
 

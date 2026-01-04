@@ -1,15 +1,18 @@
 <?php
 
-use yii\helpers\Html;
-use common\models\Item;
+// Используется в модельном окне выбора нового родительского контейнера
 
-/* @var $this yii\web\View */
-/* @var $parentContainer Item */
-/* @var $containers Item[] */
-/* @var $query string */
+use common\models\Item;
+use common\models\Repo;
+
+/** @var \yii\web\View $this */
+/** @var Item $parentContainer */
+/** @var Item[] $containers */
+/** @var string $query */
+/** @var Repo $repo */
 
 $this->title = 'Поиск контейнера';
-$this->render('_breadcrumbs', ['model' => null]);
+$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
 $this->params['breadcrumbs'][] = $this->title;
 
 // Disable debug console in the bottom right corner
@@ -22,6 +25,7 @@ $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 're
         'showExtraOptions' => false,
         'searchInside' => false,
         'containerId' => null,
+        'repo' => $repo,
     ]) ?>
 
     <?php if ($query !== '') { ?>
@@ -30,6 +34,7 @@ $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 're
         <?= $this->render('_containers', [
             'containers' => $containers,
             'isSearch' => true,
+            'repo' => $repo,
         ]) ?>
     <?php } ?>
 

@@ -1,10 +1,13 @@
 <?php
 
+use common\models\Item;
+use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-/** @var $containers \common\models\Item[] */
-/** @var $isSearch boolean */
+/** @var Item[] $containers */
+/** @var boolean $isSearch */
+/** @var Repo $repo */
 
 $this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items');
 
@@ -45,9 +48,9 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                                 $path[] = [
                                     'id' => $tmpItem->id,
                                     'label' => $tmpItem->name,
-                                    'url' => ['items/pick-container', 'id' => $tmpItem->id],
+                                    'url' => ['items/pick-container', 'repoId' => $tmpItem->repoId, 'id' => $tmpItem->itemId],
                                 ];
-                                $tmpItem = $tmpItem->parent;
+                                $tmpItem = $tmpItem->parentItem;
                             }
                             for ($i = count($path) - 1; $i > 0; $i--) {
                                 echo Html::beginTag('a', ['href' => Url::to($path[$i]['url'])]);
@@ -63,10 +66,10 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                     <?php } ?>
 
                     <div class="name">
-                        <?= Html::beginTag('a', ['href' => Url::to(['items/pick-container', 'id' => $item->id])])
+                        <?= Html::beginTag('a', ['href' => Url::to(['items/pick-container', 'repoId' => $repo->id, 'id' => $item->itemId])])
                         . Html::encode($item->name)
-                        . Html::endTag('a') ?>&nbsp;<sup style="color: #ccc; font-size: 60%;">#<?= Html::encode($item->id) ?></sup>
-                        <?= Html::a('', Url::to(['items/view', 'id' => $item->id]), ['class' => 'glyphicon glyphicon-new-window view-link', 'style' => 'margin-left: 5px', 'target' => '_parent']) ?>
+                        . Html::endTag('a') ?>&nbsp;<sup style="color: #ccc; font-size: 60%;"><?= Html::encode($item->repoId) ?>#<?= Html::encode($item->itemId) ?></sup>
+                        <?= Html::a('', Url::to(['items/view', 'id' => $item->itemId]), ['class' => 'glyphicon glyphicon-new-window view-link', 'style' => 'margin-left: 5px', 'target' => '_parent']) ?>
                     </div>
 
                 </td>

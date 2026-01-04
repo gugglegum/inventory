@@ -31,15 +31,14 @@ AppAsset::register($this);
 <div class="wrap">
     <?php
     NavBar::begin([
-        'brandLabel' => 'Inventory',
+        'brandLabel' => 'StockHub',
         'brandUrl' => Yii::$app->homeUrl,
         'options' => [
             'class' => 'navbar-inverse navbar-static-top',
         ],
     ]);
     $menuItems = [
-        ['label' => 'Home', 'url' => ['/site/index']],
-        ['label' => 'Предметы', 'url' => ['items/index']],
+        ['label' => 'Репозитории', 'url' => ['repo/index']],
         ['label' => 'Admin', 'items' => [
             ['label' => 'Users', 'url' => ['users/index']],
         ]],
@@ -64,6 +63,7 @@ AppAsset::register($this);
 
     <div class="container">
         <?= Breadcrumbs::widget([
+            'homeLink' => false,
             'links' => $this->params['breadcrumbs'] ?? [],
         ]) ?>
         <?= Alert::widget() ?>

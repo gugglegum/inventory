@@ -1,13 +1,15 @@
 <?php
 
-use yii\helpers\Html;
 use common\models\Item;
+use common\models\Repo;
+use yii\helpers\Html;
 
-/* @var $this yii\web\View */
-/* @var $rootItems Item[] */
+/** @var \yii\web\View $this */
+/** @var Repo $repo */
+/** @var Item[] $rootItems */
 
 $this->title = 'Предметы';
-$this->render('_breadcrumbs', ['model' => null]);
+$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
 
 ?>
 <div class="item-index">
@@ -20,15 +22,17 @@ $this->render('_breadcrumbs', ['model' => null]);
                 'showExtraOptions' => false,
                 'searchInside' => false,
                 'containerId' => null,
+                'repo' => $repo,
             ]) ?>
         </div>
 
         <div id="idFormWrapper">
             <?= $this->render('_idForm', [
-                'id' => '',
+                'itemId' => '',
                 'item' => null,
                 'prevItem' => null,
                 'nextItem' => null,
+                'repo' => $repo,
             ]) ?>
         </div>
     </div>
@@ -46,7 +50,7 @@ $this->render('_breadcrumbs', ['model' => null]);
         <p>Здесь пока ничего нет.</p>
     <?php } ?>
 
-    <p><?= Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить контейнер', ['items/create', 'isContainer' => 1], ['class' => 'btn btn-success']) ?></p>
+    <p><?= Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить контейнер', ['items/create', 'repoId' => $repo->id, 'parentItemId' => 0, 'isContainer' => 1], ['class' => 'btn btn-success']) ?></p>
 
 
 </div>

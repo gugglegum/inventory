@@ -1,14 +1,17 @@
 <?php
 
+use backend\models\ItemTagsForm;
+use common\models\Item;
+use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
-/* @var $this yii\web\View */
-/* @var $model common\models\Item */
-/* @var $form yii\widgets\ActiveForm */
-/* @var $tagsForm \backend\models\ItemTagsForm */
-/* @var $goto string */
+/** @var \yii\web\View $this */
+/** @var Item $model */
+/** @var Repo $repo */
+/** @var ItemTagsForm $tagsForm */
+/** @var string $goto */
 
 $this->registerJsFile('@web/js/upload_photo.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]], 'upload_photo');
 $this->registerJsFile('@web/js/item-form.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]], 'item-form');
@@ -16,35 +19,41 @@ $this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items
 $this->registerCssFile('@web/css/item-form.css', ['appendTimestamp' => true], 'item-form');
 $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 
+/** @var \yii\widgets\ActiveForm $form */
 $tabIndex = 1;
 ?>
 
 <div class="item-form" style="margin-bottom: 10em;">
 
     <?php $form = ActiveForm::begin([
-        'options' => ['enctype' => 'multipart/form-data'],
+        'options' => ['enctype' => 'multipart/form-data', 'data-repo-id' => $repo->id],
         'id' => 'ItemForm',
     ]); ?>
 
+    <?= $form->errorSummary($model) ?>
+
     <?= $form->field($model, 'name')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
     <?= $form->field($model, 'description')->textarea(['rows' => 4, 'tabindex' => $tabIndex++]) ?>
-    <?= $form->field($model, 'parentId')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
+    <?= $form->field($model, 'parentItemId')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
     <button type="button" style="float: left" id="btnTogglePickContainerModal" class="btn" data-toggle="modal" data-target="#pickContainerModal" tabindex="<?= $tabIndex++ ?>">Сменить...</button>
     <div id="divParentPreview"></div>
     <div class="clearfix"></div>
     <?= $form->field($tagsForm, 'tags')->textInput(['tabindex' => $tabIndex++]) ?>
     <?= $form->field($model, 'isContainer')->checkbox(['tabindex' => $tabIndex++]) ?>
     <?= $form->field($model, 'priority')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
+    <?php if (!$model->isNewRecord) { ?>
+        <?= $form->field($model, 'itemId')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
+    <?php } ?>
 
     <div class="form-group">
         <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
         <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
             $model->isNewRecord
-                ? $model->parentId !== null ? ['items/view', 'id' => $model->parentId] : ['items/index']
-                : ['items/view', 'id' => $model->id]
+                ? $model->parentItemId !== null ? ['items/view', 'repoId' => $repo->id, 'id' => $model->parentItemId] : ['items/index']
+                : ['items/view', 'repoId' => $repo->id, 'id' => $model->itemId]
         ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$model->isNewRecord) { ?>
-            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'id' => $model->id], [
+            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'id' => $model->itemId], [
                 'style' => 'margin-left: 1em',
                 'tabindex' => $tabIndex++,
             ]) ?>
@@ -87,11 +96,11 @@ $tabIndex = 1;
         <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
         <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
             $model->isNewRecord
-                ? $model->parentId !== null ? ['items/view', 'id' => $model->parentId] : ['items/index']
-                : ['items/view', 'id' => $model->id]
+                ? $model->parentItemId !== null ? ['items/view', 'repoId' => $repo->id, 'id' => $model->parentItemId] : ['items/index']
+                : ['items/view', 'repoId' => $repo->id, 'id' => $model->itemId]
         ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$model->isNewRecord) { ?>
-            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'id' => $model->id], [
+            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'id' => $model->itemId], [
                 'style' => 'margin-left: 1em',
                 'tabindex' => $tabIndex++,
             ]) ?>
@@ -121,7 +130,7 @@ $tabIndex = 1;
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="myModalLabel">Выбор родительского контейнера</h4>
             </div>
-            <div class="modal-body" data-iframe-base-src="<?= Html::encode(Url::to(['items/pick-container', 'id' => ''])) ?>">
+            <div class="modal-body" data-iframe-base-src="<?= Html::encode(Url::to(['items/pick-container', 'repoId' => $repo->id, 'id' => '0'])) ?>">
             </div>
         </div>
     </div>

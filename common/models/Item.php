@@ -2,7 +2,9 @@
 
 namespace common\models;
 
+use common\components\ItemAccessValidator;
 use yii\behaviors\TimestampBehavior;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\db\Exception;
 use yii\db\StaleObjectException;
@@ -10,18 +12,23 @@ use yii\db\StaleObjectException;
 /**
  * Предмет
  *
- * @property string $id
- * @property string $parentId
- * @property string $name
- * @property string $description
- * @property integer $isContainer
- * @property integer $priority
- * @property integer $created
- * @property integer $updated
+ * @property int $id ID предмета (глобальный по всем репозиториям)
+ * @property int $itemId ID предмета (внутри репозитория)
+ * @property int $parentItemId ID родительского предмета-контейнера (ссылка на itemId)
+ * @property int repoId ID репозитория
+ * @property string $name Наименование
+ * @property string $description Описание
+ * @property int $isContainer Является ли предмет контейнером?
+ * @property int $priority Приоритет сортировки
+ * @property int $createdBy ID создавшего запись пользователя
+ * @property int $updatedBy ID последнего изменившего запись пользователя
+ * @property int $created Время создания
+ * @property int $updated Время последнего изменения
  *
  * @property ItemRelation[] $itemRelations
  * @property ItemRelation[] $itemBackRelations
- * @property Item $parent
+ * @property Item $parentItem
+ * @property Repo $repo
  * @property Item[] $items
  * @property ItemPhoto[] $itemPhotos
  * @property ItemPhoto $primaryPhoto
@@ -30,6 +37,11 @@ use yii\db\StaleObjectException;
  */
 class Item extends ActiveRecord
 {
+    public const string SCENARIO_CREATE = 'create';
+    public const string SCENARIO_UPDATE = 'update';
+
+    private ItemAccessValidator $itemAccessValidator;
+
     /**
      * @inheritdoc
      */
@@ -55,17 +67,29 @@ class Item extends ActiveRecord
     /**
      * @inheritdoc
      */
+    public function scenarios(): array
+    {
+        $scenarios = parent::scenarios();
+
+        $scenarios[self::SCENARIO_CREATE] = ['parentItemId', 'name', 'description', 'isContainer', 'priority'];
+        $scenarios[self::SCENARIO_UPDATE] = ['itemId', 'parentItemId', 'name', 'description', 'isContainer', 'priority'];
+
+        return $scenarios;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function rules(): array
     {
         return [
-            [['name', 'isContainer'], 'required'],
-            [['parentId', 'isContainer'], 'integer'],
-            [['parentId'], 'checkParentExists'],
-            [['parentId'], 'checkParentIsNotLooped'],
+            [['itemId', 'repoId', 'name', 'isContainer', 'createdBy'], 'required'],
+            [['itemId', 'parentItemId', 'repoId', 'isContainer', 'priority', 'createdBy', 'updatedBy'], 'integer'],
+            [['parentItemId'], 'checkParentExists'],
+            [['parentItemId'], 'checkParentIsNotLooped'],
             [['name', 'description'], 'filter', 'filter' => 'trim'],
             [['description'], 'string'],
             [['name'], 'string', 'max' => 200],
-            [['priority'], 'integer'],
         ];
     }
 
@@ -75,12 +99,16 @@ class Item extends ActiveRecord
     public function attributeLabels(): array
     {
         return [
-            'id' => 'ID предмета',
-            'parentId' => 'ID родительского предмета-контейнера',
+            'id' => 'ID предмета (глобальный)',
+            'itemId' => 'ID предмета',
+            'parentItemId' => 'ID родительского предмета-контейнера',
+            'repoId' => 'ID репозитория',
             'name' => 'Наименование',
             'description' => 'Описание',
             'isContainer' => 'Является ли предмет контейнером?',
             'priority' => 'Приоритет сортировки',
+            'createdBy' => 'ID создавшего предмет пользователя',
+            'updatedBy' => 'ID последнего изменившего предмет пользователя',
             'created' => 'Время создания',
             'updated' => 'Время последнего изменения',
         ];
@@ -94,11 +122,17 @@ class Item extends ActiveRecord
     public function beforeDelete(): bool
     {
         if (parent::beforeDelete()) {
-            foreach ($this->items as $item) {
-                $item->delete();
+            if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->repoId, RepoUser::ACCESS_DELETE_ITEMS)) {
+                $this->addError('', 'Недостаточно прав для удаления предмета.');
+                return false;
             }
+
             foreach ($this->itemPhotos as $itemPhoto) {
                 $itemPhoto->delete();
+            }
+            foreach ($this->items as $item) {
+                $item->setItemAccessValidator($this->itemAccessValidator);
+                $item->delete();
             }
             return true;
         } else {
@@ -108,40 +142,55 @@ class Item extends ActiveRecord
 
     public function beforeSave($insert): bool
     {
+        if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->repoId, $insert ? RepoUser::ACCESS_CREATE_ITEMS : RepoUser::ACCESS_EDIT_ITEMS)) {
+            $this->addError('', 'Недостаточно прав для сохранения предмета.');
+            return false;
+        }
+
+        if ($this->itemId === null) {
+            $this->itemId = $this->getNextAvailableItemId();
+        }
+
         if (trim((string) $this->priority) === '') {
             $this->priority = 0;
         }
         return parent::beforeSave($insert);
     }
 
+    public function setItemAccessValidator(ItemAccessValidator $itemAccessValidator): static
+    {
+        $this->itemAccessValidator = $itemAccessValidator;
+        return $this;
+    }
+
     /**
-     * Проверяет новый parentId на существование предмета с таким ID
+     * Проверяет новый parentItemId на существование предмета с таким ID
      *
      * @param $attribute
      * @return void
      */
     public function checkParentExists($attribute): void
     {
-        if ($this->parentId != null && $this->parent == null) {
+        if ($this->parentItemId != null && $this->parentItem == null) {
             $this->addError($attribute, 'Родительский предмет не существует');
         }
     }
 
     /**
-     * Проверяет новый parentId на отсутствие петли в цепочке родительских предметов, т.е. когда мы делаем parentId равным id
-     * или равным ID какого-то из дочерних предметов.
+     * Проверяет новый parentItemId на отсутствие петли в цепочке родительских предметов, т.е. когда мы делаем parentItemId равным itemId
+     * или равным itemId какого-то из дочерних предметов.
      *
      * @param $attribute
      * @return void
      */
     public function checkParentIsNotLooped($attribute): void
     {
-        $parentItem = $this->parent;
+        $parentItem = $this->parentItem;
         while ($parentItem != null) {
             if ($parentItem->id == $this->id) {
                 $this->addError($attribute, 'Родительский предмет является одновременно дочерним (что образует бесконечную цепочку вложенности предметов)');
             }
-            $parentItem = $parentItem->parent;
+            $parentItem = $parentItem->parentItem;
         }
     }
 
@@ -196,63 +245,47 @@ class Item extends ActiveRecord
         return implode($separator, $tags);
     }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getItemRelations(): \yii\db\ActiveQuery
+    public function getRepo(): ActiveQuery
+    {
+        return $this->hasOne(Repo::class, ['id' => 'repoId']);
+    }
+
+    public function getItemRelations(): ActiveQuery
     {
         return $this->hasMany(ItemRelation::class, ['srcItemId' => 'id']);
     }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getItemBackRelations(): \yii\db\ActiveQuery
+    public function getItemBackRelations(): ActiveQuery
     {
         return $this->hasMany(ItemRelation::class, ['dstItemId' => 'id']);
     }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getParent(): \yii\db\ActiveQuery
+    public function getParentItem(): ActiveQuery
     {
-        return $this->hasOne(Item::class, ['id' => 'parentId']);
+        return $this->hasOne(Item::class, ['repoId' => 'repoId', 'itemId' => 'parentItemId']);
     }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getItems(): \yii\db\ActiveQuery
+    public function getItems(): ActiveQuery
     {
-        return $this->hasMany(Item::class, ['parentId' => 'id'])->orderBy(['isContainer' => SORT_DESC, 'id' => SORT_ASC]);
+        return $this->hasMany(Item::class, ['repoId' => 'repoId', 'parentItemId' => 'itemId'])->orderBy(['isContainer' => SORT_DESC, 'id' => SORT_ASC]);
     }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getItemPhotos(): \yii\db\ActiveQuery
+    public function getItemPhotos(): ActiveQuery
     {
         return $this->hasMany(ItemPhoto::class, ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC]);
     }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getPrimaryPhoto(): \yii\db\ActiveQuery
+    public function getPrimaryPhoto(): ActiveQuery
     {
         return $this->hasOne(ItemPhoto::class, ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC])->limit(1);
     }
 
-    public function getSecondaryPhotos(): \yii\db\ActiveQuery
+    public function getSecondaryPhotos(): ActiveQuery
     {
         return $this->hasMany(ItemPhoto::class, ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC])->offset(1);
     }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getItemTags(): \yii\db\ActiveQuery
+    public function getItemTags(): ActiveQuery
     {
         return $this->hasMany(ItemTag::class, ['itemId' => 'id']);
     }
@@ -264,5 +297,15 @@ class Item extends ActiveRecord
     public static function find(): ItemQuery
     {
         return new ItemQuery(get_called_class());
+    }
+
+    public function getNextAvailableItemId(): int
+    {
+        $repo = $this->repo;
+        $itemId = $repo->lastItemId + 1;
+        while (Item::find()->where(['repoId' => $repo->id, 'itemId' => $itemId])->count() !== 0) {
+            $itemId++;
+        }
+        return $itemId;
     }
 }

@@ -3,9 +3,10 @@ $(document).ready(function() {
     $('#btnTogglePickContainerModal').click(function() {
         let modal = $('#pickContainerModal');
         let modalBody = $('.modal-body', modal);
+        let parentItemId = $('#item-parentitemid').val();
         let iframe = $('<iframe>', {
             id: 'pickContainerIframe',
-            src: $('.modal-body', modal).data('iframe-base-src') + encodeURIComponent($('#item-parentid').val())
+            src: $('.modal-body', modal).data('iframe-base-src').replace(/\/0\//, '/' + encodeURIComponent(parentItemId !== '' ? parentItemId : '0') + '/')
         });
         modalBody.html(iframe);
     });
@@ -19,14 +20,14 @@ $(document).ready(function() {
     let xhr = undefined;
 
     let updateParentPreview = function() {
-        let parentIdValue = $('#item-parentid').val();
-        if (parentIdValue === '') {
+        let parentItemIdValue = $('#item-parentitemid').val();
+        if (parentItemIdValue === '') {
             $('#divParentPreview').html('Корневой раздел');
             return;
         }
-        let id = parseInt(parentIdValue);
+        let id = parseInt(parentItemIdValue);
 
-        if (isNaN(id) || !/^\d+$/.test(parentIdValue) || id === 0) {
+        if (isNaN(id) || !/^\d+$/.test(parentItemIdValue) || id === 0) {
             $('#divParentPreview').html('Недопустимый ID');
             return;
         }
@@ -39,7 +40,9 @@ $(document).ready(function() {
                 xhr.abort();
             }
 
-            xhr = $.ajax('/items/json-preview?id=' + encodeURIComponent(id), {
+            let repoId = $('form#ItemForm').data('repoId');
+
+            xhr = $.ajax('/repo/' + encodeURIComponent(repoId) + '/items/' + encodeURIComponent(id) + '/json-preview', {
                 'success': function (data/*, textStatus, jqXHR*/) {
                     $('#divParentPreview').html(data.content);
 
@@ -68,10 +71,10 @@ $(document).ready(function() {
                 }
             });
         }
-        lastPreviewId = parentIdValue;
+        lastPreviewId = parentItemIdValue;
     }
 
-    $('#item-parentid').on("change paste keyup", function() {
+    $('#item-parentitemid').on("change paste keyup", function() {
         if (typeof updateTimeoutId !== 'undefined') {
             window.clearTimeout(updateTimeoutId);
         }

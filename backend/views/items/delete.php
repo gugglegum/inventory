@@ -1,15 +1,18 @@
 <?php
 
+use common\models\Item;
+use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
-/* @var $this yii\web\View */
-/* @var $model common\models\Item */
+/** @var \yii\web\View $this */
+/** @var Item $model */
+/** @var Repo $repo */
 
 $this->title = 'Удаление ' . ($model->isContainer ? 'контейнера' : 'предмета');
 
-$this->render('_breadcrumbs', ['model' => $model]);
+$this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo]);
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
@@ -17,7 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <h1><?= Html::encode($this->title) ?></h1>
 
-    <p>Вы собираетесь удалить этот <?= $model->isContainer ? 'контейнер' : 'предмет' ?><?= ($childrenCount = $model->getItems()->count()) > 0 ? ', включая вложенные объекты (<strong>' . $childrenCount . '</strong>)' : '' ?>:</p>
+    <p>Вы собираетесь удалить этот <?= $model->isContainer ? 'контейнер' : 'предмет' ?><?= ($childrenCount = $model->getItems()->count()) > 0 ? ', включая вложенные предметы (<strong>' . $childrenCount . '</strong>)' : '' ?>:</p>
 
     <?= $this->render('_items', [
         'items' => [$model],
@@ -27,13 +30,15 @@ $this->params['breadcrumbs'][] = $this->title;
     ]) ?>
 
     <?php $form = ActiveForm::begin([
-        'action' => Url::to(['delete', 'id' => $model->id]),
+        'action' => Url::to(['delete', 'repoId' => $repo->id, 'id' => $model->itemId]),
         'method' => 'post',
         'options' => [
-            'enctype' => 'multipart/form-data',
             'style' => 'margin-top: 1em',
         ],
     ]); ?>
+
+    <?= $form->errorSummary($model) ?>
+
     <?= Html::submitButton('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', [
         'class' => 'btn btn-danger',
         'data' => [

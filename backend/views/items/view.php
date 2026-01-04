@@ -1,19 +1,23 @@
 <?php
 
+use common\models\Item;
+use common\models\Repo;
 use s9e\TextFormatter\Bundles\Fatdown as TextFormatter;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-/** @var yii\web\View $this */
-/** @var common\models\Item $model */
-/** @var common\models\Item[] $children */
+/** @var \yii\web\View $this */
+/** @var Item $model */
+/** @var Repo $repo */
+/** @var Item[] $children */
 /** @var int $containerId title */
-/** @var ?common\models\Item $prevItem */
-/** @var ?common\models\Item $nextItem */
+/** @var ?Item $prevItem */
+/** @var ?Item $nextItem */
+/** @var string $query */
 
 $this->title = $model->name;
 
-$this->render('_breadcrumbs', ['model' => $model]);
+$this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo]);
 unset($this->params['breadcrumbs'][count($this->params['breadcrumbs']) - 1]['url']);
 
 $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
@@ -32,8 +36,8 @@ if ($description !== '') {
     // Выделяем ссылками упоминания ID предметов вида "#1234"
     $description = preg_replace_callback(
         '/(?<=[\s.,;()<>{}\[\]]|^)(#(\d+))(?=[\s.,;()<>{}\[\]]|$)/',
-        function(array $matches) {
-            return '<a href="' . Html::encode(Url::to(['items/view', 'id' => $matches[2]])) . '">' . $matches[1] . '</a>';
+        function(array $matches) use ($repo) {
+            return '<a href="' . Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'id' => $matches[2]])) . '">' . $matches[1] . '</a>';
         },
         $description);
 } else {
@@ -46,29 +50,31 @@ if ($description !== '') {
     <div id="searchFormGroup">
         <div id="searchFormWrapper">
             <?= $this->render('_searchForm', [
-                'query' => '',
+                'query' => $query,
                 'containerSearch' => false,
                 'showExtraOptions' => $model->isContainer && count($children) > 0,
                 'searchInside' => false,
                 'containerId' => $containerId,
+                'repo' => $repo,
             ]) ?>
         </div>
 
         <div id="idFormWrapper">
             <?= $this->render('_idForm', [
-                'id' => (string) $model->id,
+                'itemId' => (string) $model->itemId,
                 'item' => $model,
                 'prevItem' => $prevItem,
                 'nextItem' => $nextItem,
+                'repo' => $repo,
             ]) ?>
         </div>
     </div>
 
-    <h1><?= Html::encode($this->title) ?>&nbsp;<sup style="color: #ccc">#<?= Html::encode($model->id) ?></sup></h1>
+    <h1><?= Html::encode($this->title) ?>&nbsp;<sup style="color: #999"><?= Html::encode($model->repoId) ?>#<?= Html::encode($model->itemId) ?></sup></h1>
 
     <dl id="item-description">
         <div id="lnkEdit">
-            <?= Html::a('<i class="glyphicon glyphicon-edit" style="margin-right: 5px;"></i> Изменить', ['update', 'id' => $model->id]) ?>
+            <?= Html::a('<i class="glyphicon glyphicon-edit" style="margin-right: 5px;"></i> Изменить', ['update', 'repoId' => $repo->id, 'id' => $model->itemId]) ?>
         </div>
         <dt>Описание</dt>
         <dd><?= $description ?></dd>
@@ -160,12 +166,13 @@ if ($description !== '') {
 
             <p style="margin-top: 1em"><?php
             if ($model->isContainer) {
-                echo Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить предмет внутрь', ['items/create', 'parentId' => $model->id], ['class' => 'btn btn-success']);
+                echo Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить предмет внутрь', ['items/create', 'repoId' => $repo->id, 'parentItemId' => $model->itemId], ['class' => 'btn btn-success']);
             }
             ?></p>
 
             <?= $this->render('_importForm', [
                 'parent' => $model,
+                'repo' => $repo,
                 'text' => '',
             ]) ?>
         </div>
@@ -175,6 +182,6 @@ if ($description !== '') {
     <div class="clearfix"></div>
 
     <p style="margin-top: 3em">
-        <?= Html::a('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', ['delete', 'id' => $model->id]) ?>
+        <?= Html::a('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', ['delete', 'repoId' => $repo->id, 'id' => $model->itemId]) ?>
     </p>
 </div>

@@ -1,23 +1,27 @@
 <?php
 
+use common\models\Item;
+use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use common\models\Item;
 
-/** @var yii\web\View $this */
-/** @var Item[] $items */
+/** @var \yii\web\View $this */
+/** @var Item[] $items null -- если поиск не выполнялся, [] -- если ничего не найдено */
 /** @var array $paths */
-/** @var string $query */
+/** @var ?string $query */
+/** @var ?string $itemId */
 /** @var bool $searchInside */
 /** @var ?int $containerId */
 /** @var ?Item $container */
 /** @var bool $isMoreThan */
+/** @var Repo $repo */
 
 $this->title = 'Поиск';
-$this->render('_breadcrumbs', ['model' => $container]);
+$this->render('/_breadcrumbs', ['item' => $container, 'repo' => $repo]);
 $this->params['breadcrumbs'][] = $this->title;
-$this->title .= ' «' . $query . '»'; // чтоб в хлебных крошках запрос не отображался
-
+if ($query !== null && is_array($items)) {
+    $this->title .= ' «' . $query . '»'; // чтоб в хлебных крошках запрос не отображался
+}
 ?>
 <div class="item-search">
 
@@ -29,27 +33,29 @@ $this->title .= ' «' . $query . '»'; // чтоб в хлебных крошк�
                 'showExtraOptions' => (bool) $containerId,
                 'searchInside' => $searchInside,
                 'containerId' => $containerId,
+                'repo' => $repo,
             ]) ?>
         </div>
 
         <div id="idFormWrapper">
             <?= $this->render('_idForm', [
-                'id' => '',
+                'itemId' => $itemId,
                 'item' => null,
                 'prevItem' => null,
                 'nextItem' => null,
+                'repo' => $repo,
             ]) ?>
         </div>
     </div>
 
     <?php
     if ($containerId && $container) { ?>
-        <p>Поиск внутри контейнера <a href="<?= Html::encode(Url::to(['items/view', 'id' => $container->id])) ?>"><?= Html::encode($container->name); ?></a> <sup style="color: #ccc">#<?= $container->id ?></sup>,
-            но можно <a href="<?= Html::encode(Url::to(['items/search', 'q' => $query])) ?>">поискать везде</a>.
+        <p>Поиск внутри контейнера <a href="<?= Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'id' => $container->itemId])) ?>"><?= Html::encode($container->name); ?></a> <sup style="color: #ccc">#<?= $container->id ?></sup>,
+            но можно <a href="<?= Html::encode(Url::to(['items/search', 'repoId' => $repo->id, 'q' => $query])) ?>">поискать везде</a>.
         </p>
     <?php } ?>
 
-    <?php if ($query !== '') { ?>
+    <?php if ($items !== null) { ?>
     <h3>Результаты поиска</h3>
 
     <?php if (!empty($items)) { ?>

@@ -1,26 +1,29 @@
 <?php
 
+use common\models\Item;
+use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-/** @var yii\web\View $this */
-/** @var string $id */
-/** @var ?common\models\Item $item */
-/** @var ?common\models\Item $prevItem */
-/** @var ?common\models\Item $nextItem */
+/** @var \yii\web\View $this */
+/** @var string $itemId */
+/** @var ?Item $item */
+/** @var ?Item $prevItem */
+/** @var ?Item $nextItem */
+/** @var Repo $repo */
 
 $this->registerCssFile('@web/css/search-form.css', ['appendTimestamp' => true], 'search-form');
 
 $tabIndex = 4;
 
 ?>
-<form action="<?= Html::encode(Url::to(['items/view'])) ?>" id="idForm">
-    <?php if ($item) { ?><a href="<?= Html::encode(Url::to($item->parentId !== null ? ['items/view', 'id' => $item->parentId] : ['items/index'])) ?>" tabindex="<?= $tabIndex++ ?>"><span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span></a><?php } else { ?><span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span><?php } ?>
-    <?php if ($prevItem) { ?><a href="<?= Html::encode(Url::to(['items/view', 'id' => $prevItem->id])) ?>" tabindex="<?= $tabIndex++ ?>"><span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span></a><?php } else { ?><span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span><?php } ?>
-    <label for="inputId">#</label>
-    <input type="number" pattern="\d*" name="id" id="inputId" value="<?= Html::encode($id) ?>" tabindex="<?= $tabIndex++ ?>">
+<form action="<?= Html::encode(Url::to(['items/search', 'repoId' => $repo->id])) ?>" id="idForm">
+    <?php if ($item) { ?><a href="<?= Html::encode(Url::to($item->parentItemId !== null ? ['items/view', 'repoId' => $item->repoId, 'id' => $item->parentItemId] : ['items/index'])) ?>" tabindex="<?= $tabIndex++ ?>"><span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span></a><?php } else { ?><span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span><?php } ?>
+    <?php if ($prevItem) { ?><a href="<?= Html::encode(Url::to(['items/view', 'repoId' => $prevItem->repoId, 'id' => $prevItem->itemId])) ?>" tabindex="<?= $tabIndex++ ?>"><span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span></a><?php } else { ?><span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span><?php } ?>
+    <label for="inputId"><?= Html::encode($repo->id) ?>#</label>
+    <input type="number" pattern="\d*" name="id" id="inputId" value="<?= Html::encode($itemId) ?>" tabindex="<?= $tabIndex++ ?>">
     <button type="submit" tabindex="<?= $tabIndex++ ?>"><span class="glyphicon glyphicon-triangle-right" aria-hidden="true"></span></button>
-    <?php if ($nextItem) { ?><a href="<?= Html::encode(Url::to(['items/view', 'id' => $nextItem->id])) ?>" tabindex="<?= $tabIndex++ ?>"><span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span></a><?php } else { ?><span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span><?php } ?>
+    <?php if ($nextItem) { ?><a href="<?= Html::encode(Url::to(['items/view', 'repoId' => $nextItem->repoId, 'id' => $nextItem->itemId])) ?>" tabindex="<?= $tabIndex++ ?>"><span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span></a><?php } else { ?><span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span><?php } ?>
 </form>
 <script>
     document.getElementById('inputId').addEventListener('focus', function() {

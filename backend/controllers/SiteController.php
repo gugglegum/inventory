@@ -54,11 +54,6 @@ class SiteController extends Controller
         ];
     }
 
-    public function actionIndex(): \yii\web\Response
-    {
-        return $this->redirect(['items/index']);
-    }
-
     /**
      * @return Response|string
      */
