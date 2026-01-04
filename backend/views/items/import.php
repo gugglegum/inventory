@@ -16,8 +16,7 @@ use yii\helpers\Url;
 /** @var string $errorMsg */
 
 $this->title = 'Импорт предметов';
-$this->render('/_breadcrumbs', ['item' => $parent, 'repo' => $repo]);
-$this->params['breadcrumbs'][] = $this->title;
+$this->render('/_breadcrumbs', ['item' => $parent, 'repo' => $repo, 'suffix' => [$this->title]]);
 
 ?>
 

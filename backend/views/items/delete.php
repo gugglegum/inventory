@@ -11,9 +11,7 @@ use yii\widgets\ActiveForm;
 /** @var Repo $repo */
 
 $this->title = 'Удаление ' . ($model->isContainer ? 'контейнера' : 'предмета');
-
-$this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo]);
-$this->params['breadcrumbs'][] = $this->title;
+$this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo, 'suffix' => [$this->title]]);
 
 ?>
 <div class="item-delete">

@@ -6,8 +6,7 @@ use yii\helpers\Html;
 /* @var $model backend\models\UserForm */
 
 $this->title = 'Create User';
-$this->params['breadcrumbs'][] = ['label' => 'Users', 'url' => ['index']];
-$this->params['breadcrumbs'][] = $this->title;
+$this->params['breadcrumbs'][] = ['label' => 'Users', 'url' => ['index'], 'suffix' => [$this->title]];
 ?>
 <div class="user-create">
 

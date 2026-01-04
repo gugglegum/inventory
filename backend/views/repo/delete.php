@@ -10,9 +10,7 @@ use yii\widgets\ActiveForm;
 /** @var \common\models\User[] $affectedUsers */
 
 $this->title = 'Удаление репозитория';
-
-$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
-$this->params['breadcrumbs'][] = $this->title;
+$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo, 'suffix' => [$this->title]]);
 
 ?>
 <div class="item-delete">

@@ -6,6 +6,7 @@ use yii\helpers\Html;
 
 /** @var Item $item */
 /** @var ?Repo $repo */
+/** @var ?array $suffix */
 
 $this->params['breadcrumbs'][] = ['label' => 'Репозитории', 'url' => ['repo/index']];
 if ($repo) {

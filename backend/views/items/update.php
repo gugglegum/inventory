@@ -11,8 +11,7 @@ use yii\helpers\Html;
 /** @var ItemTagsForm $tagsForm */
 
 $this->title = $model->name;
-$this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo]);
-$this->params['breadcrumbs'][] = 'Редактирование';
+$this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo, 'suffix' => ['Редактирование']]);
 
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 

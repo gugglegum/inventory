@@ -13,8 +13,7 @@ use yii\helpers\Html;
 /** @var string $goto */
 
 $this->title = 'Создание ' . ($model->isContainer ? 'контейнера' : 'предмета');
-$this->render('/_breadcrumbs', ['item' => $parent, 'repo' => $repo]);
-$this->params['breadcrumbs'][] = $this->title;
+$this->render('/_breadcrumbs', ['item' => $parent, 'repo' => $repo, 'suffix' => [$this->title]]);
 
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 ?>

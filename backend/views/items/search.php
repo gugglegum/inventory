@@ -17,8 +17,7 @@ use yii\helpers\Url;
 /** @var Repo $repo */
 
 $this->title = 'Поиск';
-$this->render('/_breadcrumbs', ['item' => $container, 'repo' => $repo]);
-$this->params['breadcrumbs'][] = $this->title;
+$this->render('/_breadcrumbs', ['item' => $container, 'repo' => $repo, 'suffix' => [$this->title]]);
 if ($query !== null && is_array($items)) {
     $this->title .= ' «' . $query . '»'; // чтоб в хлебных крошках запрос не отображался
 }

@@ -15,8 +15,7 @@ use common\models\Item;
 $this->registerJsFile('@web/js/pick-container.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]], 'pick-container');
 
 $this->title = 'Выбор контейнера';
-$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
-$this->params['breadcrumbs'][] = $this->title;
+$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo, 'suffix' => [$this->title]]);
 
 // Disable debug console in the bottom right corner
 $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 'renderToolbar']);

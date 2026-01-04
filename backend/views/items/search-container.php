@@ -12,8 +12,7 @@ use common\models\Repo;
 /** @var Repo $repo */
 
 $this->title = 'Поиск контейнера';
-$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
-$this->params['breadcrumbs'][] = $this->title;
+$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo, 'suffix' => [$this->title]]);
 
 // Disable debug console in the bottom right corner
 $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 'renderToolbar']);

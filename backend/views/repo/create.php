@@ -7,8 +7,7 @@ use yii\helpers\Html;
 /** @var Repo $repo */
 
 $this->title = 'Создание репозитория';
-$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
-$this->params['breadcrumbs'][] = $this->title;
+$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo, 'suffix' => [$this->title]]);
 
 ?>
 <div class="item-create">

@@ -7,8 +7,7 @@ use yii\helpers\Html;
 /** @var Repo $repo */
 
 $this->title = $repo->name;
-$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
-$this->params['breadcrumbs'][] = 'Редактирование';
+$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo, 'suffix' => ['Редактирование']]);
 
 ?>
 <div class="repo-update">
