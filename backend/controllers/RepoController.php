@@ -177,7 +177,7 @@ class RepoController extends Controller
     private function getAffectedUsers(Repo $repo): array
     {
         $affectedUsers = [];
-        foreach ($repo->repoUsers as $repoUser) {
+        foreach ($repo->getRepoUsers()->innerJoinWith('user')->where(['user.status' => \common\models\User::STATUS_ACTIVE])->each() as $repoUser) {
             if ($repoUser->userId !== $this->getLoggedUser()->id) {
                 $affectedUsers[] = $repoUser->user;
             }
