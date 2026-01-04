@@ -70,6 +70,20 @@ class RepoController extends Controller
     }
 
     /**
+     * @param int $repoId
+     * @return Response|string
+     * @throws ForbiddenHttpException
+     * @throws NotFoundHttpException
+     */
+    public function actionView(int $repoId): Response|string
+    {
+        $repo = $this->findRepo($repoId);
+        return $this->render('view', [
+            'repo' => $repo,
+        ]);
+    }
+
+    /**
      * @return Response|string
      * @throws Exception
      * @throws \yii\db\Exception

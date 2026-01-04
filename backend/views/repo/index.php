@@ -31,8 +31,9 @@ $this->registerCssFile('@web/css/repos.css', ['appendTimestamp' => true], 'repos
             </td>
             <td class="count"><?= $repo->getItems()->count() ?></td>
             <td class="actions">
-                <?= Html::a('', \yii\helpers\Url::to(['repo/update', 'repoId' => $repo->id]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-right: 20px']) ?>
-                <?= Html::a('', \yii\helpers\Url::to(['repo/delete', 'repoId' => $repo->id]), ['class' => 'glyphicon glyphicon-trash', 'style' => 'margin-left: 20px']) ?>
+                <?= Html::a('', \yii\helpers\Url::to(['repo/view', 'repoId' => $repo->id]), ['class' => 'glyphicon glyphicon-eye-open', 'style' => 'margin: 0 20px']) ?>
+                <?= Html::a('', \yii\helpers\Url::to(['repo/update', 'repoId' => $repo->id]), ['class' => 'glyphicon glyphicon-edit', 'style' => 'margin: 0 20px']) ?>
+                <?= Html::a('', \yii\helpers\Url::to(['repo/delete', 'repoId' => $repo->id]), ['class' => 'glyphicon glyphicon-trash', 'style' => 'margin: 0 20px']) ?>
             </td>
         </tr>
         <?php } ?>

@@ -1,0 +1,60 @@
+#repo-view #item-description {
+    max-width: 60em;
+}
+#repo-view h1 {
+    font-size: 30px;
+}
+#repo-view #repo-description #lnkEdit {
+    float: right;
+}
+#repo-view .columns-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+#repo-view .columns-container #repo-info {
+    flex-grow: 1;
+    flex-basis: 30%;
+    min-width: 255px;
+    box-sizing: border-box;
+    padding-right: 2em;
+}
+
+#repo-view .columns-container #repo-info dl {
+    max-width: 60em;
+    margin-bottom: 0.5em;
+}
+#repo-view .columns-container #repo-info dl dt {
+    box-sizing: border-box;
+    white-space: nowrap;
+    display: inline;
+}
+#repo-view .columns-container #repo-info dl dd {
+    box-sizing: border-box;
+    display: inline;
+    padding-left: 0.25em;
+}
+
+#repo-view table.repo-users {
+    margin-top: 1em;
+    width: 100%;
+}
+#repo-view table.repo-users td, #repo-view table.repo-users th {
+    border: 1px solid #ccc;
+    padding: 10px 10px;
+}
+#repo-view table.repo-users th {
+    text-align: center;
+    border-right: 1px solid #ccc;
+}
+#repo-view table.repo-users td {
+    vertical-align: top;
+}
+#repo-view table.repo-users td {
+    border-right: 1px solid #ccc;
+}
+#repo-view table.repo-users td.username {
+    font-weight: bold;
+}
+#repo-view table.repo-users td.count {
+    text-align: center;
+}
