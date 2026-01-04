@@ -105,6 +105,13 @@ class m260101_233045_create_repos extends Migration
         $this->dropIndex('parentItemIdRepoId', 'item');
         $this->dropIndex('itemIdRepoId', 'item');
         $this->renameColumn('item', 'parentItemId', 'parentId');
+
+        $this->execute("UPDATE item c
+            JOIN item p ON p.repoId = c.repoId
+            AND p.itemId = c.parentId
+            SET c.parentId = p.id
+            WHERE c.parentId IS NOT NULL");
+
         $this->addForeignKey('items_parentId', 'item', ['parentId'], 'item', ['id']);
 
         $this->dropColumn('item', 'updatedBy');
