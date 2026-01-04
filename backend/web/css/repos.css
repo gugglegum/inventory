@@ -1,8 +1,9 @@
 table.repos {
+    margin-top: 2em;
     width: 100%;
 }
 table.repos tr {
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #ccc;
 }
 table.repos tr:last-child {
     border-bottom: none;
@@ -12,12 +13,10 @@ table.repos th, table.repos td {
 }
 table.repos th {
     text-align: center;
+    border-right: 1px solid #ccc;
 }
 table.repos td {
     vertical-align: top;
-}
-table.repos th {
-    border-right: 1px solid #eee;
 }
 table.repos th:last-child {
     border-right: none;
@@ -27,7 +26,7 @@ table.repos td.id {
     text-align: center;
 }
 table.repos td {
-    border-right: 1px solid #eee;
+    border-right: 1px solid #ccc;
 }
 table.repos td:last-child {
     border-right: none;

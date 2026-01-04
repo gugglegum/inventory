@@ -5,7 +5,9 @@ body {
 p {
     margin: 0.5em 0;
 }
-
+ul, ol {
+    margin: 0.5em 0;
+}
 .wrap {
     min-height: 100%;
     height: auto;
