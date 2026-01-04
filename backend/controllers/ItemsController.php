@@ -692,7 +692,7 @@ class ItemsController extends Controller
             $model->setItemAccessValidator($this->getItemAccessValidator());
             return $model;
         } else {
-            throw new NotFoundHttpException("Родительский контейнер {$repoId}#{$id} не существует");
+            throw new NotFoundHttpException("Родительский контейнер {$repoId}#{$parentItemId} не существует");
         }
     }
 

@@ -1,0 +1,50 @@
+table.repos {
+    width: 100%;
+}
+table.repos tr {
+    border-bottom: 1px solid #eee;
+}
+table.repos tr:last-child {
+    border-bottom: none;
+}
+table.repos th, table.repos td {
+    padding: 10px 10px;
+}
+table.repos th {
+    text-align: center;
+}
+table.repos td {
+    vertical-align: top;
+}
+table.repos th {
+    border-right: 1px solid #eee;
+}
+table.repos th:last-child {
+    border-right: none;
+}
+table.repos td.id {
+    font-size: 150%;
+    text-align: center;
+}
+table.repos td {
+    border-right: 1px solid #eee;
+}
+table.repos td:last-child {
+    border-right: none;
+}
+table.repos td.details .name a:first-child {
+    font-size: 150%;
+}
+table.repos td.details .description {
+    font-size: 80%;
+    color: #999;
+    margin: 0.25em 0;
+}
+table.repos td.count {
+    text-align: center;
+    vertical-align: middle;
+}
+table.repos td.actions {
+    text-align: center;
+    vertical-align: middle;
+}
