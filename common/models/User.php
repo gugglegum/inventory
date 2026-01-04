@@ -15,13 +15,15 @@ use yii\web\IdentityInterface;
  *
  * @property integer $id
  * @property string $username
+ * @property string $authKey
  * @property string $passwordHash
  * @property string $passwordResetToken
  * @property string $email
- * @property string $authKey
+ * @property int $access Глобальные права доступа (bitmask)
  * @property integer $status
  * @property integer $created
  * @property integer $updated
+ *
  * @property string $password write-only password
  * @property string $statusAsText read-only
  *
@@ -29,8 +31,10 @@ use yii\web\IdentityInterface;
  */
 class User extends ActiveRecord implements IdentityInterface
 {
-    const STATUS_DELETED = 0;
-    const STATUS_ACTIVE = 10;
+    public const int STATUS_DELETED = 0;
+    public const int STATUS_ACTIVE = 10;
+
+    public const ACCESS_MANAGE_USERS = 1;
 
     /**
      * @inheritdoc

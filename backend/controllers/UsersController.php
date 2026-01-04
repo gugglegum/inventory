@@ -2,6 +2,7 @@
 
 namespace backend\controllers;
 
+use common\components\UserAccess;
 use Yii;
 use common\models\User;
 use common\models\UserSearch;
@@ -32,6 +33,9 @@ class UsersController extends Controller
                     [
                         'allow' => true,
                         'roles' => ['@'],
+                        'matchCallback' => static function () {
+                            return UserAccess::canManageUsers();
+                        },
                     ],
                 ],
             ],

@@ -37,15 +37,17 @@ AppAsset::register($this);
             'class' => 'navbar-inverse navbar-static-top',
         ],
     ]);
-    $menuItems = [
-        ['label' => 'Репозитории', 'url' => ['repo/index']],
-        ['label' => 'Admin', 'items' => [
-            ['label' => 'Users', 'url' => ['users/index']],
-        ]],
-    ];
-    if (Yii::$app->user->isGuest) {
-        $menuItems[] = ['label' => 'Login', 'url' => ['/site/login']];
-    } else {
+    $menuItems = [];
+    if (!Yii::$app->user->isGuest) {
+        $menuItems[] = ['label' => 'Репозитории', 'url' => ['repo/index']];
+        if (\common\components\UserAccess::canManageUsers()) {
+            $menuItems[] = [
+                'label' => 'Admin', 'items' => [
+                    ['label' => 'Users', 'url' => ['users/index']],
+                ],
+            ];
+        }
+
         /** @var User $identity */
         $identity = Yii::$app->user->identity;
         $menuItems[] = [
