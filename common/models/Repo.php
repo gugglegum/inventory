@@ -14,11 +14,11 @@ use yii\db\StaleObjectException;
  *
  * @property integer $id ID репозитория
  * @property string $name Название репозитория
- * @property string $description Описание репозитория
+ * @property ?string $description Описание репозитория
  * @property int $priority Приоритет сортировки
  * @property int $lastItemId Счётчик предметов внутри репозитория для использования в Item.itemId
  * @property int $createdBy ID создавшего репозиторий пользователя
- * @property int $updatedBy ID последнего изменившего репозиторий пользователя
+ * @property ?int $updatedBy ID последнего изменившего репозиторий пользователя
  * @property int $created Время создания
  * @property ?int $updated Время последнего изменения
  *

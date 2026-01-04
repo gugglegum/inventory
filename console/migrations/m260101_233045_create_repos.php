@@ -22,8 +22,8 @@ class m260101_233045_create_repos extends Migration
         $this->createTable('repo', [
             'id' => "int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID репозитория'",
             'name' => "varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Название репозитория'",
-            'description' => "text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Описание репозитория'",
-            'priority' => "INT DEFAULT 0 COMMENT 'Приоритет сортировки'",
+            'description' => "text COLLATE utf8mb4_unicode_ci COMMENT 'Описание репозитория'",
+            'priority' => "INT DEFAULT 0 NOT NULL COMMENT 'Приоритет сортировки'",
             'lastItemId' => "INT DEFAULT 0 NOT NULL COMMENT 'ID последнего созданного предмета'",
             'createdBy' => "int(10) UNSIGNED NOT NULL COMMENT 'ID создавшего репозиторий пользователя'",
             'updatedBy' => "int(10) UNSIGNED NULL COMMENT 'ID последнего изменившего репозиторий пользователя'",

@@ -14,10 +14,10 @@ use yii\db\StaleObjectException;
  *
  * @property int $id ID предмета (глобальный по всем репозиториям)
  * @property int $itemId ID предмета (внутри репозитория)
- * @property int $parentItemId ID родительского предмета-контейнера (ссылка на itemId)
+ * @property ?int $parentItemId ID родительского предмета-контейнера (ссылка на itemId)
  * @property int repoId ID репозитория
  * @property string $name Наименование
- * @property string $description Описание
+ * @property ?string $description Описание
  * @property int $isContainer Является ли предмет контейнером?
  * @property int $priority Приоритет сортировки
  * @property ?int $createdBy ID создавшего запись пользователя
@@ -27,7 +27,7 @@ use yii\db\StaleObjectException;
  *
  * @property ItemRelation[] $itemRelations
  * @property ItemRelation[] $itemBackRelations
- * @property Item $parentItem
+ * @property ?Item $parentItem
  * @property Repo $repo
  * @property Item[] $items
  * @property ItemPhoto[] $itemPhotos
