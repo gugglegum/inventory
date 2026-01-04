@@ -385,6 +385,7 @@ class ItemsController extends Controller
         $repo = $this->findRepo($repoId);
         $item = $this->findModel($repoId, $id);
         $item->scenario = Item::SCENARIO_UPDATE;
+        $item->updatedBy = $this->getLoggedUser()->id;
 
         $tagsForm = new ItemTagsForm();
         $tagsForm->tags = $item->fetchTagsAsString();
