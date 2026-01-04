@@ -1,6 +1,7 @@
 <?php
 
 use common\models\Item;
+use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
@@ -9,6 +10,7 @@ use yii\helpers\Url;
 /** @var bool $showPath  */
 /** @var bool $showChildren */
 /** @var ?int $containerId */
+/** @var Repo $repo */
 
 $this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items');
 
@@ -74,13 +76,13 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 <div class="description"><?php
                     // Выводим укороченное описание, если оно слишком длинное. Заменяем в нём все избыточные белые
                     // пробелы на обычные пробелы.
-                    $maxDescriptionLength = 140;
+                    $maxDescriptionLength = 250;
                     $threshold = 10;
                     $description = preg_replace('/\s+/u', "\x20", $description);
                     if (mb_strlen($description) > $maxDescriptionLength + $threshold) {
                         $description = rtrim(mb_substr($description, 0, $maxDescriptionLength)) . '...';
                     }
-                    echo Html::encode($description);
+                    echo \common\helpers\MarkdownFormatter::format($description, $repo);
                 ?></div>
                 <?php } ?>
 

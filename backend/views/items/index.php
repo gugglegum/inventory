@@ -37,7 +37,11 @@ $this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
         </div>
     </div>
 
-    <h1>Корневые контейнеры</h1>
+    <h1><?= Html::encode($repo->name) ?></h1>
+
+<?php if ($repo->description !== null) { ?>
+    <div style="margin: 1em 0"><?= \common\helpers\MarkdownFormatter::format($repo->description, $repo) ?></div>
+<?php } ?>
 
     <?php if (!empty($rootItems)) { ?>
     <?= $this->render('_items', [
@@ -45,6 +49,7 @@ $this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
         'showPath' => false,
         'showChildren' => true,
         'containerId' => null,
+        'repo' => $repo,
     ]) ?>
     <?php } else { ?>
         <p>Здесь пока ничего нет.</p>

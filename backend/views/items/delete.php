@@ -25,6 +25,7 @@ $this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo, 'suffix' => [
         'showPath' => false,
         'showChildren' => true,
         'containerId' => null,
+        'repo' => $repo,
     ]) ?>
 
     <?php $form = ActiveForm::begin([

@@ -65,6 +65,7 @@ if ($query !== null && is_array($items)) {
         'showPath' => true,
         'showChildren' => true,
         'containerId' => $containerId,
+        'repo' => $repo,
     ]) ?>
     <?php } else { ?>
         <p>Ничего не нашлось.</p>

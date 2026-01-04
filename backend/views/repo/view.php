@@ -1,9 +1,7 @@
 <?php
 
 use common\models\Repo;
-use s9e\TextFormatter\Bundles\Fatdown as TextFormatter;
 use yii\helpers\Html;
-use yii\helpers\Url;
 
 /** @var \yii\web\View $this */
 /** @var Repo $repo */
@@ -16,16 +14,7 @@ $this->registerCssFile('@web/css/repo-view.css', ['appendTimestamp' => true], 'r
 
 $description = trim((string) $repo->description);
 if ($description !== '') {
-    $description = TextFormatter::parse($description);
-    $description = TextFormatter::render($description);
-
-    // Выделяем ссылками упоминания ID предметов вида "#1234"
-    $description = preg_replace_callback(
-        '/(?<=[\s.,;()<>{}\[\]]|^)(#(\d+))(?=[\s.,;()<>{}\[\]]|$)/',
-        function(array $matches) use ($repo) {
-            return '<a href="' . Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'id' => $matches[2]])) . '">' . $matches[1] . '</a>';
-        },
-        $description);
+    $description = \common\helpers\MarkdownFormatter::format($description, $repo);
 } else {
     $description = '<em>Нет описания</em>';
 }

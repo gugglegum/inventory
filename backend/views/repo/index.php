@@ -27,7 +27,7 @@ $this->registerCssFile('@web/css/repos.css', ['appendTimestamp' => true], 'repos
             <td class="id"><?= Html::encode($repo->id) ?></td>
             <td class="details">
                 <div class="name"><a href="<?= Html::encode(\yii\helpers\Url::to(['items/index', 'repoId' => $repo->id])) ?>"><?= Html::encode($repo->name) ?></a></div>
-                <div class="description"><?= Html::encode($repo->description) ?></div>
+                <div class="description"><?= $repo->description !== null ? \common\helpers\MarkdownFormatter::format($repo->description, $repo) : ''; ?></div>
             </td>
             <td class="count"><?= $repo->getItems()->count() ?></td>
             <td class="actions">
