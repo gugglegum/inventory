@@ -30,4 +30,9 @@ if ($repo) {
         }
     }
 }
-unset($this->params['breadcrumbs'][count($this->params['breadcrumbs']) - 1]['url']);
+if (!empty($suffix)) {
+    $this->params['breadcrumbs'] = array_merge($this->params['breadcrumbs'], $suffix);
+}
+if (is_array($this->params['breadcrumbs'][count($this->params['breadcrumbs']) - 1])) {
+    unset($this->params['breadcrumbs'][count($this->params['breadcrumbs']) - 1]['url']);
+}
