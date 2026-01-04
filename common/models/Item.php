@@ -20,8 +20,8 @@ use yii\db\StaleObjectException;
  * @property string $description Описание
  * @property int $isContainer Является ли предмет контейнером?
  * @property int $priority Приоритет сортировки
- * @property int $createdBy ID создавшего запись пользователя
- * @property int $updatedBy ID последнего изменившего запись пользователя
+ * @property ?int $createdBy ID создавшего запись пользователя
+ * @property ?int $updatedBy ID последнего изменившего запись пользователя
  * @property int $created Время создания
  * @property int $updated Время последнего изменения
  *
@@ -34,6 +34,8 @@ use yii\db\StaleObjectException;
  * @property ItemPhoto $primaryPhoto
  * @property ItemPhoto[] $secondaryPhotos
  * @property ItemTag[] $itemTags
+ * @property ?User $createdByUser
+ * @property ?User $updatedByUser
  */
 class Item extends ActiveRecord
 {
@@ -288,6 +290,16 @@ class Item extends ActiveRecord
     public function getItemTags(): ActiveQuery
     {
         return $this->hasMany(ItemTag::class, ['itemId' => 'id']);
+    }
+
+    public function getCreatedByUser(): ActiveQuery
+    {
+        return $this->hasOne(User::class, ['id' => 'createdBy']);
+    }
+
+    public function getUpdatedByUser(): ActiveQuery
+    {
+        return $this->hasOne(User::class, ['id' => 'updatedBy']);
     }
 
     /**

@@ -49,8 +49,8 @@ class m260101_233045_create_repos extends Migration
 
         $this->addColumn('item', 'itemId', "INT UNSIGNED NOT NULL COMMENT 'ID предмета (внутри репозитория)' AFTER `id`");
         $this->addColumn('item', 'repoId', "INT UNSIGNED NOT NULL COMMENT 'ID репозитория' AFTER `parentId`");
-        $this->addColumn('item', 'createdBy', "INT UNSIGNED NOT NULL COMMENT 'ID создавшего запись пользователя' AFTER `priority`");
-        $this->addColumn('item', 'updatedBy', "INT UNSIGNED NULL COMMENT 'ID последнего изменившего запись пользователя' AFTER `createdBy`");
+        $this->addColumn('item', 'createdBy', "INT UNSIGNED COMMENT 'ID создавшего запись пользователя' AFTER `priority`");
+        $this->addColumn('item', 'updatedBy', "INT UNSIGNED COMMENT 'ID последнего изменившего запись пользователя' AFTER `createdBy`");
 
         $this->dropForeignKey('items_parentId', 'item');
         $this->renameColumn('item', 'parentId', 'parentItemId');
@@ -68,7 +68,6 @@ class m260101_233045_create_repos extends Migration
             ]);
             $this->update('item', [
                 'repoId' => $repoId,
-                'createdBy' => $userId,
             ]);
             foreach ($userIds as $userId) {
                 $this->insert('repo_user', [
