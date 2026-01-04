@@ -10,7 +10,6 @@ use common\models\Repo;
 
 $this->title = 'Репозитории';
 $this->registerCssFile('@web/css/repos.css', ['appendTimestamp' => true], 'repos');
-$this->render('/_breadcrumbs', ['item' => null, 'repo' => null]);
 
 ?>
 <div class="repo-index">
