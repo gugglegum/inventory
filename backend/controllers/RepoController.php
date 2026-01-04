@@ -8,6 +8,7 @@ use common\components\ItemAccessValidator;
 use common\helpers\ValidateErrorsFormatter;
 use common\models\Repo;
 use common\models\RepoUser;
+use common\models\User;
 use Yii;
 use yii\base\Exception;
 use yii\db\StaleObjectException;
@@ -143,14 +144,31 @@ class RepoController extends Controller
             if ($repo->delete() === false) {
                 return $this->render('delete', [
                     'repo' => $repo,
+                    'affectedUsers' => $this->getAffectedUsers($repo),
                 ]);
             }
             return $this->redirect(['repo/index', 'repoId' => $repo->id]);
         } else {
             return $this->render('delete', [
                 'repo' => $repo,
+                'affectedUsers' => $this->getAffectedUsers($repo),
             ]);
         }
+    }
+
+    /**
+     * Список пользователей, которые могут пострадать при удалении репозитория (кроме текущего пользователя).
+     * @return User[]
+     */
+    private function getAffectedUsers(Repo $repo): array
+    {
+        $affectedUsers = [];
+        foreach ($repo->repoUsers as $repoUser) {
+            if ($repoUser->userId !== $this->getLoggedUser()->id) {
+                $affectedUsers[] = $repoUser->user;
+            }
+        }
+        return $affectedUsers;
     }
 
     /**
