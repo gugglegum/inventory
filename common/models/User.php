@@ -6,6 +6,7 @@ use Yii;
 use yii\base\Exception;
 use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 
@@ -23,6 +24,8 @@ use yii\web\IdentityInterface;
  * @property integer $updated
  * @property string $password write-only password
  * @property string $statusAsText read-only
+ *
+ * @property Item[] $createdItems Предметы, созданные пользователем
  */
 class User extends ActiveRecord implements IdentityInterface
 {
@@ -218,6 +221,11 @@ class User extends ActiveRecord implements IdentityInterface
     public function removePasswordResetToken(): void
     {
         $this->passwordResetToken = null;
+    }
+
+    public function getCreatedItems(): ActiveQuery
+    {
+        return $this->hasMany(Item::class, ['createdBy' => 'id']);
     }
 
     /**
