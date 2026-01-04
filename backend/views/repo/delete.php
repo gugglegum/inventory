@@ -21,7 +21,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php if (($itemsCount = $repo->getItems()->count()) > 0) { ?>
     <div class="alert alert-danger" role="alert" style="margin: 2em 0; max-width: 50em; font-size: 130%"><strong>ВНИМАНИЕ!</strong> Вы собираетесь полностью удалить репозиторий
-        &laquo;<strong><?= Html::encode($repo->name) ?></strong>&raquo;, содержащий предметы (<strong>' . <?= Html::encode($itemsCount) ?> . '</strong>) ?>.
+        &laquo;<strong><?= Html::encode($repo->name) ?></strong>&raquo;, содержащий предметы&nbsp;(<strong><?= Html::encode($itemsCount) ?></strong>).
         Подумайте как следует перед тем как продолжить. Это действие нельзя будет отменить.
     </div>
 <?php } else { ?>
