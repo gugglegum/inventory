@@ -8,7 +8,7 @@ use yii\helpers\Html;
 /** @var Repo $repo */
 /** @var Item[] $rootItems */
 
-$this->title = 'Предметы';
+$this->title = $repo->name;
 $this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
 
 ?>
