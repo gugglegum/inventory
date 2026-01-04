@@ -11,7 +11,6 @@ use yii\helpers\Url;
 $this->title = $repo->name;
 
 $this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
-unset($this->params['breadcrumbs'][count($this->params['breadcrumbs']) - 1]['url']);
 
 $this->registerCssFile('@web/css/repo-view.css', ['appendTimestamp' => true], 'repo-view');
 

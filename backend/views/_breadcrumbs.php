@@ -29,3 +29,4 @@ if ($repo) {
         }
     }
 }
+unset($this->params['breadcrumbs'][count($this->params['breadcrumbs']) - 1]['url']);

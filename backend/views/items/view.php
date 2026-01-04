@@ -18,7 +18,6 @@ use yii\helpers\Url;
 $this->title = $model->name;
 
 $this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo]);
-unset($this->params['breadcrumbs'][count($this->params['breadcrumbs']) - 1]['url']);
 
 $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 $this->registerCssFile('@web/css/item-view.css', ['appendTimestamp' => true], 'item-view');
