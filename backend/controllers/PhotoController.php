@@ -61,17 +61,17 @@ class PhotoController extends Controller
      */
     public function actionThumbnail(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality): Response
     {
-        /** @var ItemPhoto $photo */
-        $photo = ItemPhoto::findOne($id);
-        if (! $photo) {
+        /** @var ItemPhoto $itemPhoto */
+        $itemPhoto = ItemPhoto::findOne($id);
+        if (! $itemPhoto) {
             throw new HttpException(404, 'Photo #' . $id . ' is not found');
         }
 
-        $staticThumbnailUrl = $photo->getStaticThumbnailUrl($width, $height, $upscale, $crop, $quality);
-        $thumbnailFile = $photo->getThumbnailFile($width, $height, $upscale, $crop, $quality);
+        $staticThumbnailUrl = $itemPhoto->photo->getStaticThumbnailUrl($width, $height, $upscale, $crop, $quality);
+        $thumbnailFile = $itemPhoto->photo->getThumbnailFile($width, $height, $upscale, $crop, $quality);
 
         if (!file_exists($thumbnailFile)) {
-            $photo->createThumbnail($width, $height, $upscale, $crop, $quality);
+            $itemPhoto->photo->createThumbnail($width, $height, $upscale, $crop, $quality);
         }
 //        session_cache_limiter('private_no_expire');
         header_remove('Pragma');

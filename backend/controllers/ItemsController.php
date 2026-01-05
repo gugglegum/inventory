@@ -7,6 +7,7 @@ use backend\models\ItemTagsForm;
 use common\components\ItemAccessValidator;
 use common\helpers\ValidateErrorsFormatter;
 use common\models\ItemTag;
+use common\models\Photo;
 use common\models\Repo;
 use Yii;
 use common\models\Item;
@@ -343,11 +344,14 @@ class ItemsController extends Controller
                         continue;
                     }
                     if (array_key_exists($photoId, $tmpNames)) {
-                        $photo = new ItemPhoto();
-                        $photo->itemId = $item->id;
-                        $photo->sortIndex = $sortIndex;
+                        $photo = new Photo();
                         $photo->assignFile($_FILES['photos']['tmp_name'][$photoId]);
                         $photo->save();
+                        $itemPhoto = new ItemPhoto();
+                        $itemPhoto->itemId = $item->id;
+                        $itemPhoto->photoId = $photo->id;
+                        $itemPhoto->sortIndex = $sortIndex;
+                        $itemPhoto->save();
                         $sortIndex++;
                     }
                 }
@@ -401,10 +405,13 @@ class ItemsController extends Controller
                         continue;
                     }
                     if (array_key_exists($photoId, $tmpNames)) {
-                        $photo = new ItemPhoto();
-                        $photo->itemId = $item->id;
+                        $photo = new Photo();
                         $photo->assignFile($_FILES['photos']['tmp_name'][$photoId]);
                         $photo->save();
+                        $itemPhoto = new ItemPhoto();
+                        $itemPhoto->itemId = $item->id;
+                        $itemPhoto->photoId = $photo->id;
+                        $itemPhoto->save();
                     }
                 }
                 return $this->redirect(['view', 'repoId' => $repo->id, 'id' => $item->itemId]);

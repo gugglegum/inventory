@@ -25,11 +25,11 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                     <?php
                     $primaryPhoto = $item->primaryPhoto;
                     if ($primaryPhoto) {
-                        echo Html::beginTag('a', ['href' => $item->primaryPhoto->getUrl(), 'rel' => 'item-photos#' . $item->id, 'class' => 'fancybox']);
+                        echo Html::beginTag('a', ['href' => $item->primaryPhoto->photo->getUrl(), 'rel' => 'item-photos#' . $item->id, 'class' => 'fancybox']);
                     }
 
                     echo Html::img($item->primaryPhoto
-                        ? $item->primaryPhoto->getThumbnailUrl(48, 48, true, true, 90)
+                        ? $item->primaryPhoto->photo->getThumbnailUrl(48, 48, true, true, 90)
                         : Url::to('@web/images/no-fees-icon-B.png'), ['alt' => 'PHOTO']);
 
                     if ($primaryPhoto) {

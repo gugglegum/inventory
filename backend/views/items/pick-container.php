@@ -39,11 +39,11 @@ $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 're
                 <?php
                 $primaryPhoto = $parentContainer->primaryPhoto;
                 if ($primaryPhoto) {
-                    echo Html::beginTag('a', ['href' => $parentContainer->primaryPhoto->getUrl(), 'rel' => 'item-photos#' . $parentContainer->id, 'class' => 'fancybox']);
+                    echo Html::beginTag('a', ['href' => $parentContainer->primaryPhoto->photo->getUrl(), 'rel' => 'item-photos#' . $parentContainer->id, 'class' => 'fancybox']);
                 }
 
                 echo Html::img($parentContainer->primaryPhoto
-                    ? $parentContainer->primaryPhoto->getThumbnailUrl(100, 100, true, true, 90)
+                    ? $parentContainer->primaryPhoto->photo->getThumbnailUrl(100, 100, true, true, 90)
                     : Url::to('@web/images/no-fees-icon-B.png'), ['alt' => 'PHOTO']);
 
                 if ($primaryPhoto) {
