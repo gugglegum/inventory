@@ -48,7 +48,7 @@ if ($description !== '') {
             </dl>
             <dl>
                 <dt>Дата создания:</dt>
-                <dd><?= Html::encode(date('d.m.Y H:i', $repo->created)) ?></dd>
+                <dd><?= Html::encode(date('d.m.Y H:i T', $repo->created)) ?></dd>
             </dl>
             <dl>
                 <dt>Последним изменил(а):</dt>
@@ -56,7 +56,7 @@ if ($description !== '') {
             </dl>
             <dl>
                 <dt>Дата изменения:</dt>
-                <dd><?= ($repo->updated !== null && $repo->created !== $repo->updated) ? Html::encode(date('d.m.Y H:i', $repo->updated)) : '<em>Не было изменений</em>' ?></dd>
+                <dd><?= ($repo->updated !== null && $repo->created !== $repo->updated) ? Html::encode(date('d.m.Y H:i T', $repo->updated)) : '<em>Не было изменений</em>' ?></dd>
             </dl>
             <dl>
                 <dt>Предметов в репозитории:</dt>

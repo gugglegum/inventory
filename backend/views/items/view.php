@@ -97,7 +97,7 @@ if ($description !== '') {
             </dl>
             <dl>
                 <dt>Дата создания:</dt>
-                <dd><?= Html::encode(date('d.m.Y H:i', $model->created)) ?></dd>
+                <dd><?= Html::encode(date('d.m.Y H:i T', $model->created)) ?></dd>
             </dl>
             <dl>
                 <dt>Последним изменил(а):</dt>
@@ -105,7 +105,7 @@ if ($description !== '') {
             </dl>
             <dl>
                 <dt>Дата изменения:</dt>
-                <dd><?= ($model->updated !== null && $model->created !== $model->updated) ? Html::encode(date('d.m.Y H:i', $model->updated)) : '<em>Не было изменений</em>' ?></dd>
+                <dd><?= ($model->updated !== null && $model->created !== $model->updated) ? Html::encode(date('d.m.Y H:i T', $model->updated)) : '<em>Не было изменений</em>' ?></dd>
             </dl>
             <h3>Фотографии</h3>
             <?php
@@ -118,7 +118,7 @@ if ($description !== '') {
                         echo Html::beginTag('a', ['href' => $itemPhoto->getUrl(), 'rel' => 'item-photos', 'class' => 'fancybox']);
                         echo Html::img($itemPhoto->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
                         echo Html::endTag('a');
-                        echo '<div class="upload-date">' . Html::encode(date('d.m.Y H:i', $itemPhoto->created)) . '</div>';
+                        echo '<div class="upload-date">' . Html::encode(date('d.m.Y H:i T', $itemPhoto->created)) . '</div>';
                         echo Html::endTag('div');
                         echo Html::endTag('div');
                     }
