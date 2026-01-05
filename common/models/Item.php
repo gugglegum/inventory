@@ -9,6 +9,7 @@ use yii\db\ActiveRecord;
 use yii\db\BaseActiveRecord;
 use yii\db\Exception;
 use yii\db\StaleObjectException;
+use Yii;
 
 /**
  * Предмет
@@ -164,6 +165,28 @@ class Item extends ActiveRecord
         return parent::beforeSave($insert);
     }
 
+    /**
+     * @inheritdoc
+     */
+    public function save($runValidation = true, $attributeNames = null): bool
+    {
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $saveResult = parent::save($runValidation, $attributeNames);
+            if ($saveResult) {
+                // Обновляем lastItemId в репозитории напрямую без проверки прав на изменение repo и без обновления repo.updated
+                $this->repo->updateAttributes(['lastItemId' => $this->itemId]);
+                $transaction->commit();
+            } else {
+                $transaction->rollBack();
+            }
+            return $saveResult;
+        } catch (\yii\db\Exception $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+    }
+
     public function setItemAccessValidator(ItemAccessValidator $itemAccessValidator): static
     {
         $this->itemAccessValidator = $itemAccessValidator;
@@ -316,11 +339,14 @@ class Item extends ActiveRecord
         return new ItemQuery(get_called_class());
     }
 
+    /**
+     * @return int
+     * @throws Exception
+     */
     public function getNextAvailableItemId(): int
     {
-        $repo = $this->repo;
-        $itemId = $repo->lastItemId + 1;
-        while (Item::find()->where(['repoId' => $repo->id, 'itemId' => $itemId])->count() !== 0) {
+        $itemId = Yii::$app->db->createCommand('SELECT lastItemId FROM repo WHERE id = :repoId FOR UPDATE', [':repoId' => $this->repoId])->queryScalar();
+        while (Item::find()->where(['repoId' => $this->repoId, 'itemId' => $itemId])->exists()) {
             $itemId++;
         }
         return $itemId;

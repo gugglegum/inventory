@@ -331,9 +331,6 @@ class ItemsController extends Controller
             /** @noinspection NestedPositiveIfStatementsInspection */
             if ($item->load(Yii::$app->request->post()) && $item->save()) {
 
-                // Обновляем lastItemId в репозитории напрямую без проверки прав на изменение repo и без обновления repo.updated
-                $repo->updateAttributes(['lastItemId' => $item->itemId]);
-
                 if ($tagsForm->load(Yii::$app->request->post())) {
                     $item->saveTagsFromString($tagsForm->tags);
                 }
@@ -590,9 +587,6 @@ class ItemsController extends Controller
                 if (!$itemModel->save()) {
                     throw new Exception(ValidateErrorsFormatter::getMessage($itemModel));
                 }
-
-                // Обновляем lastItemId в репозитории напрямую без проверки прав на изменение repo и без обновления repo.updated
-                $repo->updateAttributes(['lastItemId' => $itemModel->itemId]);
 
                 if (isset($item['tags'])) {
                     $itemModel->saveTagsFromString($item['tags']);
