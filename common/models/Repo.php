@@ -140,18 +140,9 @@ class Repo extends ActiveRecord
                 return false;
             }
         } else {
-            // Список полей, которые можно обновлять без проверки прав
-            $fieldsToUpdateWithoutAccessValidation = ['lastItemId'];
-
-            // Список полей, которые выходят за рамки тех, что можно обновлять без проверки прав
-            $fieldsRequireAccessValidation = array_diff_key($this->dirtyAttributes, array_fill_keys($fieldsToUpdateWithoutAccessValidation, null));
-
-            // Если среди грязных полей есть что-то, кроме разрешенных без проверки прав -- проверяем права
-            if (!empty($fieldsRequireAccessValidation)) {
-                if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->id, RepoUser::ACCESS_EDIT_REPO)) {
-                    $this->addError('', 'Недостаточно прав для сохранения репозитория.');
-                    return false;
-                }
+            if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->id, RepoUser::ACCESS_EDIT_REPO)) {
+                $this->addError('', 'Недостаточно прав для сохранения репозитория.');
+                return false;
             }
         }
 
