@@ -34,7 +34,8 @@ class User extends ActiveRecord implements IdentityInterface
     public const int STATUS_DELETED = 0;
     public const int STATUS_ACTIVE = 10;
 
-    public const ACCESS_MANAGE_USERS = 1;
+    public const int ACCESS_MANAGE_USERS = 1;
+    public const int ACCESS_CREATE_REPO = 2;
 
     /**
      * @inheritdoc

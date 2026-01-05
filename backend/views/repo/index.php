@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use common\components\UserAccess;
 use yii\helpers\Html;
 use common\models\Repo;
 
@@ -42,5 +43,7 @@ $this->registerCssFile('@web/css/repos.css', ['appendTimestamp' => true], 'repos
         <p>Здесь пока ничего нет.</p>
     <?php } ?>
 
+    <?php if (UserAccess::canCreateRepo()) { ?>
     <p><?= Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить репозиторий', ['repo/create'], ['class' => 'btn btn-success']) ?></p>
+    <?php } ?>
 </div>

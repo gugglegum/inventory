@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace backend\controllers;
 
 use common\components\ItemAccessValidator;
+use common\components\UserAccess;
 use common\helpers\ValidateErrorsFormatter;
 use common\models\Repo;
 use common\models\RepoUser;
@@ -33,6 +34,19 @@ class RepoController extends Controller
             'access' => [
                 'class' => AccessControl::class,
                 'rules' => [
+                    // create: только если есть право
+                    [
+                        'allow' => true,
+                        'actions' => ['create'],
+                        'roles' => ['@'],
+                        'matchCallback' => static fn() => UserAccess::canCreateRepo(),
+                    ],
+                    [
+                        'allow' => false,                 // <-- явный запрет
+                        'actions' => ['create'],
+                        'roles' => ['@'],
+                    ],
+                    // остальные экшены: просто залогинен
                     [
                         'allow' => true,
                         'roles' => ['@'],

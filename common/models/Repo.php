@@ -3,6 +3,7 @@
 namespace common\models;
 
 use common\components\ItemAccessValidator;
+use common\components\UserAccess;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
@@ -133,7 +134,12 @@ class Repo extends ActiveRecord
 
     public function beforeSave($insert): bool
     {
-        if (!$insert) {
+        if ($insert) {
+            if (!UserAccess::canCreateRepo()) {
+                $this->addError('', 'Недостаточно прав для создания репозитория.');
+                return false;
+            }
+        } else {
             // Список полей, которые можно обновлять без проверки прав
             $fieldsToUpdateWithoutAccessValidation = ['lastItemId'];
 
