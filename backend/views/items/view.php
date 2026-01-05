@@ -101,11 +101,11 @@ if ($description !== '') {
             </dl>
             <dl>
                 <dt>Последним изменил(а):</dt>
-                <dd><?= $model->updatedByUser ? Html::encode($model->updatedByUser->username) : (($model->updated !== null && $model->created !== $model->updated) ? '<em>Неизвестно</em>' : '<em>Никто</em>') ?></dd>
+                <dd><?= $model->updatedByUser ? Html::encode($model->updatedByUser->username) : ($model->updated !== null ? '<em>Неизвестно</em>' : '<em>Никто</em>') ?></dd>
             </dl>
             <dl>
                 <dt>Дата изменения:</dt>
-                <dd><?= ($model->updated !== null && $model->created !== $model->updated) ? Html::encode(date('d.m.Y H:i T', $model->updated)) : '<em>Не было изменений</em>' ?></dd>
+                <dd><?= $model->updated !== null ? Html::encode(date('d.m.Y H:i T', $model->updated)) : '<em>Не было изменений</em>' ?></dd>
             </dl>
             <h3>Фотографии</h3>
             <?php

@@ -52,11 +52,11 @@ if ($description !== '') {
             </dl>
             <dl>
                 <dt>Последним изменил(а):</dt>
-                <dd><?= $repo->updatedByUser ? Html::encode($repo->updatedByUser->username) : (($repo->updated !== null && $repo->created !== $repo->updated) ? '<em>Неизвестно</em>' : '<em>Никто</em>') ?></dd>
+                <dd><?= $repo->updatedByUser ? Html::encode($repo->updatedByUser->username) : (($repo->updated !== null) ? '<em>Неизвестно</em>' : '<em>Никто</em>') ?></dd>
             </dl>
             <dl>
                 <dt>Дата изменения:</dt>
-                <dd><?= ($repo->updated !== null && $repo->created !== $repo->updated) ? Html::encode(date('d.m.Y H:i T', $repo->updated)) : '<em>Не было изменений</em>' ?></dd>
+                <dd><?= $repo->updated !== null ? Html::encode(date('d.m.Y H:i T', $repo->updated)) : '<em>Не было изменений</em>' ?></dd>
             </dl>
             <dl>
                 <dt>Предметов в репозитории:</dt>

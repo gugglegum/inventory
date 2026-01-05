@@ -6,6 +6,7 @@ use common\components\ItemAccessValidator;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
+use yii\db\BaseActiveRecord;
 use yii\db\Exception;
 use yii\db\StaleObjectException;
 
@@ -23,7 +24,7 @@ use yii\db\StaleObjectException;
  * @property ?int $createdBy ID создавшего запись пользователя
  * @property ?int $updatedBy ID последнего изменившего запись пользователя
  * @property int $created Время создания
- * @property int $updated Время последнего изменения
+ * @property ?int $updated Время последнего изменения
  *
  * @property ItemRelation[] $itemRelations
  * @property ItemRelation[] $itemBackRelations
@@ -62,6 +63,10 @@ class Item extends ActiveRecord
                 'class' => TimestampBehavior::class,
                 'createdAtAttribute' => 'created',
                 'updatedAtAttribute' => 'updated',
+                'attributes' => [
+                    BaseActiveRecord::EVENT_BEFORE_INSERT => ['created'], // только created
+                    BaseActiveRecord::EVENT_BEFORE_UPDATE => ['updated'], // только updated
+                ],
             ],
         ];
     }
