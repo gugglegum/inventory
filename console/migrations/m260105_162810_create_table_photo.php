@@ -57,6 +57,7 @@ class m260105_162810_create_table_photo extends Migration
         $this->addColumn('{{%item_photo}}', 'photoId', $this->integer()->unsigned()->null()->comment('ID фотографии')->after('itemId'));
         $this->execute("UPDATE {{%item_photo}} SET photoId = id");
         $this->alterColumn('{{%item_photo}}', 'photoId', $this->integer()->unsigned()->notNull()->comment('ID фотографии'));
+        $this->alterColumn('{{%item_photo}}', 'id', $this->integer()->unsigned()->notNull()->append('AUTO_INCREMENT')->comment('ID фотографии предмета'));
 
         $this->createIndex('idx_item_photo_photoId', '{{%item_photo}}', 'photoId');
         $this->addForeignKey(
@@ -111,6 +112,7 @@ class m260105_162810_create_table_photo extends Migration
         // 3 back) убрать связь на photo
         $this->dropForeignKey('fk_item_photo_photoId', '{{%item_photo}}');
         $this->dropIndex('idx_item_photo_photoId', '{{%item_photo}}');
+        $this->alterColumn('{{%item_photo}}', 'id', $this->integer()->unsigned()->notNull()->append('AUTO_INCREMENT')->comment('ID фотографии'));
         $this->dropColumn('{{%item_photo}}', 'photoId');
 
         // 1 back) удалить photo (сначала FK)
