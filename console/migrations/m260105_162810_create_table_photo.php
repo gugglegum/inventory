@@ -54,7 +54,7 @@ class m260105_162810_create_table_photo extends Migration
         ");
 
         // 3) В item_photo добавляем photoId и заполняем (= id для уже существующих строк)
-        $this->addColumn('{{%item_photo}}', 'photoId', $this->integer()->unsigned()->null()->comment('ID фотографии'));
+        $this->addColumn('{{%item_photo}}', 'photoId', $this->integer()->unsigned()->null()->comment('ID фотографии')->after('itemId'));
         $this->execute("UPDATE {{%item_photo}} SET photoId = id");
         $this->alterColumn('{{%item_photo}}', 'photoId', $this->integer()->unsigned()->notNull()->comment('ID фотографии'));
 
