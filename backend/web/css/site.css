@@ -105,7 +105,7 @@ a.desc:after {
     gap: 8px;
 }
 .navbar-brand > img {
-    height: 70px;
+    height: 60px;
     width: auto;
     display: inline-block;
 }
