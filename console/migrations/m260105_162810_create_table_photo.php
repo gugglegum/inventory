@@ -104,7 +104,9 @@ class m260105_162810_create_table_photo extends Migration
             SET ip.md5 = p.md5,
                 ip.size = p.size,
                 ip.width = p.width,
-                ip.height = p.height
+                ip.height = p.height,
+                ip.created = p.created,
+                ip.updated = p.updated
         ");
 
         $this->createIndex('md5', '{{%item_photo}}', 'md5');
