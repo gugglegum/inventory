@@ -94,3 +94,18 @@ a.desc:after {
     padding: 10px 20px;
     margin: 0 0 15px 0;
 }
+
+/* Логотип в шапке */
+.navbar-brand {
+    margin-top: 2px;
+    margin-bottom: -2px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.navbar-brand > img {
+    height: 70px;
+    width: auto;
+    display: inline-block;
+}

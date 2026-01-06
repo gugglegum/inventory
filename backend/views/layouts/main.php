@@ -22,7 +22,7 @@ AppAsset::register($this);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?= Html::csrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
-    <link rel="icon" type="image/vnd.microsoft.icon" href="<?= Url::to('@web/images/box.ico') ?>" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="<?= Url::to('@web/images/favicon.svg') ?>" />
     <?php $this->head() ?>
 </head>
 <body>
@@ -32,6 +32,7 @@ AppAsset::register($this);
     <?php
     NavBar::begin([
         'brandLabel' => 'StockHub',
+        'brandImage' => Url::to('@web/images/logo.svg'),
         'brandUrl' => Yii::$app->homeUrl,
         'options' => [
             'class' => 'navbar-inverse navbar-static-top',

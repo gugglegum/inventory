@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="140" viewBox="0 0 560 140">
+  <!-- Transparent background. Designed for dark navbar -->
+  <g fill="none" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Cube icon -->
+    <polygon points="32,46 62,30 92,46 62,62" stroke="#FFFFFF" stroke-width="4"></polygon>
+    <polygon points="32,46 32,82 62,98 62,62" stroke="#FFFFFF" stroke-width="4"></polygon>
+    <polygon points="92,46 92,82 62,98 62,62" stroke="#FFC400" stroke-width="4"></polygon>
+    <!-- Small hub node -->
+    <circle cx="62" cy="74" r="5.5" fill="#FFC400" stroke="none"></circle>
+    <path d="M62 74 L44 64 M62 74 L80 64 M62 74 L62 92" stroke="#FFC400" stroke-width="3"></path>
+    <circle cx="44" cy="64" r="3.5" fill="#FFFFFF" stroke="none"></circle>
+    <circle cx="80" cy="64" r="3.5" fill="#FFFFFF" stroke="none"></circle>
+    <circle cx="62" cy="92" r="3.5" fill="#FFFFFF" stroke="none"></circle>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="120" y="88" font-family="Inter, system-ui, -apple-system, Segoe UI, Arial, sans-serif" font-size="64" font-weight="600" fill="#FFFFFF" letter-spacing="0.5">
+    Stock
+  </text>
+
+  <!-- Hub badge -->
+  <g transform="translate(290, 36)">
+    <rect x="0" y="-5" rx="7" ry="7" width="110" height="72" fill="#FFC400"></rect>
+    <text x="55" y="52.5" font-family="Inter, system-ui, -apple-system, Segoe UI, Arial, sans-serif" font-size="54" font-weight="700" text-anchor="middle" fill="#0B0B0B">
+      hub
+    </text>
+  </g>
+</svg>
