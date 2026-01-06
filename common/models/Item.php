@@ -135,12 +135,12 @@ class Item extends ActiveRecord
                 return false;
             }
 
-            foreach ($this->itemPhotos as $itemPhoto) {
-                $itemPhoto->delete();
-            }
             foreach ($this->items as $item) {
                 $item->setItemAccessValidator($this->itemAccessValidator);
                 $item->delete();
+            }
+            foreach ($this->itemPhotos as $itemPhoto) {
+                $itemPhoto->delete();
             }
             return true;
         } else {
