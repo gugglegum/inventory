@@ -83,7 +83,7 @@ if ($description !== '') {
                             if ($i > 0) {
                                 echo ', ';
                             }
-                            echo Html::a($tag, Url::to(['items/search', 'q' => $tag]));
+                            echo Html::a($tag, Url::to(['items/search', 'repoId' => $repo->id, 'q' => $tag]));
                             $i++;
                         }
                     } else {
