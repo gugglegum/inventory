@@ -346,6 +346,7 @@ class Item extends ActiveRecord
     public function getNextAvailableItemId(): int
     {
         $itemId = Yii::$app->db->createCommand('SELECT lastItemId FROM repo WHERE id = :repoId FOR UPDATE', [':repoId' => $this->repoId])->queryScalar();
+        $itemId++;
         while (Item::find()->where(['repoId' => $this->repoId, 'itemId' => $itemId])->exists()) {
             $itemId++;
         }
