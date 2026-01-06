@@ -14,14 +14,14 @@
   </g>
 
   <!-- Wordmark -->
-  <text x="120" y="88" font-family="Inter, system-ui, -apple-system, Segoe UI, Arial, sans-serif" font-size="64" font-weight="600" fill="#FFFFFF" letter-spacing="0.5">
+  <text x="120" y="88" font-family="Arial, sans-serif" font-size="64" font-weight="500" fill="#FFFFFF" letter-spacing="0.5">
     Stock
   </text>
 
   <!-- Hub badge -->
   <g transform="translate(290, 36)">
     <rect x="0" y="-5" rx="7" ry="7" width="110" height="72" fill="#FFC400"></rect>
-    <text x="55" y="52.5" font-family="Inter, system-ui, -apple-system, Segoe UI, Arial, sans-serif" font-size="54" font-weight="700" text-anchor="middle" fill="#0B0B0B">
+    <text x="55" y="52.5" font-family="Arial, sans-serif" font-size="54" font-weight="700" text-anchor="middle" fill="#0B0B0B">
       hub
     </text>
   </g>
