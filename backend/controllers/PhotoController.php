@@ -3,6 +3,7 @@
 namespace backend\controllers;
 
 use common\models\ItemPhoto;
+use common\models\Photo;
 use Yii;
 use yii\base\Exception;
 use yii\filters\AccessControl;
@@ -61,17 +62,17 @@ class PhotoController extends Controller
      */
     public function actionThumbnail(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality): Response
     {
-        /** @var ItemPhoto $itemPhoto */
-        $itemPhoto = ItemPhoto::findOne($id);
-        if (! $itemPhoto) {
+        /** @var Photo $photo */
+        $photo = Photo::findOne($id);
+        if (! $photo) {
             throw new HttpException(404, 'Photo #' . $id . ' is not found');
         }
 
-        $staticThumbnailUrl = $itemPhoto->photo->getStaticThumbnailUrl($width, $height, $upscale, $crop, $quality);
-        $thumbnailFile = $itemPhoto->photo->getThumbnailFile($width, $height, $upscale, $crop, $quality);
+        $staticThumbnailUrl = $photo->getStaticThumbnailUrl($width, $height, $upscale, $crop, $quality);
+        $thumbnailFile = $photo->getThumbnailFile($width, $height, $upscale, $crop, $quality);
 
         if (!file_exists($thumbnailFile)) {
-            $itemPhoto->photo->createThumbnail($width, $height, $upscale, $crop, $quality);
+            $photo->createThumbnail($width, $height, $upscale, $crop, $quality);
         }
 //        session_cache_limiter('private_no_expire');
         header_remove('Pragma');

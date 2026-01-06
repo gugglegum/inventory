@@ -38,6 +38,7 @@ use Yii;
  * @property ItemTag[] $itemTags
  * @property ?User $createdByUser
  * @property ?User $updatedByUser
+ * @property Post[] $posts
  */
 class Item extends ActiveRecord
 {
@@ -337,6 +338,11 @@ class Item extends ActiveRecord
     public static function find(): ItemQuery
     {
         return new ItemQuery(get_called_class());
+    }
+
+    public function getPosts(): ActiveQuery
+    {
+        return $this->hasMany(Post::class, ['itemId' => 'id']);
     }
 
     /**

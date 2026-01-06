@@ -35,6 +35,11 @@ return [
                 'repo/<repoId:\d+>/view' => 'repo/view',
                 'repo/<repoId:\d+>/update' => 'repo/update',
                 'repo/<repoId:\d+>/delete' => 'repo/delete',
+                'repo/<repoId:\d+>/items/<itemId:\d+>/posts' => 'posts/index',
+                'repo/<repoId:\d+>/items/<itemId:\d+>/posts/create' => 'posts/create',
+                'repo/<repoId:\d+>/items/<itemId:\d+>/posts/<postId:\d+>' => 'posts/view',
+                'repo/<repoId:\d+>/items/<itemId:\d+>/posts/<postId:\d+>/edit' => 'posts/update',
+                'repo/<repoId:\d+>/items/<itemId:\d+>/posts/<postId:\d+>/delete' => 'posts/delete',
             ],
         ],
         'user' => [

@@ -6,24 +6,24 @@ use yii\db\ActiveRecord;
 use yii\db\Query;
 
 /**
- * Фотография предмета
+ * Фотография поста
  *
  * @property int $id
- * @property int $itemId
+ * @property int $postId
  * @property int $photoId
  * @property int $sortIndex
  *
- * @property Item $item
+ * @property Post $post
  * @property Photo $photo
  */
-class ItemPhoto extends ActiveRecord
+class PostPhoto extends ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName(): string
     {
-        return 'item_photo';
+        return 'post_photo';
     }
 
     /**
@@ -32,8 +32,8 @@ class ItemPhoto extends ActiveRecord
     public function rules(): array
     {
         return [
-            [['itemId', 'photoId'], 'required'],
-            [['itemId', 'photoId', 'sortIndex'], 'integer'],
+            [['postId', 'photoId'], 'required'],
+            [['postId', 'photoId', 'sortIndex'], 'integer'],
         ];
     }
 
@@ -43,8 +43,8 @@ class ItemPhoto extends ActiveRecord
     public function attributeLabels(): array
     {
         return [
-            'id' => 'ID фотографии предмета',
-            'itemId' => 'ID предмета',
+            'id' => 'ID фотографии поста',
+            'postId' => 'ID поста',
             'photoId' => 'ID фотографии',
             'sortIndex' => 'Порядковый номер',
         ];
@@ -57,7 +57,7 @@ class ItemPhoto extends ActiveRecord
                 $maxSortIndex = new Query()
                     ->select('MAX(sortIndex)')
                     ->from(self::tableName())
-                    ->where('itemId = :itemId', ['itemId' => $this->itemId])
+                    ->where('postId = :postId', ['postId' => $this->postId])
                     ->scalar();
                 $this->sortIndex = $maxSortIndex !== null ? $maxSortIndex + 1 : 0;
             }
@@ -67,9 +67,9 @@ class ItemPhoto extends ActiveRecord
         }
     }
 
-    public function getItem(): \yii\db\ActiveQuery
+    public function getPost(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(Item::class, ['id' => 'itemId']);
+        return $this->hasOne(Post::class, ['id' => 'postId']);
     }
 
     public function getPhoto(): \yii\db\ActiveQuery
@@ -79,10 +79,10 @@ class ItemPhoto extends ActiveRecord
 
     /**
      * @inheritdoc
-     * @return ItemPhotoQuery the active query used by this AR class.
+     * @return PostPhotoQuery the active query used by this AR class.
      */
-    public static function find(): ItemPhotoQuery
+    public static function find(): PostPhotoQuery
     {
-        return new ItemPhotoQuery(get_called_class());
+        return new PostPhotoQuery(get_called_class());
     }
 }

@@ -1,0 +1,35 @@
+#post-view #post-text {
+    max-width: 60em;
+}
+#post-view h1 {
+    font-size: 30px;
+}
+#post-view #post-text #lnkEdit {
+    float: right;
+}
+#post-view #post-photos .uploaded-photos .photo-wrapper .upload-date {
+    position: absolute;
+    right: 25px;
+    bottom: 20px;
+    font-size: 70%;
+    color: #e6e6e6;
+    text-shadow: 1px 1px 1px #666, -1px -1px 1px #999;
+}
+#post-view #post-properties {
+    margin-top: 1em;
+    color: #999;
+}
+#post-view #post-properties dl {
+    max-width: 60em;
+    margin-bottom: 0.5em;
+}
+#post-view #post-properties dl dt {
+    box-sizing: border-box;
+    white-space: nowrap;
+    display: inline;
+}
+#post-view #post-properties dl dd {
+    box-sizing: border-box;
+    display: inline;
+    padding-left: 0.25em;
+}

@@ -65,50 +65,48 @@ if ($description !== '') {
         </div>
         <dt>Описание</dt>
         <dd><?= $description ?></dd>
+        <div id="item-post">
+            <div><?= Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить заметку', ['posts/create', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?></div>
+<?php if ($model->getPosts()->count() > 0) { ?>
+            <h4>Посты о предмете:</h4>
+            <ul class="posts">
+            <?php foreach ($model->posts as $post) { ?>
+                <li>
+                    <div class="title"><?= Html::encode(date('Y-m-d', $post->datetime)) ?> <?= Html::a($post->title, ['posts/view', 'repoId' => $repo->id, 'itemId' => $model->itemId, 'postId' => $post->id]) ?><?=
+                        Html::a('', Url::to(['posts/update', 'repoId' => $repo->id, 'itemId' => $model->itemId, 'postId' => $post->id]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-left: 5px']) ?></div>
+                    <div class="text"><?php
+                        // Выводим укороченный текст, если он слишком длинное. Заменяем в нём все избыточные белые
+                        // пробелы на обычные пробелы.
+                        $maxDescriptionLength = 250;
+                        $threshold = 10;
+                        $text = preg_replace('/\s+/u', "\x20", $post->text);
+                        if (mb_strlen($text) > $maxDescriptionLength + $threshold) {
+                            $text = rtrim(mb_substr($text, 0, $maxDescriptionLength)) . '...';
+                        }
+                        echo \common\helpers\MarkdownFormatter::format($text, $repo);
+                    ?></div>
+
+                    <?php $postPhotos = $post->postPhotos; if (count($postPhotos) != 0) { ?>
+                        <div class="photos">
+                            <?php foreach ($postPhotos as $postPhoto) { ?>
+                                <?= Html::beginTag('a', ['href' => $postPhoto->photo->getUrl(), 'rel' => 'post-photos#' . $post->id, 'class' => 'fancybox']) ?>
+                                <?= Html::img($postPhoto->photo->getThumbnailUrl(48, 48, true, true, 90), ['alt' => 'Photo']) ?>
+                                <?= Html::endTag('a') ?>
+                            <?php } ?>
+                        </div>
+                    <?php } ?>
+                </li>
+            <?php } ?>
+            </ul>
+<?php } ?>
+        </div>
     </dl>
 
     <div class="columns-container">
         <div id="item-info">
-            <dl>
-                <dt>Контейнер: </dt>
-                <dd><em><?= $model->isContainer ? 'Да' : 'Нет' ?></em></dd>
-            </dl>
-            <dl>
-                <dt>Метки:</dt>
-                <dd><?php
-                    $tags = $model->fetchTags();
-                    if (count($tags) > 0) {
-                        $i = 0;
-                        foreach ($tags as $tag) {
-                            if ($i > 0) {
-                                echo ', ';
-                            }
-                            echo Html::a($tag, Url::to(['items/search', 'repoId' => $repo->id, 'q' => $tag]));
-                            $i++;
-                        }
-                    } else {
-                        echo '<em>Нет</em>';
-                    }
-                    ?></dd>
-            </dl>
-            <dl>
-                <dt>Создатель:</dt>
-                <dd><?= $model->createdByUser ? Html::encode($model->createdByUser->username) : '<em>Неизвестно</em>' ?></dd>
-            </dl>
-            <dl>
-                <dt>Дата создания:</dt>
-                <dd><?= Html::encode(date('d.m.Y H:i T', $model->created)) ?></dd>
-            </dl>
-            <dl>
-                <dt>Последним изменил(а):</dt>
-                <dd><?= $model->updatedByUser ? Html::encode($model->updatedByUser->username) : ($model->updated !== null ? '<em>Неизвестно</em>' : '<em>Никто</em>') ?></dd>
-            </dl>
-            <dl>
-                <dt>Дата изменения:</dt>
-                <dd><?= $model->updated !== null ? Html::encode(date('d.m.Y H:i T', $model->updated)) : '<em>Не было изменений</em>' ?></dd>
-            </dl>
-            <h3>Фотографии</h3>
-            <?php
+            <div id="item-photos">
+                <h3>Фотографии</h3>
+                <?php
                 $photos = $model->itemPhotos;
                 if (count($photos) !== 0) {
                     echo Html::beginTag('div', ['class' => 'uploaded-photos']);
@@ -127,7 +125,49 @@ if ($description !== '') {
                 } else {
                     echo "<p class='hint-block'><em>Нет фотографий</em></p>\n";
                 }
-            ?>
+                ?>
+            </div>
+
+            <div id="item-properties">
+                <dl>
+                    <dt>Контейнер: </dt>
+                    <dd><em><?= $model->isContainer ? 'Да' : 'Нет' ?></em></dd>
+                </dl>
+                <dl>
+                    <dt>Метки:</dt>
+                    <dd><?php
+                        $tags = $model->fetchTags();
+                        if (count($tags) > 0) {
+                            $i = 0;
+                            foreach ($tags as $tag) {
+                                if ($i > 0) {
+                                    echo ', ';
+                                }
+                                echo Html::a($tag, Url::to(['items/search', 'repoId' => $repo->id, 'q' => $tag]));
+                                $i++;
+                            }
+                        } else {
+                            echo '<em>Нет</em>';
+                        }
+                        ?></dd>
+                </dl>
+                <dl>
+                    <dt>Создатель:</dt>
+                    <dd><?= $model->createdByUser ? Html::encode($model->createdByUser->username) : '<em>Неизвестно</em>' ?></dd>
+                </dl>
+                <dl>
+                    <dt>Дата создания:</dt>
+                    <dd><?= Html::encode(date('d.m.Y H:i T', $model->created)) ?></dd>
+                </dl>
+                <dl>
+                    <dt>Последним изменил(а):</dt>
+                    <dd><?= $model->updatedByUser ? Html::encode($model->updatedByUser->username) : ($model->updated !== null ? '<em>Неизвестно</em>' : '<em>Никто</em>') ?></dd>
+                </dl>
+                <dl>
+                    <dt>Дата изменения:</dt>
+                    <dd><?= $model->updated !== null ? Html::encode(date('d.m.Y H:i T', $model->updated)) : '<em>Не было изменений</em>' ?></dd>
+                </dl>
+            </div>
         </div>
 
         <?php if ($model->isContainer || count($children) > 0) { ?>

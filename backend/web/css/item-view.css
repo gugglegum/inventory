@@ -34,7 +34,11 @@
     text-shadow: 0 0 15px #000;
 }
 
-#item-view .columns-container #item-info .uploaded-photos .photo-wrapper .upload-date {
+
+#item-view .columns-container #item-photos h3 {
+    margin-top: 0;
+}
+#item-view .columns-container #item-photos .uploaded-photos .photo-wrapper .upload-date {
     position: absolute;
     right: 25px;
     bottom: 20px;
@@ -43,6 +47,10 @@
     text-shadow: 1px 1px 1px #666, -1px -1px 1px #999;
 }
 
+#item-view .columns-container #item-info #item-properties {
+    margin-top: 1em;
+    color: #999;
+}
 #item-view .columns-container #item-info dl {
     max-width: 60em;
     margin-bottom: 0.5em;
@@ -56,4 +64,27 @@
     box-sizing: border-box;
     display: inline;
     padding-left: 0.25em;
+}
+
+#item-view #item-description #item-post {
+    margin-top: 2em;
+}
+#item-view #item-description #item-post ul {
+    padding-left: 1em;
+}
+#item-view #item-description #item-post ul li {
+    margin: 1em 0 0 0;
+    list-style: none;
+}
+#item-view #item-description #item-post .title a.edit-link {
+    font-size: 50%;
+    vertical-align: super;
+}
+#item-view #item-description #item-post .text {
+    color: #999;
+    font-size: 80%;
+    margin: 0.2em 0 0.5em 0;
+}
+#item-view #item-description #item-post .text p {
+    margin: 0;
 }

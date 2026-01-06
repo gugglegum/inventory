@@ -23,7 +23,8 @@
         "ext-exif": "*",
         "ext-mbstring": "*",
         "ext-pdo_mysql": "*",
-        "s9e/text-formatter": "^2.13"
+        "s9e/text-formatter": "^2.13",
+        "kartik-v/yii2-widget-datetimepicker": "*"
     },
     "require-dev": {
         "yiisoft/yii2-codeception": "*",
