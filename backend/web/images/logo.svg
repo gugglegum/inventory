@@ -20,8 +20,8 @@
 
   <!-- Hub badge -->
   <g transform="translate(290, 36)">
-    <rect x="0" y="-5" rx="7" ry="7" width="110" height="72" fill="#FFC400"></rect>
-    <text x="55" y="52.5" font-family="Arial, sans-serif" font-size="54" font-weight="700" text-anchor="middle" fill="#0B0B0B">
+    <rect x="0" y="-5" rx="7" ry="7" width="110" height="72" fill="#da00c0"></rect>
+    <text x="55" y="52.5" font-family="Arial, sans-serif" font-size="54" font-weight="700" text-anchor="middle" fill="#222">
       hub
     </text>
   </g>
