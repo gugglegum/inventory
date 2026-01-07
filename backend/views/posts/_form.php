@@ -38,6 +38,7 @@ $tabIndex = 1;
                 'format' => 'dd.mm.yyyy hh:ii',
             ],
             'removeButton' => false,
+            'layout' => '{picker}{remove}{input} <span style="position: relative; top: 0.5em; left: 0.5em;">(UTC)</span>',
     ]) ?>
     <?= $form->field($post, 'title')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
     <?= $form->field($post, 'text')->textarea(['rows' => 4, 'tabindex' => $tabIndex++]) ?>
