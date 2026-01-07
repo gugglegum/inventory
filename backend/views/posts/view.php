@@ -30,6 +30,7 @@ if ($text !== '') {
 <div id="post-view">
 
     <h1><?= Html::encode($this->title) ?></h1>
+    <div><?= Html::encode(date('d.m.Y H:i T', $post->datetime)) ?></div>
 
     <dl id="post-text">
         <div id="lnkEdit">

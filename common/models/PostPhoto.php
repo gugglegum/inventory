@@ -67,6 +67,35 @@ class PostPhoto extends ActiveRecord
         }
     }
 
+    /**
+     * @return bool
+     * @throws \Throwable
+     */
+    public function beforeDelete(): bool
+    {
+        if (parent::beforeDelete()) {
+//            if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->repoId, RepoUser::ACCESS_DELETE_ITEMS)) {
+//                $this->addError('', 'Недостаточно прав для удаления предмета.');
+//                return false;
+//            }
+//            $postPhoto->setItemAccessValidator($this->itemAccessValidator);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @return void
+     * @throws \Throwable
+     */
+    public function afterDelete(): void
+    {
+        parent::afterDelete();
+        $this->photo->delete();
+    }
+
+
     public function getPost(): \yii\db\ActiveQuery
     {
         return $this->hasOne(Post::class, ['id' => 'postId']);

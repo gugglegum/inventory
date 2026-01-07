@@ -66,39 +66,17 @@ if ($description !== '') {
         <dt>Описание</dt>
         <dd><?= $description ?></dd>
         <div id="item-post">
-            <div><?= Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить заметку', ['posts/create', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?></div>
+            <h3>Заметки о предмете</h3>
 <?php if ($model->getPosts()->count() > 0) { ?>
-            <h4>Посты о предмете:</h4>
-            <ul class="posts">
-            <?php foreach ($model->posts as $post) { ?>
-                <li>
-                    <div class="title"><?= Html::encode(date('Y-m-d', $post->datetime)) ?> <?= Html::a($post->title, ['posts/view', 'repoId' => $repo->id, 'itemId' => $model->itemId, 'postId' => $post->id]) ?><?=
-                        Html::a('', Url::to(['posts/update', 'repoId' => $repo->id, 'itemId' => $model->itemId, 'postId' => $post->id]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-left: 5px']) ?></div>
-                    <div class="text"><?php
-                        // Выводим укороченный текст, если он слишком длинное. Заменяем в нём все избыточные белые
-                        // пробелы на обычные пробелы.
-                        $maxDescriptionLength = 250;
-                        $threshold = 10;
-                        $text = preg_replace('/\s+/u', "\x20", $post->text);
-                        if (mb_strlen($text) > $maxDescriptionLength + $threshold) {
-                            $text = rtrim(mb_substr($text, 0, $maxDescriptionLength)) . '...';
-                        }
-                        echo \common\helpers\MarkdownFormatter::format($text, $repo);
-                    ?></div>
-
-                    <?php $postPhotos = $post->postPhotos; if (count($postPhotos) != 0) { ?>
-                        <div class="photos">
-                            <?php foreach ($postPhotos as $postPhoto) { ?>
-                                <?= Html::beginTag('a', ['href' => $postPhoto->photo->getUrl(), 'rel' => 'post-photos#' . $post->id, 'class' => 'fancybox']) ?>
-                                <?= Html::img($postPhoto->photo->getThumbnailUrl(48, 48, true, true, 90), ['alt' => 'Photo']) ?>
-                                <?= Html::endTag('a') ?>
-                            <?php } ?>
-                        </div>
-                    <?php } ?>
-                </li>
-            <?php } ?>
-            </ul>
-<?php } ?>
+<?= $this->render('/posts/_posts', [
+        'posts' => $model->posts,
+        'item' => $model,
+        'repo' => $repo,
+    ]) ?>
+<?php } else {
+    echo "<p class='hint-block'><em>Нет заметок</em></p>\n";
+} ?>
+            <div><?= Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить заметку', ['posts/create', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?></div>
         </div>
     </dl>
 
