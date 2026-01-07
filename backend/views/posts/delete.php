@@ -12,8 +12,11 @@ use yii\widgets\ActiveForm;
 /** @var Item $item */
 /** @var Repo $repo */
 
-$this->title = 'Удаление поста';
-$this->render('/_breadcrumbs', ['item' => $item, 'repo' => $repo, 'suffix' => [$this->title]]);
+$this->title = $post->title;
+$this->render('/_breadcrumbs', ['item' => $item, 'repo' => $repo, 'suffix' => [
+        ['url' => \yii\helpers\Url::to(['posts/view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]), 'label' => $this->title],
+        'Редактирование'
+]]);
 
 ?>
 <div class="item-delete">

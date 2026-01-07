@@ -143,31 +143,27 @@ class Post extends ActiveRecord
         return !$this->hasErrors();
     }
 
-//    /**
-//     * @return bool
-//     * @throws StaleObjectException
-//     * @throws \Throwable
-//     */
-//    public function beforeDelete(): bool
-//    {
-//        if (parent::beforeDelete()) {
+    /**
+     * @return bool
+     * @throws \Throwable
+     */
+    public function beforeDelete(): bool
+    {
+        if (parent::beforeDelete()) {
 //            if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->repoId, RepoUser::ACCESS_DELETE_ITEMS)) {
 //                $this->addError('', 'Недостаточно прав для удаления предмета.');
 //                return false;
 //            }
-//
-//            foreach ($this->items as $item) {
-//                $item->setItemAccessValidator($this->itemAccessValidator);
-//                $item->delete();
-//            }
-//            foreach ($this->itemPhotos as $itemPhoto) {
-//                $itemPhoto->delete();
-//            }
-//            return true;
-//        } else {
-//            return false;
-//        }
-//    }
+
+            foreach ($this->postPhotos as $postPhoto) {
+//                $postPhoto->setItemAccessValidator($this->itemAccessValidator);
+                $postPhoto->delete();
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
 
 //    public function beforeSave($insert): bool
 //    {
