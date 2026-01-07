@@ -76,7 +76,9 @@ if ($description !== '') {
 <?php } else {
     echo "<p class='hint-block'><em>Нет заметок</em></p>\n";
 } ?>
-            <div><?= Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить заметку', ['posts/create', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?></div>
+            <div class="add-post-link">
+                <?= Html::a('<i class="glyphicon glyphicon-plus-sign"></i> Добавить заметку', ['posts/create', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
+            </div>
         </div>
     </dl>
 

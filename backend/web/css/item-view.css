@@ -69,6 +69,12 @@
 #item-view #item-description #item-post {
     margin-top: 2em;
 }
+#item-view #item-description #item-post .add-post-link {
+    margin: 1em;
+}
+#item-view #item-description #item-post .add-post-link .glyphicon {
+    margin-right: 5px;
+}
 #item-view #item-description #item-post ul {
     padding-left: 1em;
 }
