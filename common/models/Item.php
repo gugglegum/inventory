@@ -173,10 +173,13 @@ class Item extends ActiveRecord
     {
         $transaction = Yii::$app->db->beginTransaction();
         try {
+            $isNewRecord = $this->isNewRecord;
             $saveResult = parent::save($runValidation, $attributeNames);
             if ($saveResult) {
-                // Обновляем lastItemId в репозитории напрямую без проверки прав на изменение repo и без обновления repo.updated
-                $this->repo->updateAttributes(['lastItemId' => $this->itemId]);
+                if ($isNewRecord) {
+                    // Обновляем lastItemId в репозитории напрямую без проверки прав на изменение repo и без обновления repo.updated
+                    $this->repo->updateAttributes(['lastItemId' => $this->itemId]);
+                }
                 $transaction->commit();
             } else {
                 $transaction->rollBack();
