@@ -631,6 +631,7 @@ class ItemsController extends Controller
         return $this->asJson([
             'content' => $this->renderPartial('_items', [
                 'items' => [$model],
+                'repo' => $repo,
                 'paths' => [
                     $model->id => $this->getItemPathForView($model, $repo),
                 ],
