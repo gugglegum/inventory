@@ -145,7 +145,7 @@ class PostsController extends Controller
                         $sortIndex++;
                     }
                 }
-                return $this->redirect(['posts/view', 'repoId' => $repo->id, 'itemId' => $item->id, 'postId' => $post->id]);
+                return $this->redirect(['posts/view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
             }
         }
 
