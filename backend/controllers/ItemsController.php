@@ -281,8 +281,8 @@ class ItemsController extends Controller
         $model = $this->findModel($repo->id, $id);
         $queryString = Yii::$app->request->getQueryParam('q', '');
 
-        $prevItem = Item::find()->where(['repoId' => $repo->id])->andWhere('itemId < :id', ['id' => $id])->orderBy('id DESC')->limit(1)->one();
-        $nextItem = Item::find()->where(['repoId' => $repo->id])->andWhere('itemId > :id', ['id' => $id])->orderBy('id ASC')->limit(1)->one();
+        $prevItem = Item::find()->where(['repoId' => $repo->id])->andWhere('itemId < :id', ['id' => $id])->orderBy('itemId DESC')->limit(1)->one();
+        $nextItem = Item::find()->where(['repoId' => $repo->id])->andWhere('itemId > :id', ['id' => $id])->orderBy('itemId ASC')->limit(1)->one();
 
         return $this->render('view', [
             'model' => $model,
