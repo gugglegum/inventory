@@ -22,7 +22,7 @@ $this->registerCssFile('@web/css/inventories.css', ['appendTimestamp' => true], 
     <h1><?= Html::encode($this->title . ': ' . $container->name) ?></h1>
 
     <?php
-        if ($container->getLastOpenedInventory() === null) {
+        if ($container->lastOpenedInventory === null) {
             $form = ActiveForm::begin([
                     'action' => Url::to(['create', 'repoId' => $repo->id, 'itemId' => $container->itemId]),
                     'method' => 'post',
