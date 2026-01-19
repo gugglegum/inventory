@@ -1,0 +1,55 @@
+#inventory-view #item-description {
+    max-width: 60em;
+}
+#inventory-view h1 {
+    font-size: 30px;
+}
+
+dl.params {
+    max-width: 60em;
+    margin-bottom: 0.5em;
+}
+dl.params dt {
+    box-sizing: border-box;
+    white-space: nowrap;
+    display: inline;
+}
+dl.params dd {
+    box-sizing: border-box;
+    display: inline;
+    padding-left: 0.25em;
+    margin: 0;
+}
+
+#inventory-view .columns-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+}
+#inventory-view .columns-container div.column {
+    flex: 1 1 320px;
+    min-width: 320px;
+}
+
+#inventory-view form.inventory-by-item-id {
+    margin-top: 1em;
+}
+#inventory-view form.inventory-by-item-id .field-inventoryitem-itemid {
+    padding-right: 0.5em;
+    display: inline-block;
+}
+#inventory-view form.inventory-by-item-id button {
+    display: inline-block;
+}
+
+#inventory-view .bottom-buttons {
+    margin: 2em 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em 1em;     /* row-gap = 0.5em, column-gap = 1em */
+    align-items: center;
+}
+#inventory-view .bottom-buttons > form {
+    /*margin-top: 0 !important;*/
+    /*margin: 0;*/
+}

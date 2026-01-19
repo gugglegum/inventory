@@ -1,0 +1,9 @@
+.inventory-index ul.inventories {
+    margin: 2em 0;
+}
+.inventory-index ul.inventories li {
+    margin: 1em 0;
+}
+.inventory-index ul.inventories li.active {
+    font-weight: bold;
+}

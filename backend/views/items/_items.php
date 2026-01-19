@@ -11,6 +11,7 @@ use yii\helpers\Url;
 /** @var bool $showChildren */
 /** @var ?int $containerId */
 /** @var Repo $repo */
+/** @var ?callable $bottomCallback */
 
 $this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items');
 
@@ -38,7 +39,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 ?>
             </td>
             <td class="details">
-                <?php if ($showPath) { ?>
+                <?php if ($showPath && array_key_exists($item->id, $paths)) { ?>
                 <div class="path">
                     <?php
                     $path = $paths[$item->id];
@@ -117,6 +118,9 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                     } ?>
                 </div>
                 <?php } ?>
+                <?php if (!empty($bottomCallback)) {
+                    $bottomCallback($item);
+                } ?>
             </td>
 <!--            <td><label><input name="item_check[--><?php //= $item->id ?><!--]" type="checkbox"></label></td>-->
         </tr>

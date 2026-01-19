@@ -20,7 +20,6 @@ $this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo]);
 
 $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 $this->registerCssFile('@web/css/item-view.css', ['appendTimestamp' => true], 'item-view');
-//$this->registerJsFile('@web/js/item-view.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]], 'item-view');
 
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 
@@ -132,21 +131,71 @@ if ($description !== '') {
                         ?></dd>
                 </dl>
                 <dl>
-                    <dt>Создатель:</dt>
-                    <dd><?= $model->createdByUser ? Html::encode($model->createdByUser->username) : '<em>Неизвестно</em>' ?></dd>
+                    <dt>Создание:</dt>
+                    <dd><?php if ($model->created !== null) { ?>
+                        <?= Html::encode(date('d.m.Y H:i T', $model->created))?>
+                        <?php if ($model->createdByUser) { ?>
+                        (<?= Html::encode($model->createdByUser->username) ?>)
+                    <?php } ?>
+                    <?php } else { ?>
+                        <em>Не было изменений</em>
+                    <?php } ?>
+                    </dd>
                 </dl>
                 <dl>
-                    <dt>Дата создания:</dt>
-                    <dd><?= Html::encode(date('d.m.Y H:i T', $model->created)) ?></dd>
+                    <dt>Последнее изменение:</dt>
+                    <dd><?php if ($model->updated !== null) { ?>
+                        <?= Html::encode(date('d.m.Y H:i T', $model->updated))?>
+                        <?php if ($model->updatedByUser) { ?>
+                        (<?= Html::encode($model->updatedByUser->username) ?>)
+                    <?php } ?>
+                    <?php } else { ?>
+                        <em>Не было изменений</em>
+                    <?php } ?>
+                    </dd>
                 </dl>
                 <dl>
-                    <dt>Последним изменил(а):</dt>
-                    <dd><?= $model->updatedByUser ? Html::encode($model->updatedByUser->username) : ($model->updated !== null ? '<em>Неизвестно</em>' : '<em>Никто</em>') ?></dd>
+                    <dt>Подтверждено наличие:</dt>
+                    <dd><?php if ($model->lastSeen !== null) { ?>
+                        <?= Html::encode(date('d.m.Y H:i T', $model->lastSeen))?>
+                        <?php if ($model->lastSeenByUser) { ?>
+                        (<?= Html::encode($model->lastSeenByUser->username) ?>)
+                    <?php } ?>
+                    <?php } else { ?>
+                        <em>Не было подтверждений</em>
+                    <?php } ?>
+                    </dd>
                 </dl>
                 <dl>
-                    <dt>Дата изменения:</dt>
-                    <dd><?= $model->updated !== null ? Html::encode(date('d.m.Y H:i T', $model->updated)) : '<em>Не было изменений</em>' ?></dd>
+                    <dt>Заявлено отсутствие:</dt>
+                    <dd><?php if ($model->missingSince !== null) { ?>
+                        <?= Html::encode(date('d.m.Y H:i T', $model->missingSince))?>
+                        <?php if ($model->missingSinceByUser) { ?>
+                        (<?= Html::encode($model->missingSinceByUser->username) ?>)
+                        <?php } ?>
+                    <?php } else { ?>
+                        <em>Не было заявлений</em>
+                    <?php } ?>
+                    </dd>
                 </dl>
+                <?php if ($model->isContainer || $model->getInventories()->count() > 0) { ?>
+                <dl>
+                    <dt>Последняя инвентаризация:</dt>
+                    <dd><?php if ($model->lastClosedInventory !== null) { ?>
+                            <a href="<?= Html::encode(Url::to(['inventory/view', 'repoId' => $repo->id, 'itemId' => $model->itemId, 'inventoryId' => $model->lastClosedInventory->id])) ?>"><?= Html::encode(date('d.m.Y H:i T', $model->lastClosedInventory->closed)) ?></a>
+                        <?php if ($model->lastClosedInventory->closedByUser) { ?>
+                        (<?= Html::encode($model->lastClosedInventory->closedByUser->username) ?>)
+                        <?php } ?>
+                    <?php } else { ?>
+                    <em>Не было инвентаризаций</em>
+                    <?php } ?>
+                    <?php if ($model->lastOpenedInventory !== null) { ?>
+                        + есть незаконченная инвентаризация, <a href="<?= Html::encode(Url::to(['inventory/view', 'repoId' => $repo->id, 'itemId' => $model->itemId, 'inventoryId' => $model->lastOpenedInventory->id])) ?>">продолжить</a>.
+                    <?php } ?>
+                        <p><?= Html::a('<i class="glyphicon glyphicon-check" style="margin-right: 5px;"></i> Инвентаризации', ['inventory/index', 'repoId' => $repo->id, 'itemId' => $model->itemId]); ?></p>
+                    </dd>
+                </dl>
+                <?php } ?>
             </div>
         </div>
 

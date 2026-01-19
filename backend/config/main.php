@@ -40,6 +40,10 @@ return [
                 'repo/<repoId:\d+>/items/<itemId:\d+>/posts/<postId:\d+>' => 'posts/view',
                 'repo/<repoId:\d+>/items/<itemId:\d+>/posts/<postId:\d+>/edit' => 'posts/update',
                 'repo/<repoId:\d+>/items/<itemId:\d+>/posts/<postId:\d+>/delete' => 'posts/delete',
+                'repo/<repoId:\d+>/items/<itemId:\d+>/inventory' => 'inventory/index',
+                'repo/<repoId:\d+>/items/<itemId:\d+>/inventory/create' => 'inventory/create',
+                'repo/<repoId:\d+>/items/<itemId:\d+>/inventory/<inventoryId:\d+>' => 'inventory/view',
+                'repo/<repoId:\d+>/items/<itemId:\d+>/inventory/<inventoryId:\d+>/delete' => 'inventory/delete',
             ],
         ],
         'user' => [

@@ -22,8 +22,12 @@ use Yii;
  * @property ?string $description Описание
  * @property int $isContainer Является ли предмет контейнером?
  * @property int $priority Приоритет сортировки
+ * @property ?int $lastSeenBy Кем подтверждено нахождение
+ * @property ?int $missingSinceBy Кем обнаружено отсутствие
  * @property ?int $createdBy ID создавшего запись пользователя
  * @property ?int $updatedBy ID последнего изменившего запись пользователя
+ * @property ?int $lastSeen Когда подтверждено нахождение
+ * @property ?int $missingSince Когда обнаружено отсутствие
  * @property int $created Время создания
  * @property ?int $updated Время последнего изменения
  *
@@ -36,9 +40,15 @@ use Yii;
  * @property ItemPhoto $primaryPhoto
  * @property ItemPhoto[] $secondaryPhotos
  * @property ItemTag[] $itemTags
+ * @property ?User $lastSeenByUser
+ * @property ?User $missingSinceByUser
  * @property ?User $createdByUser
  * @property ?User $updatedByUser
  * @property Post[] $posts
+ * @property Inventory[] $inventories
+ * @property Inventory $lastOpenedInventory
+ * @property Inventory $lastClosedInventory
+ * @property InventoryItem[] $inventoryItems
  */
 class Item extends ActiveRecord
 {
@@ -322,6 +332,36 @@ class Item extends ActiveRecord
     public function getItemTags(): ActiveQuery
     {
         return $this->hasMany(ItemTag::class, ['itemId' => 'id']);
+    }
+
+    public function getInventories(): ActiveQuery
+    {
+        return $this->hasMany(Inventory::class, ['containerId' => 'id']);
+    }
+
+    public function getLastOpenedInventory(): ActiveQuery
+    {
+        return $this->hasOne(Inventory::class, ['containerId' => 'id'])->where(['status' => Inventory::STATUS_OPENED])->orderBy(['id' => SORT_DESC])->limit(1);
+    }
+
+    public function getLastClosedInventory(): ActiveQuery
+    {
+        return $this->hasOne(Inventory::class, ['containerId' => 'id'])->where(['status' => Inventory::STATUS_CLOSED])->orderBy(['id' => SORT_DESC])->limit(1);
+    }
+
+    public function getInventoryItems(): ActiveQuery
+    {
+        return $this->hasMany(InventoryItem::class, ['itemId' => 'id']);
+    }
+
+    public function getLastSeenByUser(): ActiveQuery
+    {
+        return $this->hasOne(User::class, ['id' => 'lastSeenBy']);
+    }
+
+    public function getMissingSinceByUser(): ActiveQuery
+    {
+        return $this->hasOne(User::class, ['id' => 'missingSinceBy']);
     }
 
     public function getCreatedByUser(): ActiveQuery
