@@ -32,7 +32,7 @@ return [
                 'repo/<repoId:\d+>/items/<itemId:\d+>/delete' => 'items/delete',
                 'repo/<repoId:\d+>/items/<parentItemId:\d+>/import' => 'items/import',
                 'repo/create' => 'repo/create',
-                'repo/<repoId:\d+>/view' => 'repo/view',
+                'repo/<repoId:\d+>' => 'repo/view',
                 'repo/<repoId:\d+>/update' => 'repo/update',
                 'repo/<repoId:\d+>/delete' => 'repo/delete',
                 'repo/<repoId:\d+>/items/<itemId:\d+>/posts' => 'posts/index',
