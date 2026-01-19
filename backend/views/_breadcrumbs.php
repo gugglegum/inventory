@@ -18,7 +18,7 @@ if ($repo) {
         while ($tmpItem) {
             $path[] = [
                 'label' => $tmpItem->name,
-                'url' => ['items/view', 'repoId' => $repo->id, 'id' => $tmpItem->itemId],
+                'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => $tmpItem->itemId],
                 'template' => empty($path)
                     ? '<li class="active">{link}<sup style="margin-left: 3px">#' . Html::encode($tmpItem->itemId) . "</sup></li>\n"
                     : '<li>{link}<sup style="margin-left: 3px; color: #777">#' . Html::encode($tmpItem->itemId) . "</sup></li>\n",

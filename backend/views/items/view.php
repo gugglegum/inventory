@@ -60,7 +60,7 @@ if ($description !== '') {
 
     <dl id="item-description">
         <div id="lnkEdit">
-            <?= Html::a('<i class="glyphicon glyphicon-edit" style="margin-right: 5px;"></i> Изменить', ['update', 'repoId' => $repo->id, 'id' => $model->itemId]) ?>
+            <?= Html::a('<i class="glyphicon glyphicon-edit" style="margin-right: 5px;"></i> Изменить', ['update', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
         </div>
         <dt>Описание</dt>
         <dd><?= $description ?></dd>
@@ -247,6 +247,6 @@ if ($description !== '') {
     <div class="clearfix"></div>
 
     <p style="margin-top: 3em">
-        <?= Html::a('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', ['delete', 'repoId' => $repo->id, 'id' => $model->itemId]) ?>
+        <?= Html::a('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
     </p>
 </div>

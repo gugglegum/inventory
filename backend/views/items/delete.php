@@ -29,7 +29,7 @@ $this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo, 'suffix' => [
     ]) ?>
 
     <?php $form = ActiveForm::begin([
-        'action' => Url::to(['delete', 'repoId' => $repo->id, 'id' => $model->itemId]),
+        'action' => Url::to(['delete', 'repoId' => $repo->id, 'itemId' => $model->itemId]),
         'method' => 'post',
         'options' => [
             'style' => 'margin-top: 1em',
@@ -45,7 +45,7 @@ $this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo, 'suffix' => [
             'method' => 'post',
         ],
     ]) ?>
-    <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(['items/view', 'repoId' => $repo->id, 'id' => $model->itemId]), ['style' => 'margin-left: 1em']) ?>
+    <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $model->itemId]), ['style' => 'margin-left: 1em']) ?>
     <?php ActiveForm::end(); ?>
 
 </div>

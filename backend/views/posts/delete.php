@@ -51,7 +51,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
             'method' => 'post',
         ],
     ]) ?>
-    <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(['items/view', 'repoId' => $repo->id, 'id' => $item->itemId]), ['style' => 'margin-left: 1em']) ?>
+    <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]), ['style' => 'margin-left: 1em']) ?>
     <?php ActiveForm::end(); ?>
 
 </div>

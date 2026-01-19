@@ -35,7 +35,7 @@ $tabIndex = 1;
         <?= Html::submitButton($repo->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $repo->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
         <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(['repo/index']), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$repo->isNewRecord) { ?>
-            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'id' => $repo->id], [
+            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id], [
                 'style' => 'margin-left: 1em',
                 'tabindex' => $tabIndex++,
             ]) ?>

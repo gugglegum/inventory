@@ -49,11 +49,11 @@ $tabIndex = 1;
         <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
         <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
             $model->isNewRecord
-                ? $model->parentItemId !== null ? ['items/view', 'repoId' => $repo->id, 'id' => $model->parentItemId] : ['items/index']
-                : ['items/view', 'repoId' => $repo->id, 'id' => $model->itemId]
+                ? $model->parentItemId !== null ? ['items/view', 'repoId' => $repo->id, 'itemId' => $model->parentItemId] : ['items/index']
+                : ['items/view', 'repoId' => $repo->id, 'itemId' => $model->itemId]
         ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$model->isNewRecord) { ?>
-            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'id' => $model->itemId], [
+            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $model->itemId], [
                 'style' => 'margin-left: 1em',
                 'tabindex' => $tabIndex++,
             ]) ?>
@@ -96,11 +96,11 @@ $tabIndex = 1;
         <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
         <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
             $model->isNewRecord
-                ? $model->parentItemId !== null ? ['items/view', 'repoId' => $repo->id, 'id' => $model->parentItemId] : ['items/index']
-                : ['items/view', 'repoId' => $repo->id, 'id' => $model->itemId]
+                ? $model->parentItemId !== null ? ['items/view', 'repoId' => $repo->id, 'itemId' => $model->parentItemId] : ['items/index']
+                : ['items/view', 'repoId' => $repo->id, 'itemId' => $model->itemId]
         ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$model->isNewRecord) { ?>
-            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'id' => $model->itemId], [
+            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $model->itemId], [
                 'style' => 'margin-left: 1em',
                 'tabindex' => $tabIndex++,
             ]) ?>

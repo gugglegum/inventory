@@ -75,7 +75,7 @@ $tabIndex = 1;
 
     <dl class="params">
         <dt>Контейнер:</dt>
-        <dd><a href="<?= Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'id' => $container->itemId])) ?>"><?= Html::encode($container->name) ?></a></dd>
+        <dd><a href="<?= Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $container->itemId])) ?>"><?= Html::encode($container->name) ?></a></dd>
     </dl>
     <dl class="params">
         <dt>Период инвентаризации:</dt>
@@ -212,7 +212,7 @@ $tabIndex = 1;
         });
 
         if (count($itemsToBeMoved) > 0) { ?>
-            <p><strong>Внимание!</strong> В ходе инвентаризации в этом контейнере (<a href="<?= Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'id' => $container->itemId])) ?>"><?= Html::encode($container->name) ?></a>) были подтверждены предметы из других контейнеров. При завершении инвентаризации следующие предметы будут перемещены в этот контейнер:</p>
+            <p><strong>Внимание!</strong> В ходе инвентаризации в этом контейнере (<a href="<?= Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $container->itemId])) ?>"><?= Html::encode($container->name) ?></a>) были подтверждены предметы из других контейнеров. При завершении инвентаризации следующие предметы будут перемещены в этот контейнер:</p>
             <?= $this->render('/items/_items', [
                 'items' => $itemsToBeMoved,
                 'showPath' => true,

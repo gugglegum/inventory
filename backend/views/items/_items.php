@@ -57,10 +57,10 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 <?php } ?>
 
                 <div class="name">
-                    <?= Html::beginTag('a', ['href' => Url::to(['items/view', 'repoId' => $item->repoId, 'id' => $item->itemId])])
+                    <?= Html::beginTag('a', ['href' => Url::to(['items/view', 'repoId' => $item->repoId, 'itemId' => $item->itemId])])
                         . Html::encode($item->name)
                         . Html::endTag('a') ?>&nbsp;<sup><?= Html::encode($item->repoId) ?>#<?= Html::encode($item->itemId) ?></sup><?=
-                        Html::a('', Url::to(['items/update', 'repoId' => $item->repoId, 'id' => $item->itemId]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-left: 5px']) ?>
+                        Html::a('', Url::to(['items/update', 'repoId' => $item->repoId, 'itemId' => $item->itemId]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-left: 5px']) ?>
                 </div>
 
                 <?php $secondaryPhotos = $item->secondaryPhotos; if (count($secondaryPhotos) != 0) { ?>
@@ -111,7 +111,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                         if ($i > 0) {
                             echo ', ';
                         }
-                        echo Html::beginTag('a', ['href' => Url::to(['items/view', 'repoId' => $item->repoId, 'id' => $childItem->itemId])]);
+                        echo Html::beginTag('a', ['href' => Url::to(['items/view', 'repoId' => $item->repoId, 'itemId' => $childItem->itemId])]);
                         echo Html::encode($childItem->name);
                         echo Html::endTag('a');
                         $i++;

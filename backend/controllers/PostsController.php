@@ -231,7 +231,7 @@ class PostsController extends Controller
                     'post' => $post,
                 ]);
             }
-            return $this->redirect(['items/view', 'repoId' => $repo->id, 'id' => $item->itemId]);
+            return $this->redirect(['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
         } else {
             return $this->render('delete', [
                 'item' => $item,

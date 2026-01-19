@@ -86,7 +86,7 @@ $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 're
 
                 <div class="name">
                     <?= Html::encode($parentContainer->name) ?>&nbsp;<sup style="color: #ccc; font-size: 60%;">#<?= Html::encode($parentContainer->id) ?></sup>
-                    <?= Html::a('', Url::to(['items/view', 'id' => $parentContainer->itemId]), ['class' => 'glyphicon glyphicon-new-window view-link', 'style' => 'margin-left: 5px', 'target' => '_parent']) ?>
+                    <?= Html::a('', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $parentContainer->itemId]), ['class' => 'glyphicon glyphicon-new-window view-link', 'style' => 'margin-left: 5px', 'target' => '_parent']) ?>
                 </div>
 
                 <button type="button" id="btnPick" class="btn btn-primary" data-toggle="modal" data-container-id="<?= $parentContainer->itemId ?>">

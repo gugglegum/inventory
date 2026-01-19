@@ -86,25 +86,25 @@ class ItemsController extends Controller
 
     /**
      * @param int $repoId
-     * @param string|null $id
+     * @param string|null $itemId
      * @return Response|string
      * @throws NotFoundHttpException
      * @throws ForbiddenHttpException
      */
-    public function actionPickContainer(int $repoId, ?string $id = null): Response|string
+    public function actionPickContainer(int $repoId, ?string $itemId = null): Response|string
     {
         $repo = $this->findRepo($repoId);
         $query = Item::find()
             ->where(['repoId' => $repo->id])
             ->andWhere('isContainer != 0')
             ->orderBy(['priority' => SORT_DESC, 'id' => SORT_ASC]);
-        $parentContainer = $id ? (clone $query)->andWhere('itemId = :containerId', ['containerId' => $id])->one() : null;
-        $containers = $id
-            ? (clone $query)->andWhere('parentItemId = :containerId', ['containerId' => $id])->all()
+        $parentContainer = $itemId ? (clone $query)->andWhere('itemId = :containerId', ['containerId' => $itemId])->one() : null;
+        $containers = $itemId
+            ? (clone $query)->andWhere('parentItemId = :containerId', ['containerId' => $itemId])->all()
             : (clone $query)->andWhere('parentItemId IS NULL')->all();
         $this->layout = 'blank';
         return $this->render('pick-container', [
-            'parentContainerItemId' => $id,
+            'parentContainerItemId' => $itemId,
             'parentContainer' => $parentContainer,
             'containers' => $containers,
             'repo' => $repo,
@@ -205,7 +205,7 @@ class ItemsController extends Controller
 
         // Если найден ровно 1 результат, то сразу перекидываем на страницу этого предмета
         if (is_array($items) && count($items) === 1) {
-            return $this->redirect(['/items/view', 'repoId' => $repo->id, 'id' => $items[0]->itemId, 'q' => $queryString]);
+            return $this->redirect(['/items/view', 'repoId' => $repo->id, 'itemId' => $items[0]->itemId, 'q' => $queryString]);
         }
 
         $paths = [];
@@ -260,7 +260,7 @@ class ItemsController extends Controller
                 'itemId' => $tmpItem->itemId,
                 'repoId' => $tmpItem->repoId,
                 'label' => $tmpItem->name,
-                'url' => ['items/view', 'repoId' => $repo->id, 'id' => $tmpItem->itemId],
+                'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => $tmpItem->itemId],
             ];
             $tmpItem = $tmpItem->parentItem;
         }
@@ -270,25 +270,25 @@ class ItemsController extends Controller
     /**
      * Displays a single Item model.
      * @param int $repoId
-     * @param int $id
+     * @param int $itemId
      * @return Response|string
      * @throws NotFoundHttpException
      * @throws ForbiddenHttpException
      */
-    public function actionView(int $repoId, int $id): Response|string
+    public function actionView(int $repoId, int $itemId): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $model = $this->findModel($repo->id, $id);
+        $model = $this->findModel($repo->id, $itemId);
         $queryString = Yii::$app->request->getQueryParam('q', '');
 
-        $prevItem = Item::find()->where(['repoId' => $repo->id])->andWhere('itemId < :id', ['id' => $id])->orderBy('itemId DESC')->limit(1)->one();
-        $nextItem = Item::find()->where(['repoId' => $repo->id])->andWhere('itemId > :id', ['id' => $id])->orderBy('itemId ASC')->limit(1)->one();
+        $prevItem = Item::find()->where(['repoId' => $repo->id])->andWhere('itemId < :id', ['id' => $itemId])->orderBy('itemId DESC')->limit(1)->one();
+        $nextItem = Item::find()->where(['repoId' => $repo->id])->andWhere('itemId > :id', ['id' => $itemId])->orderBy('itemId ASC')->limit(1)->one();
 
         return $this->render('view', [
             'model' => $model,
             'repo' => $repo,
             'children' => $model->getItems()->orderBy(['priority' => SORT_DESC, 'isContainer' => SORT_DESC, 'id' => SORT_ASC])->all(),
-            'containerId' => $id,
+            'containerId' => $itemId,
             'prevItem' => $prevItem,
             'nextItem' => $nextItem,
             'query' => $queryString,
@@ -357,7 +357,7 @@ class ItemsController extends Controller
                 }
                 return $this->redirect($goto === 'create'
                     ? ['items/create', 'repoId' => $repo->id, 'parentItemId' => $parentItemId, 'goto' => $goto]
-                    : ['items/view', 'repoId' => $repo->id, 'id' => $item->itemId]);
+                    : ['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
             }
         }
         return $this->render('create', [
@@ -373,17 +373,17 @@ class ItemsController extends Controller
      * Updates an existing Item model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $repoId
-     * @param int $id
+     * @param int $itemId
      * @return Response|string
      * @throws Exception
      * @throws NotFoundHttpException
      * @throws ForbiddenHttpException
      * @throws \yii\db\Exception
      */
-    public function actionUpdate(int $repoId, int $id): Response|string
+    public function actionUpdate(int $repoId, int $itemId): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $item = $this->findModel($repoId, $id);
+        $item = $this->findModel($repoId, $itemId);
         $item->scenario = Item::SCENARIO_UPDATE;
         $item->updatedBy = $this->getLoggedUser()->id;
 
@@ -414,7 +414,7 @@ class ItemsController extends Controller
                         $itemPhoto->save();
                     }
                 }
-                return $this->redirect(['view', 'repoId' => $repo->id, 'id' => $item->itemId]);
+                return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
             }
         }
         return $this->render('update', [
@@ -428,17 +428,17 @@ class ItemsController extends Controller
      * Deletes an existing Item model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $repoId
-     * @param int $id
+     * @param int $itemId
      * @return Response|string
      * @throws NotFoundHttpException if the model cannot be found
      * @throws ForbiddenHttpException
      * @throws \Throwable
      * @throws \yii\db\StaleObjectException
      */
-    public function actionDelete(int $repoId, int $id): Response|string
+    public function actionDelete(int $repoId, int $itemId): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $item = $this->findModel($repoId, $id);
+        $item = $this->findModel($repoId, $itemId);
 
         if (Yii::$app->request->isPost) {
             $parentItemId = $item->parentItemId;
@@ -452,7 +452,7 @@ class ItemsController extends Controller
 
             return $this->redirect(
                 $parentItemId
-                    ? ['items/view', 'repoId' => $repo->id, 'id' => $parentItemId]
+                    ? ['items/view', 'repoId' => $repo->id, 'itemId' => $parentItemId]
                     : ['items/index', 'repoId' => $repo->id]
             );
 
@@ -490,7 +490,7 @@ class ItemsController extends Controller
         $line = 1;
         $item = [];
 
-        $addProperty = function(string $key, string $value) use (&$item) {
+        $addProperty = function (string $key, string $value) use (&$item) {
             if (!in_array($key, ['description', 'tags', 'container'], true)) {
                 throw new Exception('Unknown property "' . $key . '"');
             }
@@ -603,7 +603,7 @@ class ItemsController extends Controller
                     $firstItemAnchor = 'item' . $itemModel->repoId . '-' . $itemModel->itemId;
                 }
             }
-            return $this->redirect(Url::to(['view', 'repoId' => $repo->id, 'id' => $parentItem->itemId]) . '#' . $firstItemAnchor);
+            return $this->redirect(Url::to(['view', 'repoId' => $repo->id, 'itemId' => $parentItem->itemId]) . '#' . $firstItemAnchor);
         }
 
         return $this->render('import', [
@@ -619,15 +619,15 @@ class ItemsController extends Controller
 
     /**
      * @param int $repoId
-     * @param int $id
+     * @param int $itemId
      * @return Response
      * @throws NotFoundHttpException
      * @throws ForbiddenHttpException
      */
-    public function actionJsonPreview(int $repoId, int $id): Response
+    public function actionJsonPreview(int $repoId, int $itemId): Response
     {
         $repo = $this->findRepo($repoId);
-        $model = $this->findModel($repo->id, $id);
+        $model = $this->findModel($repo->id, $itemId);
         return $this->asJson([
             'content' => $this->renderPartial('_items', [
                 'items' => [$model],

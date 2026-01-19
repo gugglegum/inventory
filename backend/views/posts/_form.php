@@ -78,7 +78,7 @@ $tabIndex = 1;
     <div class="form-group">
         <?= Html::submitButton($post->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $post->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
         <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
-                $post->isNewRecord ? ['items/view', 'repoId' => $repo->id, 'id' => $item->itemId] : ['view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]
+                $post->isNewRecord ? ['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId] : ['view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]
         ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$post->isNewRecord) { ?>
             <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id], [

@@ -49,7 +49,7 @@ if ($query !== null && is_array($items)) {
 
     <?php
     if ($containerId && $container) { ?>
-        <p>Поиск внутри контейнера <a href="<?= Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'id' => $container->itemId])) ?>"><?= Html::encode($container->name); ?></a> <sup style="color: #ccc">#<?= $container->id ?></sup>,
+        <p>Поиск внутри контейнера <a href="<?= Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $container->itemId])) ?>"><?= Html::encode($container->name); ?></a> <sup style="color: #ccc">#<?= $container->id ?></sup>,
             но можно <a href="<?= Html::encode(Url::to(['items/search', 'repoId' => $repo->id, 'q' => $query])) ?>">поискать везде</a>.
         </p>
     <?php } ?>

@@ -212,7 +212,7 @@ class InventoryController extends Controller
         $inventory->closed = $now;
         $inventory->closedBy = $this->getLoggedUser()->id;
         $inventory->save();
-        return $this->redirect(['items/view', 'repoId' => $repo->id, 'id' => $container->itemId]);
+        return $this->redirect(['items/view', 'repoId' => $repo->id, 'itemId' => $container->itemId]);
     }
 
     /**
@@ -307,7 +307,7 @@ class InventoryController extends Controller
                 'itemId' => $tmpItem->itemId,
                 'repoId' => $tmpItem->repoId,
                 'label' => $tmpItem->name,
-                'url' => ['items/view', 'repoId' => $repo->id, 'id' => $tmpItem->itemId],
+                'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => $tmpItem->itemId],
             ];
             $tmpItem = $tmpItem->parentItem;
         }

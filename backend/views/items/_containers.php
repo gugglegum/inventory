@@ -48,7 +48,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                                 $path[] = [
                                     'id' => $tmpItem->id,
                                     'label' => $tmpItem->name,
-                                    'url' => ['items/pick-container', 'repoId' => $tmpItem->repoId, 'id' => $tmpItem->itemId],
+                                    'url' => ['items/pick-container', 'repoId' => $tmpItem->repoId, 'itemId' => $tmpItem->itemId],
                                 ];
                                 $tmpItem = $tmpItem->parentItem;
                             }
@@ -66,10 +66,10 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                     <?php } ?>
 
                     <div class="name">
-                        <?= Html::beginTag('a', ['href' => Url::to(['items/pick-container', 'repoId' => $repo->id, 'id' => $item->itemId])])
+                        <?= Html::beginTag('a', ['href' => Url::to(['items/pick-container', 'repoId' => $repo->id, 'itemId' => $item->itemId])])
                         . Html::encode($item->name)
                         . Html::endTag('a') ?>&nbsp;<sup style="color: #ccc; font-size: 60%;"><?= Html::encode($item->repoId) ?>#<?= Html::encode($item->itemId) ?></sup>
-                        <?= Html::a('', Url::to(['items/view', 'id' => $item->itemId]), ['class' => 'glyphicon glyphicon-new-window view-link', 'style' => 'margin-left: 5px', 'target' => '_parent']) ?>
+                        <?= Html::a('', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]), ['class' => 'glyphicon glyphicon-new-window view-link', 'style' => 'margin-left: 5px', 'target' => '_parent']) ?>
                     </div>
 
                 </td>
@@ -77,5 +77,5 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
         <?php } ?>
     </table>
 <?php } else { ?>
-    <p><?= $isSearch ? 'Ничего не нашлось. Начать <a href="' . Html::encode(Url::to(['items/pick-container'])) . '">выбирать с корня</a>' : 'Нет вложенных контейнеров' ?>.</p>
+    <p><?= $isSearch ? 'Ничего не нашлось. Начать <a href="' . Html::encode(Url::to(['items/pick-container', 'repoId' => $repo->id, 'itemId' => 0])) . '">выбирать с корня</a>' : 'Нет вложенных контейнеров' ?>.</p>
 <?php } ?>

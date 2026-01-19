@@ -22,7 +22,7 @@ $this->render('/_breadcrumbs', ['item' => $parent, 'repo' => $repo, 'suffix' => 
 
 <h1><?= Html::encode($this->title) ?></h1>
 
-<p>В контейнер <?= Html::a($parent->name, Url::to(['items/view', 'repoId' => $repo->id, 'id' => $parent->itemId])) ?>&nbsp;<sup style="color: #999;">#<?= Html::encode($parent->id) ?></sup>
+<p>В контейнер <?= Html::a($parent->name, Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $parent->itemId])) ?>&nbsp;<sup style="color: #999;">#<?= Html::encode($parent->id) ?></sup>
     планируется добавить следующие предметы. Проверьте всё ли правильно, исправьте если необходимо, отметьте галочку
     &laquo;подтвердить добавление&raquo; и нажмите &laquo;Импорт&raquo;.</p>
 
