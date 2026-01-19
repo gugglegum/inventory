@@ -26,7 +26,7 @@ use Yii;
  * @property PostPhoto[] $postPhotos
  * @property PostPhoto $primaryPhoto
  * @property PostPhoto[] $secondaryPhotos
- * @property ?User $createdByUser
+ * @property User $createdByUser
  * @property ?User $updatedByUser
  */
 class Post extends ActiveRecord
@@ -114,13 +114,13 @@ class Post extends ActiveRecord
         ];
     }
 
-    public function afterFind()
+    public function afterFind(): void
     {
         parent::afterFind();
         $this->datetimeText = $this->datetime ? Yii::$app->formatter->asDatetime($this->datetime, 'php:d.m.Y H:i') : null;
     }
 
-    public function beforeValidate()
+    public function beforeValidate(): bool
     {
         if (!parent::beforeValidate()) {
             return false;
