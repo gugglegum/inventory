@@ -1,10 +1,12 @@
 <?php
 
 use common\models\Repo;
+use common\models\RepoUser;
 use yii\helpers\Html;
 
 /** @var \yii\web\View $this */
 /** @var Repo $repo */
+/** @var RepoUser $repoUser */
 
 $this->title = $repo->name;
 
@@ -36,7 +38,7 @@ if ($description !== '') {
         <div id="repo-info">
             <dl>
                 <dt>Приоритет сортировки:</dt>
-                <dd><?= Html::encode($repo->priority) ?></dd>
+                <dd><?= Html::encode($repoUser->priority) ?></dd>
             </dl>
             <dl>
                 <dt>ID последнего предмета:</dt>

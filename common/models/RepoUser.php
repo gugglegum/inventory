@@ -12,6 +12,7 @@ use yii\db\ActiveRecord;
  * @property integer $repoId
  * @property integer $userId
  * @property integer $access
+ * @property int $priority Приоритет сортировки
  *
  * @property User $user
  * @property Repo $repo
@@ -45,8 +46,8 @@ class RepoUser extends ActiveRecord
     public function rules(): array
     {
         return [
-            [['repoId', 'userId', 'access'], 'required'],
-            [['repoId', 'userId', 'access'], 'integer'],
+            [['repoId', 'userId', 'access', 'priority'], 'required'],
+            [['repoId', 'userId', 'access', 'priority'], 'integer'],
             [['userId'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['userId' => 'id']],
             [['repoId'], 'exist', 'skipOnError' => true, 'targetClass' => Repo::class, 'targetAttribute' => ['repoId' => 'id']],
         ];
@@ -61,6 +62,7 @@ class RepoUser extends ActiveRecord
             'repoId' => 'Repo ID',
             'userId' => 'User ID',
             'access' => 'Access',
+            'priority' => 'Приоритет сортировки',
         ];
     }
 

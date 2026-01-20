@@ -16,7 +16,6 @@ use yii\db\StaleObjectException;
  * @property integer $id ID репозитория
  * @property string $name Название репозитория
  * @property ?string $description Описание репозитория
- * @property int $priority Приоритет сортировки
  * @property int $lastItemId Счётчик предметов внутри репозитория для использования в Item.itemId
  * @property int $createdBy ID создавшего репозиторий пользователя
  * @property ?int $updatedBy ID последнего изменившего репозиторий пользователя
@@ -30,9 +29,6 @@ use yii\db\StaleObjectException;
  */
 class Repo extends ActiveRecord
 {
-    public const string SCENARIO_CREATE = 'create';
-    public const string SCENARIO_UPDATE = 'update';
-
     private ItemAccessValidator $itemAccessValidator;
 
     /**
@@ -64,26 +60,13 @@ class Repo extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function scenarios(): array
-    {
-        $scenarios = parent::scenarios();
-
-        $scenarios[self::SCENARIO_CREATE] = ['name', 'description', 'priority', 'lastItemId'];
-        $scenarios[self::SCENARIO_UPDATE] = ['name', 'description', 'priority', 'lastItemId'];
-
-        return $scenarios;
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function rules(): array
     {
         return [
-            [['name', 'createdBy', 'priority', 'lastItemId'], 'required'],
+            [['name', 'createdBy', 'lastItemId'], 'required'],
             [['name'], 'string', 'max' => 64],
             [['description'], 'string'],
-            [['priority', 'lastItemId', 'createdBy'], 'integer'],
+            [['lastItemId', 'createdBy'], 'integer'],
             [['name', 'description'], 'filter', 'filter' => 'trim'],
             [['createdBy'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['createdBy' => 'id']],
             [['updatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['updatedBy' => 'id']],
@@ -99,7 +82,6 @@ class Repo extends ActiveRecord
             'id' => 'ID',
             'name' => 'Наименование',
             'description' => 'Описание',
-            'priority' => 'Приоритет сортировки',
             'lastItemId' => 'ID последнего предмета',
             'createdBy' => 'ID создавшего репозиторий пользователя',
             'updatedBy' => 'ID последнего изменившего репозиторий пользователя',

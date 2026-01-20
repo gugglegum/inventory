@@ -1,13 +1,13 @@
 <?php
 
-use common\models\Repo;
+use backend\models\RepoForm;
 use yii\helpers\Html;
 
 /** @var \yii\web\View $this */
-/** @var Repo $repo */
+/** @var RepoForm $repoForm */
 
 $this->title = 'Создание репозитория';
-$this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo, 'suffix' => [$this->title]]);
+$this->render('/_breadcrumbs', ['item' => null, 'repo' => null, 'suffix' => [$this->title]]);
 
 ?>
 <div class="item-create">
@@ -15,7 +15,7 @@ $this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo, 'suffix' => [$t
     <h1><?= Html::encode($this->title) ?></h1>
 
     <?= $this->render('_form', [
-        'repo' => $repo,
+        'repoForm' => $repoForm,
     ]) ?>
 
 </div>

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace backend\controllers;
 
+use backend\models\RepoForm;
 use common\components\ItemAccessValidator;
 use common\components\UserAccess;
-use common\helpers\ValidateErrorsFormatter;
 use common\models\Repo;
 use common\models\RepoUser;
 use common\models\User;
@@ -75,7 +75,7 @@ class RepoController extends Controller
         $repos = Repo::find()
             ->innerJoinWith('repoUsers')
             ->where(['repo_user.userId' => Yii::$app->getUser()->id])
-            ->orderBy(['priority' => SORT_DESC, 'id' => SORT_ASC])
+            ->orderBy(['repo_user.priority' => SORT_DESC, 'id' => SORT_ASC])
             ->all();
 
         return $this->render('index', [
@@ -92,8 +92,10 @@ class RepoController extends Controller
     public function actionView(int $repoId): Response|string
     {
         $repo = $this->findRepo($repoId);
+        $repoUser = $this->findRepoUser($repo);
         return $this->render('view', [
             'repo' => $repo,
+            'repoUser' => $repoUser,
         ]);
     }
 
@@ -104,31 +106,18 @@ class RepoController extends Controller
      */
     public function actionCreate(): Response|string
     {
-        $repo = new Repo();
-        $repo->scenario = Repo::SCENARIO_CREATE;
-        $repo->setItemAccessValidator($this->getItemAccessValidator());
-        $repo->priority = 0;
-        $repo->lastItemId = 0;
-        $repo->createdBy = $this->getLoggedUser()->id;
+        $repoForm = new RepoForm();
+        $repoForm->scenario = RepoForm::SCENARIO_CREATE;
+        $repoForm->setRepo(new Repo()->setItemAccessValidator($this->getItemAccessValidator()));
+        $repoForm->setRepoUser(new RepoUser());
 
         if (Yii::$app->request->isPost) {
-            if ($repo->load(Yii::$app->request->post()) && $repo->save()) {
-
-                $repoUser = new RepoUser();
-                $repoUser->load([
-                    'repoId' => $repo->id,
-                    'userId' => $repo->createdBy,
-                    'access' => RepoUser::ACCESS_CREATE_ITEMS | RepoUser::ACCESS_EDIT_ITEMS | RepoUser::ACCESS_DELETE_ITEMS | RepoUser::ACCESS_EDIT_REPO | RepoUser::ACCESS_DELETE_REPO,
-                ], '');
-                if (!$repoUser->save()) {
-                    throw new Exception(ValidateErrorsFormatter::getMessage($repoUser));
-                }
-
+            if ($repoForm->load(Yii::$app->request->post()) && $repoForm->save()) {
                 return $this->redirect(['repo/index']);
             }
         }
         return $this->render('create', [
-            'repo' => $repo,
+            'repoForm' => $repoForm,
         ]);
     }
 
@@ -143,16 +132,23 @@ class RepoController extends Controller
     public function actionUpdate(int $repoId): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $repo->scenario = Repo::SCENARIO_UPDATE;
-        $repo->setItemAccessValidator($this->getItemAccessValidator());
-        $repo->updatedBy = $this->getLoggedUser()->id;
+        $repoUser = $this->findRepoUser($repo);
+
+        $repoForm = new RepoForm();
+        $repoForm->scenario = RepoForm::SCENARIO_UPDATE;
+        $repoForm->setRepo($repo);
+        $repoForm->setRepoUser($repoUser);
+
         if (Yii::$app->request->isPost) {
-            if ($repo->load(Yii::$app->request->post()) && $repo->save()) {
-                return $this->redirect(['index', 'repoId' => $repo->id]);
+            if ($repoForm->load(Yii::$app->request->post()) && $repoForm->save()) {
+                return $this->redirect(['view', 'repoId' => $repo->id]);
             }
+        } else {
+            $repoForm->load(array_merge($repo->attributes, $repoUser->attributes), '');
         }
         return $this->render('update', [
             'repo' => $repo,
+            'repoForm' => $repoForm,
         ]);
     }
 
@@ -167,7 +163,6 @@ class RepoController extends Controller
     public function actionDelete(int $repoId): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $repo->setItemAccessValidator($this->getItemAccessValidator());
         if (Yii::$app->request->isPost) {
             if ($repo->delete() === false) {
                 return $this->render('delete', [
@@ -210,6 +205,7 @@ class RepoController extends Controller
     private function findRepo(int $repoId, int $accessType = 0): Repo
     {
         if (($repo = Repo::findOne($repoId)) !== null) {
+            $repo->setItemAccessValidator($this->getItemAccessValidator());
             if (new ItemAccessValidator()->hasUserAccessToRepo($repo, $accessType)) {
                 return $repo;
             } else {
@@ -218,6 +214,17 @@ class RepoController extends Controller
         } else {
             throw new NotFoundHttpException("Запрошенный репозиторий {$repoId} не существует");
         }
+    }
+
+    /**
+     * @param Repo $repo
+     * @return RepoUser
+     */
+    private function findRepoUser(Repo $repo): RepoUser
+    {
+        /** @var RepoUser $repoUser */
+        $repoUser = $repo->getRepoUsers()->andWhere(['userId' => Yii::$app->getUser()->id])->one();
+        return $repoUser;
     }
 
     /**
