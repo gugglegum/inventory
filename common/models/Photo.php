@@ -87,6 +87,26 @@ class Photo extends ActiveRecord
         }
     }
 
+    public function transactions(): array
+    {
+        // Чтобы delete() автоматически был в транзакции
+        return [
+            self::SCENARIO_DEFAULT => self::OP_DELETE,
+        ];
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function afterDelete(): void
+    {
+        parent::afterDelete();
+
+        if (@unlink($this->getFile()) === false) {
+            throw new \RuntimeException('Не удалось удалить файл фотографии');
+        }
+    }
+
     /**
      * @inheritdoc
      * @return PhotoQuery the active query used by this AR class.
@@ -127,12 +147,6 @@ class Photo extends ActiveRecord
                 throw new Exception('Failed to move photo file from "' . $this->tempFile . '" to "' . $file);
             }
         }
-    }
-
-    public function afterDelete(): void
-    {
-        parent::afterDelete();
-        @unlink($this->getFile());
     }
 
     /**

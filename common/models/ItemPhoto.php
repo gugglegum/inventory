@@ -4,6 +4,7 @@ namespace common\models;
 
 use yii\db\ActiveRecord;
 use yii\db\Query;
+use yii\db\StaleObjectException;
 
 /**
  * Фотография предмета
@@ -48,6 +49,37 @@ class ItemPhoto extends ActiveRecord
             'photoId' => 'ID фотографии',
             'sortIndex' => 'Порядковый номер',
         ];
+    }
+
+    public function transactions(): array
+    {
+        // Чтобы delete() автоматически был в транзакции
+        return [
+            self::SCENARIO_DEFAULT => self::OP_DELETE,
+        ];
+    }
+
+    /**
+     * @throws StaleObjectException
+     * @throws \Throwable
+     */
+    public function afterDelete(): void
+    {
+        parent::afterDelete();
+
+        // Если Photo может быть привязано к нескольким PostPhoto — не удаляем.
+        // (После удаления текущей строки проверяем, остались ли ещё ссылки)
+        if (static::find()->where(['photoId' => $this->photoId])->exists()) {
+            return;
+        }
+
+        $photo = Photo::findOne($this->photoId);
+        if ($photo !== null) {
+            if ($photo->delete() === false) {
+                // Нужно бросить исключение, чтобы внешняя транзакция откатилась.
+                throw new \RuntimeException('Не удалось удалить Photo');
+            }
+        }
     }
 
     public function beforeSave($insert): bool

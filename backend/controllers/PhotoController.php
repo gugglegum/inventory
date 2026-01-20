@@ -179,10 +179,10 @@ class PhotoController extends Controller
             throw new HttpException(400, 'Missing required parameter "id"');
         }
 
-        /** @var ItemPhoto $photo */
-        $photo = ItemPhoto::findOne($id);
-        if ($photo instanceof ItemPhoto) {
-            $photo->delete();
+        /** @var ItemPhoto $itemPhoto */
+        $itemPhoto = ItemPhoto::findOne($id);
+        if ($itemPhoto instanceof ItemPhoto) {
+            $itemPhoto->delete();
         }
     }
 }

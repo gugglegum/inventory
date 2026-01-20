@@ -153,6 +153,9 @@ class Item extends ActiveRecord
             foreach ($this->itemPhotos as $itemPhoto) {
                 $itemPhoto->delete();
             }
+            foreach ($this->posts as $post) {
+                $post->delete();
+            }
             return true;
         } else {
             return false;
