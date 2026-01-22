@@ -130,7 +130,7 @@ $tabIndex = 1;
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="myModalLabel">Выбор родительского контейнера</h4>
             </div>
-            <div class="modal-body" data-iframe-base-src="<?= Html::encode(Url::to(['items/pick-container', 'repoId' => $repo->id, 'id' => '0'])) ?>">
+            <div class="modal-body" data-iframe-base-src="<?= Html::encode(Url::to(['items/pick-container', 'repoId' => $repo->id, 'itemId' => '0'])) ?>">
             </div>
         </div>
     </div>

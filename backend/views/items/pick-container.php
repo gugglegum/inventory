@@ -55,7 +55,7 @@ $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 're
             <td class="details">
                 <div class="path">
                     <?php
-                    echo Html::beginTag('a', ['href' => Url::to(['items/pick-container', 'repoId' => $repo->id, 'id' => 0])]);
+                    echo Html::beginTag('a', ['href' => Url::to(['items/pick-container', 'repoId' => $repo->id, 'itemId' => 0])]);
                     echo Html::encode('Предметы');
                     echo Html::endTag('a');
 
@@ -65,7 +65,7 @@ $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 're
                         $path[] = [
                             'id' => $tmpItem->id,
                             'label' => $tmpItem->name,
-                            'url' => ['items/pick-container', 'repoId' => $tmpItem->repoId, 'id' => $tmpItem->itemId],
+                            'url' => ['items/pick-container', 'repoId' => $tmpItem->repoId, 'itemId' => $tmpItem->itemId],
                         ];
                         $tmpItem = $tmpItem->parentItem;
                     }
@@ -97,7 +97,7 @@ $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 're
         </tr>
     </table>
         <?php } else { ?>
-            <p>Контейнер #<?= Html::encode($parentContainerItemId) ?> не найден. Начать <a href="<?= Html::encode(Url::to(['items/pick-container', 'repoId' => $repo->id, 'id' => 0])) ?>">выбирать с корня</a>.</p>
+            <p>Контейнер #<?= Html::encode($parentContainerItemId) ?> не найден. Начать <a href="<?= Html::encode(Url::to(['items/pick-container', 'repoId' => $repo->id, 'itemId' => 0])) ?>">выбирать с корня</a>.</p>
         <?php } ?>
     <?php } else { ?>
     <h3>Корневые контейнеры</h3>
