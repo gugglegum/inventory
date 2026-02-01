@@ -162,11 +162,25 @@ class Item extends ActiveRecord
         }
     }
 
+    /**
+     * @inheritdoc
+     * @param $insert
+     * @return bool
+     * @throws Exception
+     */
     public function beforeSave($insert): bool
     {
         if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->repoId, $insert ? RepoUser::ACCESS_CREATE_ITEMS : RepoUser::ACCESS_EDIT_ITEMS)) {
             $this->addError('', 'Недостаточно прав для сохранения предмета.');
             return false;
+        }
+
+        // Добавляем проверку на изменение parentItemId
+        $parentItemId = $this->parentItemId !== '' ? (int) $this->parentItemId : null; // Преобразуем в int или null, т.к. после load() данными из POST все значения имеют тип string
+        if ($this->getOldAttribute('parentItemId') !== $parentItemId) {
+            // Если parentItemId изменился, сбрасываем missingSince и missingSinceBy
+            $this->missingSince = null;
+            $this->missingSinceBy = null;
         }
 
         if ($this->itemId === null) {
