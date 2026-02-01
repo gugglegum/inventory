@@ -26,10 +26,12 @@ use Yii;
  * @property ?int $missingSinceBy Кем обнаружено отсутствие
  * @property ?int $createdBy ID создавшего запись пользователя
  * @property ?int $updatedBy ID последнего изменившего запись пользователя
+ * @property ?int $deletedBy ID удалившего пользователя
  * @property ?int $lastSeen Когда подтверждено нахождение
  * @property ?int $missingSince Когда обнаружено отсутствие
  * @property int $created Время создания
  * @property ?int $updated Время последнего изменения
+ * @property ?int $deleted Время последнего изменения
  *
  * @property ItemRelation[] $itemRelations
  * @property ItemRelation[] $itemBackRelations
@@ -44,6 +46,7 @@ use Yii;
  * @property ?User $missingSinceByUser
  * @property ?User $createdByUser
  * @property ?User $updatedByUser
+ * @property ?User $deletedByUser
  * @property Post[] $posts
  * @property Inventory[] $inventories
  * @property Inventory $lastOpenedInventory
@@ -103,12 +106,18 @@ class Item extends ActiveRecord
     {
         return [
             [['itemId', 'repoId', 'name', 'isContainer', 'createdBy'], 'required'],
-            [['itemId', 'parentItemId', 'repoId', 'isContainer', 'priority', 'createdBy', 'updatedBy'], 'integer'],
+            [['itemId', 'parentItemId', 'repoId', 'isContainer', 'priority', 'lastSeenBy', 'missingSinceBy', 'createdBy', 'updatedBy', 'deletedBy', 'lastSeen', 'missingSince', 'created', 'updated', 'deleted'], 'integer'],
+            [['deleted', 'deletedBy'], 'default', 'value' => null],
             [['parentItemId'], 'checkParentExists'],
             [['parentItemId'], 'checkParentIsNotLooped'],
             [['name', 'description'], 'filter', 'filter' => 'trim'],
             [['description'], 'string'],
             [['name'], 'string', 'max' => 200],
+            [['lastSeenBy'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['deletedBy' => 'id']],
+            [['missingSinceBy'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['deletedBy' => 'id']],
+            [['createdBy'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['deletedBy' => 'id']],
+            [['updatedBy'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['deletedBy' => 'id']],
+            [['deletedBy'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['deletedBy' => 'id']],
         ];
     }
 
@@ -131,6 +140,94 @@ class Item extends ActiveRecord
             'created' => 'Время создания',
             'updated' => 'Время последнего изменения',
         ];
+    }
+
+    /**
+     * Мягкое удаление предмета
+     * @param int|null $userId
+     * @return bool
+     */
+    public function softDelete(?int $userId): bool
+    {
+        if ($this->deleted !== null) {
+            return true; // уже удалён
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if (!$this->beforeSoftDelete($userId)) {
+                return false;
+            }
+
+            $now = time();
+
+            // Обновляем напрямую, чтобы не триггерить валидаторы/behaviors непредсказуемо
+            // и чтобы можно было сделать "условное" обновление (deleted IS NULL).
+            static::getDb()->createCommand()->update(
+                static::tableName(),
+                [
+                    'deleted' => $now,
+                    'deletedBy' => $userId,
+                ],
+                ['and', ['id' => $this->id], ['deleted' => null]]
+            )->execute();
+
+            $this->refresh();
+            $transaction->commit();
+            return true;
+        } catch (Exception $e) {
+            $transaction->rollBack();
+            $this->addError('', 'Ошибка при удалении предмета: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * @param int|null $userId
+     * @return bool
+     */
+    public function beforeSoftDelete(?int $userId): bool
+    {
+        if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->repoId, RepoUser::ACCESS_DELETE_ITEMS)) {
+            $this->addError('', 'Недостаточно прав для удаления предмета.');
+            return false;
+        }
+
+        foreach ($this->items as $item) {
+            $item->setItemAccessValidator($this->itemAccessValidator);
+            $item->softDelete($userId);
+        }
+
+        return true;
+    }
+
+    /**
+     * Восстановление предмета после мягкого удаления
+     * @return bool
+     * @throws Exception
+     */
+    public function restore(): bool
+    {
+        if ($this->deleted === null) {
+            return true;
+        }
+
+        $rows = static::getDb()->createCommand()->update(
+            static::tableName(),
+            [
+                'deleted' => null,
+                'deletedBy' => null,
+            ],
+            ['id' => $this->id]
+        )->execute();
+
+        if ($rows > 0) {
+            $this->deleted = null;
+            $this->deletedBy = null;
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -377,13 +474,23 @@ class Item extends ActiveRecord
         return $this->hasOne(User::class, ['id' => 'updatedBy']);
     }
 
+    public function getDeletedByUser(): ActiveQuery
+    {
+        return $this->hasOne(User::class, ['id' => 'deletedBy']);
+    }
+
     /**
      * @inheritdoc
      * @return ItemQuery the active query used by this AR class.
      */
     public static function find(): ItemQuery
     {
-        return new ItemQuery(get_called_class());
+        return new ItemQuery(static::class)->notDeleted();
+    }
+
+    public static function findWithDeleted(): ItemQuery
+    {
+        return new ItemQuery(static::class);
     }
 
     public function getPosts(): ActiveQuery

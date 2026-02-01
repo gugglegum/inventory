@@ -1,5 +1,6 @@
 <?php
 
+use backend\models\ItemDeleteForm;
 use common\models\Item;
 use common\models\Repo;
 use yii\helpers\Html;
@@ -7,6 +8,7 @@ use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
 /** @var \yii\web\View $this */
+/** @var ItemDeleteForm $itemDeleteForm */
 /** @var Item $model */
 /** @var Repo $repo */
 
@@ -36,7 +38,9 @@ $this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo, 'suffix' => [
         ],
     ]); ?>
 
-    <?= $form->errorSummary($model) ?>
+    <?= $form->errorSummary($itemDeleteForm) ?>
+
+    <?= $form->field($itemDeleteForm, 'hardDelete')->checkbox() ?>
 
     <?= Html::submitButton('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', [
         'class' => 'btn btn-danger',

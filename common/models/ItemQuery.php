@@ -11,11 +11,15 @@ use yii\db\ActiveQuery;
  */
 class ItemQuery extends ActiveQuery
 {
-    /*public function active()
+    public function notDeleted(): self
     {
-        $this->andWhere('[[status]]=1');
-        return $this;
-    }*/
+        return $this->andWhere(['deleted' => null]);
+    }
+
+    public function onlyDeleted(): self
+    {
+        return $this->andWhere(['not', ['deleted' => null]]);
+    }
 
     /**
      * @inheritdoc

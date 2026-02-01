@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace backend\controllers;
 
+use backend\models\ItemDeleteForm;
 use backend\models\ItemTagsForm;
 use common\components\ItemAccessValidator;
 use common\helpers\ValidateErrorsFormatter;
@@ -71,7 +72,7 @@ class ItemsController extends Controller
     {
         $repo = $this->findRepo($repoId);
         $rootItems = Item::find()
-            ->where([
+            ->andWhere([
                 'repoId' => $repo->id,
                 'parentItemId' => null,
             ])
@@ -440,29 +441,22 @@ class ItemsController extends Controller
         $repo = $this->findRepo($repoId);
         $item = $this->findModel($repoId, $itemId);
 
+        $itemDeleteForm = new ItemDeleteForm()->setItem($item);
         if (Yii::$app->request->isPost) {
             $parentItemId = $item->parentItemId;
-
-            if ($item->delete() === false) {
-                return $this->render('delete', [
-                    'model' => $item,
-                    'repo' => $repo,
-                ]);
+            if ($itemDeleteForm->load(Yii::$app->request->post()) && $itemDeleteForm->save()) {
+                return $this->redirect(
+                    $parentItemId
+                        ? ['items/view', 'repoId' => $repo->id, 'itemId' => $parentItemId]
+                        : ['items/index', 'repoId' => $repo->id]
+                );
             }
-
-            return $this->redirect(
-                $parentItemId
-                    ? ['items/view', 'repoId' => $repo->id, 'itemId' => $parentItemId]
-                    : ['items/index', 'repoId' => $repo->id]
-            );
-
-
-        } else {
-            return $this->render('delete', [
-                'model' => $item,
-                'repo' => $repo,
-            ]);
         }
+        return $this->render('delete', [
+            'itemDeleteForm' => $itemDeleteForm,
+            'model' => $item,
+            'repo' => $repo,
+        ]);
     }
 
     /**
