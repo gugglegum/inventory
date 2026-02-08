@@ -20,7 +20,7 @@ final class MarkdownFormatter
         return preg_replace_callback(
             '/(?<=[\s.,;()<>{}\[\]]|^)(#(\d+))(?=[\s.,;()<>{}\[\]]|$)/',
             function(array $matches) use ($repo) {
-                return '<a href="' . Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'id' => $matches[2]])) . '">' . $matches[1] . '</a>';
+                return '<a href="' . Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $matches[2]])) . '">' . $matches[1] . '</a>';
             },
             $formattedText);
     }
