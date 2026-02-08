@@ -8,6 +8,7 @@ use backend\models\InventoryItemConfirmForm;
 use backend\models\InventoryItemUnconfirmForm;
 use common\components\ItemAccessValidator;
 use common\models\Inventory;
+use common\models\InventoryItem;
 use common\models\Repo;
 use Yii;
 use common\models\Item;
@@ -110,17 +111,27 @@ class InventoryController extends Controller
         $inventoryItemUnconfirm = new InventoryItemUnconfirmForm();
         if (Yii::$app->request->isPost) {
             if ($inventoryItemConfirm->load(Yii::$app->request->post())) {
-                $inventoryItemConfirm->inventoryId = $inventory->id;
-                $inventoryItemConfirm->createdBy = $this->getLoggedUser()->id;
-                if ($inventoryItemConfirm->save()) {
-                    return $this->redirect(['inventory/view', 'repoId' => $repo->id, 'itemId' => $container->itemId, 'inventoryId' => $inventory->id]);
+                $inventoryItemConfirm->repoId = $repo->id;
+                if ($inventoryItemConfirm->validate()) {
+                    $item = $this->findItem($repo->id, $inventoryItemConfirm->itemId);
+                    $inventoryItem = new InventoryItem();
+                    $inventoryItem->inventoryId = $inventory->id;
+                    $inventoryItem->itemId = $item->id;
+                    $inventoryItem->createdBy = $this->getLoggedUser()->id;
+                    if ($inventoryItem->save()) {
+                        return $this->redirect(['inventory/view', 'repoId' => $repo->id, 'itemId' => $container->itemId, 'inventoryId' => $inventory->id]);
+                    }
+                    $inventoryItemConfirm->addError('itemId', array_values($inventoryItem->getFirstErrors())[0] ?? 'Unknown error');
                 }
             }
             elseif ($inventoryItemUnconfirm->load(Yii::$app->request->post())) {
-                $inventoryItemUnconfirm->inventoryId = $inventory->id;
-                $inventoryItemUnconfirm->createdBy = $this->getLoggedUser()->id;
-                if ($inventoryItemUnconfirm->save()) {
-                    return $this->redirect(['inventory/view', 'repoId' => $repo->id, 'itemId' => $container->itemId, 'inventoryId' => $inventory->id]);
+                $inventoryItemUnconfirm->repoId = $repo->id;
+                if ($inventoryItemUnconfirm->validate()) {
+                    $item = $this->findItem($repo->id, $inventoryItemUnconfirm->itemId);
+                    $inventoryItem = $inventory->getInventoryItems()->andWhere(['inventory_item.itemId' => $item->id])->one();
+                    if ($inventoryItem->delete()) {
+                        return $this->redirect(['inventory/view', 'repoId' => $repo->id, 'itemId' => $container->itemId, 'inventoryId' => $inventory->id]);
+                    }
                 }
             }
         }
@@ -265,17 +276,17 @@ class InventoryController extends Controller
      * Finds the Item model based on its repoId and itemId.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $repoId
-     * @param int $id
+     * @param int $itemId
      * @return Item the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
-    private function findItem(int $repoId, int $id): Item
+    private function findItem(int $repoId, int $itemId): Item
     {
-        if (($model = Item::findOne(['repoId' => $repoId, 'itemId' => $id])) !== null) {
+        if (($model = Item::findOne(['repoId' => $repoId, 'itemId' => $itemId])) !== null) {
             $model->setItemAccessValidator($this->getItemAccessValidator());
             return $model;
         } else {
-            throw new NotFoundHttpException("Запрошенный предмет {$repoId}#{$id} не существует");
+            throw new NotFoundHttpException("Запрошенный предмет {$repoId}#{$itemId} не существует");
         }
     }
 

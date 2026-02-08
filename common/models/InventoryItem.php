@@ -26,9 +26,6 @@ use yii\db\BaseActiveRecord;
  */
 class InventoryItem extends ActiveRecord
 {
-    public const string SCENARIO_CONFIRM = 'confirm';
-    public const string SCENARIO_UNCONFIRM = 'unconfirm';
-
     public static function tableName(): string
     {
         return '{{%inventory_item}}';
@@ -58,19 +55,6 @@ class InventoryItem extends ActiveRecord
             [['itemId'], 'exist', 'skipOnError' => true, 'targetClass' => Item::class, 'targetAttribute' => ['itemId' => 'id']],
             [['createdBy'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['createdBy' => 'id']],
         ];
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function scenarios(): array
-    {
-        $scenarios = parent::scenarios();
-
-        $scenarios[self::SCENARIO_CONFIRM] = ['itemId'];
-        $scenarios[self::SCENARIO_UNCONFIRM] = ['itemId'];
-
-        return $scenarios;
     }
 
     public function getInventory(): ActiveQuery
