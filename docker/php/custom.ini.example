@@ -3,6 +3,6 @@ upload_max_filesize = 512M
 post_max_size = 512M
 max_execution_time = 300
 max_file_uploads = 100
-
+expose_php = Off
 sys_temp_dir = "/tmp"
 #extension=pdo_mysql
