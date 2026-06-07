@@ -1,9 +1,9 @@
-# Agent Instructions
+# Инструкции для агентов
 
-Project-specific AI documentation lives in `ai-docs/`.
+Проектная AI-документация находится в каталоге `ai-docs/`.
 
-Future AI agents should read `ai-docs/README.md` early when working on this project, then open the more specific files as needed.
+Будущим AI-агентам следует читать `ai-docs/README.md` в начале работы с проектом, а затем открывать более конкретные файлы по мере необходимости.
 
-The `ai-docs/` directory is assistant-owned project memory. Agents may update it whenever doing so helps preserve decisions, migration status, architecture notes, database discoveries, or other useful context for future sessions.
+Каталог `ai-docs/` является проектной памятью, которой владеют ассистенты. Агенты могут обновлять его всякий раз, когда это помогает сохранить принятые решения, статус миграций, архитектурные заметки, обнаруженную информацию о базе данных или другой полезный контекст для будущих сессий.
 
-Updating `ai-docs/` does not require separate user permission and not require notification about changes.
+Для обновления `ai-docs/` не требуется отдельное разрешение пользователя, и об этих изменениях не нужно специально уведомлять.
