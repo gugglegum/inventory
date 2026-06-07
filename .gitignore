@@ -1,0 +1,25 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.zed/
+
+# Local AI/runtime state
+.agents/
+.codex
+
+# Docker runtime data
+/db_data/
+/logs/
+
+# Local docker-compose.yml
+/docker-compose.yml
+
+# Local nginx files
+/docker/nginx/.htpasswd
+/docker/nginx/default.conf
+/docker/nginx/blacklist.conf
+
+# Local php files
+/docker/php/custom.ini
