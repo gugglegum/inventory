@@ -1,0 +1,5 @@
+#!/bin/bash
+
+docker compose exec php ./yii thumbnails/create 100 100 1 1 90
+docker compose exec php ./yii thumbnails/create 48 48 1 1 90
+docker compose exec php ./yii thumbnails/create 240 240 0 0 90
