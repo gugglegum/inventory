@@ -1,0 +1,76 @@
+access_log /var/log/nginx/access.log;
+error_log /var/log/nginx/error.log;
+
+client_max_body_size 512M;
+
+#server {
+#    listen 80;
+#    server_name stockhub.ru;
+#
+#    # Добавляем базовую авторизацию
+#    auth_basic "Restricted Access";
+#    auth_basic_user_file /etc/nginx/.htpasswd;
+#
+#    root /var/www/html/backend/web;
+#    index index.php index.html;
+#
+#    # Место для временных файлов Certbot
+#    location /.well-known/acme-challenge {
+#        alias /var/www/certbot;
+#    }
+#
+#    # Редирект на HTTPS
+#    location / {
+#        return 301 https://$host$request_uri;
+#    }
+#}
+
+
+server {
+#    listen 443 ssl;
+    listen 80;
+    server_name stockhub.lc stockhub.ru;
+
+#    include /etc/nginx/blacklist.conf;
+
+    # Добавляем базовую авторизацию
+#    auth_basic "Restricted Access";
+#    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    # Пути к сертификатам Let's Encrypt
+    # TLS terminates at the shared reverse proxy.
+#    ssl_certificate /etc/letsencrypt/live/stockhub.ru/fullchain.pem;
+#    ssl_certificate_key /etc/letsencrypt/live/stockhub.ru/privkey.pem;
+
+#    ssl_protocols TLSv1.2 TLSv1.3;
+#    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    root /var/www/html/backend/web;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+        expires         3d;
+    }
+
+    location /photos {
+        alias /var/www/html/photos;
+        expires         14d;
+    }
+
+    location /thumbnails {
+        alias /var/www/html/thumbnails;
+        expires         14d;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass stockhub-php:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
