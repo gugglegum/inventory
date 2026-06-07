@@ -23,7 +23,7 @@ services:
       context: .
       dockerfile: ./docker/nginx/Dockerfile
     environment:
-      - VIRTUAL_HOST=stockhub.lc,p.stockhub.lc,k.stockhub.lc
+      - VIRTUAL_HOST=stockhub.ru,p.stockhub.ru,k.stockhub.ru,stockhub.lc
       - VIRTUAL_PORT=80
       - VIRTUAL_NETWORK=proxy
       - LETSENCRYPT_HOST=
