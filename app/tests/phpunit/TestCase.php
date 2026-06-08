@@ -17,6 +17,7 @@ abstract class TestCase extends BaseTestCase
 
     protected function tearDown(): void
     {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
         $this->destroyApplication();
         parent::tearDown();
     }
@@ -38,5 +39,19 @@ abstract class TestCase extends BaseTestCase
             Yii::$app->db->close();
         }
         Yii::$app = null;
+    }
+
+    protected function setGetRequest(array $queryParams = []): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        Yii::$app->request->setQueryParams($queryParams);
+        Yii::$app->request->setBodyParams([]);
+    }
+
+    protected function setPostRequest(array $bodyParams = [], array $queryParams = []): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        Yii::$app->request->setQueryParams($queryParams);
+        Yii::$app->request->setBodyParams($bodyParams);
     }
 }

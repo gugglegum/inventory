@@ -3,6 +3,8 @@
 namespace tests\phpunit;
 
 use common\components\ItemAccessValidator;
+use common\models\Inventory;
+use common\models\InventoryItem;
 use common\models\Item;
 use common\models\Repo;
 use common\models\RepoUser;
@@ -97,6 +99,34 @@ abstract class DbTestCase extends TestCase
         $this->saveModel($item);
 
         return $item;
+    }
+
+    protected function createInventory(Item $container, User $user, array $attributes = []): Inventory
+    {
+        $inventory = new Inventory([
+            'containerId' => $container->id,
+            'status' => $attributes['status'] ?? Inventory::STATUS_OPENED,
+            'createdBy' => $user->id,
+            'closedBy' => $attributes['closedBy'] ?? null,
+            'closed' => $attributes['closed'] ?? null,
+        ]);
+
+        $this->saveModel($inventory);
+
+        return $inventory;
+    }
+
+    protected function createInventoryItem(Inventory $inventory, Item $item, User $user): InventoryItem
+    {
+        $inventoryItem = new InventoryItem([
+            'inventoryId' => $inventory->id,
+            'itemId' => $item->id,
+            'createdBy' => $user->id,
+        ]);
+
+        $this->saveModel($inventoryItem);
+
+        return $inventoryItem;
     }
 
     protected function saveModel(ActiveRecord $model): void
