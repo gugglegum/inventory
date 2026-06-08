@@ -7,9 +7,9 @@ namespace backend\controllers;
 use backend\models\InventoryItemConfirmForm;
 use backend\models\InventoryItemUnconfirmForm;
 use backend\services\InventoryCloseService;
+use backend\services\InventoryItemConfirmationService;
 use common\components\ItemAccessValidator;
 use common\models\Inventory;
-use common\models\InventoryItem;
 use common\models\Repo;
 use Yii;
 use common\models\Item;
@@ -113,29 +113,27 @@ class InventoryController extends Controller
 
         $inventoryItemConfirm = new InventoryItemConfirmForm();
         $inventoryItemUnconfirm = new InventoryItemUnconfirmForm();
+        $inventoryItemConfirmationService = new InventoryItemConfirmationService();
         if (Yii::$app->request->isPost) {
             if ($inventoryItemConfirm->load(Yii::$app->request->post())) {
                 $inventoryItemConfirm->repoId = $repo->id;
                 if ($inventoryItemConfirm->validate()) {
                     $item = $this->findItem($repo->id, $inventoryItemConfirm->itemId);
-                    $inventoryItem = new InventoryItem();
-                    $inventoryItem->inventoryId = $inventory->id;
-                    $inventoryItem->itemId = $item->id;
-                    $inventoryItem->createdBy = $this->getLoggedUser()->id;
-                    if ($inventoryItem->save()) {
+                    $confirmResult = $inventoryItemConfirmationService->confirm($inventory, $item, $this->getLoggedUser());
+                    if (!$confirmResult->hasError()) {
                         return $this->redirect(['inventory/view', 'repoId' => $repo->id, 'itemId' => $container->itemId, 'inventoryId' => $inventory->id]);
                     }
-                    $inventoryItemConfirm->addError('itemId', array_values($inventoryItem->getFirstErrors())[0] ?? 'Unknown error');
+                    $inventoryItemConfirm->addError('itemId', $confirmResult->errorMessage ?? 'Unknown error');
                 }
             }
             elseif ($inventoryItemUnconfirm->load(Yii::$app->request->post())) {
                 $inventoryItemUnconfirm->repoId = $repo->id;
                 if ($inventoryItemUnconfirm->validate()) {
                     $item = $this->findItem($repo->id, $inventoryItemUnconfirm->itemId);
-                    $inventoryItem = $inventory->getInventoryItems()->andWhere(['inventory_item.itemId' => $item->id])->one();
-                    if ($inventoryItem->delete()) {
+                    if ($inventoryItemConfirmationService->unconfirm($inventory, $item)) {
                         return $this->redirect(['inventory/view', 'repoId' => $repo->id, 'itemId' => $container->itemId, 'inventoryId' => $inventory->id]);
                     }
+                    $inventoryItemUnconfirm->addError('itemId', 'Предмет не был подтвержден в этой инвентаризации.');
                 }
             }
         }

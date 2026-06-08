@@ -8,6 +8,7 @@ use backend\controllers\InventoryController;
 use backend\models\InventoryItemConfirmForm;
 use backend\models\InventoryItemUnconfirmForm;
 use common\models\Inventory;
+use common\models\InventoryItem;
 use common\models\RepoUser;
 use common\models\User;
 use tests\phpunit\DbTestCase;
@@ -45,6 +46,64 @@ final class InventoryTest extends DbTestCase
         $unconfirmForm->itemId = 999999;
         self::assertFalse($unconfirmForm->validate());
         self::assertArrayHasKey('itemId', $unconfirmForm->getErrors());
+    }
+
+    /**
+     * POST confirm на странице инвентаризации создает отметку о найденном предмете и возвращает redirect.
+     */
+    public function testInventoryViewConfirmPostCreatesInventoryItem(): void
+    {
+        [$controller, $repo, $container, $item, $inventory] = $this->prepareOpenedInventoryFixture();
+
+        $this->setPostRequest([
+            'confirm' => [
+                'itemId' => $item->itemId,
+            ],
+        ]);
+
+        $response = $controller->actionView($repo->id, $container->itemId, $inventory->id);
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(302, $response->statusCode);
+        self::assertStringContainsString(
+            "/repo/{$repo->id}/items/{$container->itemId}/inventory/{$inventory->id}",
+            $response->headers->get('Location')
+        );
+
+        $inventoryItem = InventoryItem::findOne([
+            'inventoryId' => $inventory->id,
+            'itemId' => $item->id,
+        ]);
+        self::assertNotNull($inventoryItem);
+        self::assertSame($item->id, (int) $inventoryItem->itemId);
+    }
+
+    /**
+     * POST unconfirm на странице инвентаризации удаляет отметку о найденном предмете и возвращает redirect.
+     */
+    public function testInventoryViewUnconfirmPostDeletesInventoryItem(): void
+    {
+        [$controller, $repo, $container, $item, $inventory, $user] = $this->prepareOpenedInventoryFixture();
+        $this->createInventoryItem($inventory, $item, $user);
+
+        $this->setPostRequest([
+            'unconfirm' => [
+                'itemId' => $item->itemId,
+            ],
+        ]);
+
+        $response = $controller->actionView($repo->id, $container->itemId, $inventory->id);
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(302, $response->statusCode);
+        self::assertStringContainsString(
+            "/repo/{$repo->id}/items/{$container->itemId}/inventory/{$inventory->id}",
+            $response->headers->get('Location')
+        );
+        self::assertSame(
+            0,
+            (int) InventoryItem::find()->where(['inventoryId' => $inventory->id, 'itemId' => $item->id])->count()
+        );
     }
 
     /**
@@ -101,5 +160,33 @@ final class InventoryTest extends DbTestCase
         self::assertNotNull($missing->missingSince);
         self::assertSame($user->id, (int) $missing->missingSinceBy);
         self::assertNull($missing->lastSeen);
+    }
+
+    /**
+     * Создает открытую инвентаризацию с одним неподтвержденным предметом и готовым контроллером.
+     *
+     * @return array{0:InventoryController, 1:\common\models\Repo, 2:\common\models\Item, 3:\common\models\Item, 4:Inventory, 5:User}
+     */
+    private function prepareOpenedInventoryFixture(): array
+    {
+        $user = $this->createUser([
+            'access' => User::ACCESS_CREATE_REPO,
+        ]);
+        $repo = $this->createRepo($user);
+        $this->grantRepoAccess($repo, $user, RepoUser::ACCESS_CREATE_ITEMS | RepoUser::ACCESS_EDIT_ITEMS);
+
+        $container = $this->createItem($repo, $user, [
+            'name' => 'Контейнер',
+            'isContainer' => true,
+        ]);
+        $item = $this->createItem($repo, $user, [
+            'name' => 'Проверяемый предмет',
+            'parentItemId' => $container->itemId,
+        ]);
+        $inventory = $this->createInventory($container, $user);
+        $controller = new InventoryController('inventory', Yii::$app);
+        Yii::$app->controller = $controller;
+
+        return [$controller, $repo, $container, $item, $inventory, $user];
     }
 }

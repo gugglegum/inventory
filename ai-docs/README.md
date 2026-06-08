@@ -107,6 +107,8 @@ docker compose exec php ./vendor/bin/phpunit -c phpunit.xml
 
 Следующий шаг вынес закрытие инвентаризации из `InventoryController::actionClose()` в `backend/services/InventoryCloseService.php`. Сервис обновляет подтвержденные предметы, возвращает их в контейнер инвентаризации, отмечает неподтвержденные дочерние предметы как отсутствующие и закрывает саму инвентаризацию. Операция выполняется в транзакции, чтобы не оставить инвентаризацию частично закрытой при ошибке сохранения. Для сервиса добавлен прямой integration-тест `tests/phpunit/integration/InventoryCloseServiceTest.php`, а контроллерный тест закрытия инвентаризации остался regression-защитой HTTP-слоя.
 
+После этого из `InventoryController::actionView()` вынесены POST-мутации подтверждения и снятия подтверждения предметов. Новый сервис `backend/services/InventoryItemConfirmationService.php` создает и удаляет записи `inventory_item`, а контроллер оставляет за собой загрузку форм, поиск моделей, редиректы и render. Поведение защищено controller-тестами confirm/unconfirm в `tests/phpunit/integration/InventoryTest.php` и прямым integration-тестом сервиса `tests/phpunit/integration/InventoryItemConfirmationServiceTest.php`.
+
 ## Git и локальные файлы
 
 В корневом `.gitignore` намеренно игнорируются:
