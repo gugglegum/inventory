@@ -8,7 +8,10 @@ use common\components\ItemAccessValidator;
 use common\models\Inventory;
 use common\models\InventoryItem;
 use common\models\Item;
+use common\models\ItemPhoto;
+use common\models\Photo;
 use common\models\Post;
+use common\models\PostPhoto;
 use common\models\Repo;
 use common\models\RepoUser;
 use common\models\User;
@@ -162,6 +165,94 @@ abstract class DbTestCase extends TestCase
         $this->saveModel($post);
 
         return $post;
+    }
+
+    /**
+     * Создает маленький JPEG-файл, имитирующий загруженное пользователем фото.
+     */
+    protected function createUploadedJpegFixture(): string
+    {
+        $this->ensurePhotoRuntimeDirectories();
+
+        $file = tempnam(Yii::$app->params['photos']['storageTemp'], 'upload');
+        self::assertIsString($file, 'Не удалось создать временный файл для фотофикстуры.');
+
+        $image = imagecreatetruecolor(8, 8);
+        self::assertNotFalse($image, 'Не удалось создать тестовое JPEG-изображение.');
+
+        $color = imagecolorallocate($image, 80, 120, 160);
+        self::assertIsInt($color, 'Не удалось выделить цвет для тестового JPEG-изображения.');
+
+        imagefill($image, 0, 0, $color);
+        self::assertTrue(imagejpeg($image, $file), 'Не удалось записать тестовое JPEG-изображение.');
+        imagedestroy($image);
+
+        return $file;
+    }
+
+    /**
+     * Создает сохраненную фотографию из маленького JPEG-файла.
+     */
+    protected function createPhoto(): Photo
+    {
+        $uploadedFile = $this->createUploadedJpegFixture();
+
+        $photo = new Photo();
+        $photo->assignFile($uploadedFile);
+        $this->saveModel($photo);
+        @unlink($uploadedFile);
+
+        return $photo;
+    }
+
+    /**
+     * Создает связь фотографии с предметом.
+     */
+    protected function createItemPhoto(Item $item): ItemPhoto
+    {
+        $itemPhoto = new ItemPhoto([
+            'itemId' => $item->id,
+            'photoId' => $this->createPhoto()->id,
+        ]);
+
+        $this->saveModel($itemPhoto);
+
+        return $itemPhoto;
+    }
+
+    /**
+     * Создает связь фотографии с заметкой.
+     */
+    protected function createPostPhoto(Post $post): PostPhoto
+    {
+        $postPhoto = new PostPhoto([
+            'postId' => $post->id,
+            'photoId' => $this->createPhoto()->id,
+        ]);
+
+        $this->saveModel($postPhoto);
+
+        return $postPhoto;
+    }
+
+    /**
+     * Создает runtime-каталоги, нужные для сохранения фотографий и миниатюр в тестах.
+     */
+    protected function ensurePhotoRuntimeDirectories(): void
+    {
+        foreach ([
+            Yii::$app->params['photos']['storagePath'],
+            Yii::$app->params['photos']['storageTemp'],
+            Yii::$app->params['photos']['thumbnailPath'],
+            Yii::$app->params['photos']['thumbnailTemp'],
+        ] as $directory) {
+            if (!is_dir($directory)) {
+                self::assertTrue(
+                    mkdir($directory, 0777, true),
+                    "Не удалось создать runtime-каталог {$directory}."
+                );
+            }
+        }
     }
 
     /**

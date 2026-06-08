@@ -1,22 +1,23 @@
 <?php
 
 declare(strict_types=1);
+
 namespace backend\controllers;
 
 use backend\services\PostDeletionService;
 use backend\services\PostFormService;
 use common\components\ItemAccessValidator;
+use common\models\Item;
 use common\models\Post;
 use common\models\Repo;
 use Yii;
-use common\models\Item;
 use yii\base\Exception;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\web\Response;
 
 /**
@@ -52,32 +53,9 @@ class PostsController extends Controller
         ];
     }
 
-//    /**
-//     * Lists all Item models.
-//     * @param int $repoId
-//     * @return Response|string
-//     * @throws NotFoundHttpException
-//     * @throws ForbiddenHttpException
-//     */
-//    public function actionIndex(int $repoId): Response|string
-//    {
-//        $repo = $this->findRepo($repoId);
-//        $rootItems = Item::find()
-//            ->where([
-//                'repoId' => $repo->id,
-//                'parentItemId' => null,
-//            ])
-//            ->orderBy(['priority' => SORT_DESC, 'isContainer' => SORT_DESC, 'id' => SORT_ASC])
-//            ->all();
-//
-//        return $this->render('index', [
-//            'repo' => $repo,
-//            'rootItems' => $rootItems,
-//        ]);
-//    }
-
     /**
-     * Displays a single Item model.
+     * Displays a single Post model.
+     *
      * @param int $repoId
      * @param int $itemId
      * @param int $postId
@@ -99,15 +77,16 @@ class PostsController extends Controller
     }
 
     /**
-     * Creates a new Item model.
+     * Creates a new Post model.
+     *
      * If creation is successful, the browser will be redirected to the 'view' page.
+     *
      * @param int $repoId
      * @param int $itemId
      * @return Response|string
      * @throws Exception
      * @throws ForbiddenHttpException
      * @throws NotFoundHttpException
-     * @throws \DateMalformedStringException
      * @throws \yii\db\Exception
      */
     public function actionCreate(int $repoId, int $itemId): Response|string
@@ -151,7 +130,6 @@ class PostsController extends Controller
         );
 
         if (Yii::$app->request->isPost) {
-            /** @noinspection NestedPositiveIfStatementsInspection */
             if ($postFormService->save($post, Yii::$app->request->post(), $_FILES)) {
                 return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
             }
@@ -164,8 +142,10 @@ class PostsController extends Controller
     }
 
     /**
-     * Deletes an existing Item model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
+     * Deletes an existing Post model.
+     *
+     * If deletion is successful, the browser will be redirected to the item page.
+     *
      * @param int $repoId
      * @param int $itemId
      * @param int $postId
@@ -246,13 +226,11 @@ class PostsController extends Controller
     private function findPost(int $itemId, int $postId): Post
     {
         if (($model = Post::findOne(['itemId' => $itemId, 'id' => $postId])) !== null) {
-//            $model->setItemAccessValidator($this->getItemAccessValidator());
             return $model;
         } else {
             throw new NotFoundHttpException("Запрошенный пост {$postId} не существует");
         }
     }
-
 
     private function getItemAccessValidator(): ItemAccessValidator
     {

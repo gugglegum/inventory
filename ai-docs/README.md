@@ -127,6 +127,8 @@ Read-часть `InventoryController::actionView()` вынесена в `backend
 
 Открытие и удаление инвентаризаций вынесены из `InventoryController::actionCreate()` и `InventoryController::actionDelete()` в `backend/services/InventoryLifecycleService.php`. Контроллерные сценарии создания/удаления покрыты в `tests/phpunit/integration/InventoryTest.php`, а прямой контракт сервиса - в `tests/phpunit/integration/InventoryLifecycleServiceTest.php`.
 
+Финальная уборка после основных шагов рефакторинга убрала старый закомментированный access-validator код вокруг `Post`/`PostPhoto` и устаревший закомментированный `PostsController::actionIndex()`. Общие test helpers для создания JPEG-фикстуры, `Photo`, `ItemPhoto` и `PostPhoto` перенесены в `tests/phpunit/DbTestCase.php`; там же тестовые request helpers теперь умеют задавать `REQUEST_URI` для render-сценариев форм. Дополнительное regression-покрытие закрывает `PostsController::actionView()` и GET-ветку `RepoController::actionUpdate()`.
+
 ## Git и локальные файлы
 
 В корневом `.gitignore` намеренно игнорируются:

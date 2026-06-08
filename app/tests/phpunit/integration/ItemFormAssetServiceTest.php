@@ -10,7 +10,6 @@ use common\models\ItemPhoto;
 use common\models\RepoUser;
 use common\models\User;
 use tests\phpunit\DbTestCase;
-use Yii;
 
 /**
  * Integration-тесты сервиса обработки связанных данных формы предмета.
@@ -24,7 +23,6 @@ final class ItemFormAssetServiceTest extends DbTestCase
      */
     public function testSaveStoresTagsAndAttachesUploadedPhoto(): void
     {
-        $this->ensurePhotoRuntimeDirectories();
         $uploadedFile = $this->createUploadedJpegFixture();
         $item = $this->prepareItemFixture();
         $tagsForm = new ItemTagsForm();
@@ -73,36 +71,5 @@ final class ItemFormAssetServiceTest extends DbTestCase
         return $this->createItem($repo, $user, [
             'name' => 'Предмет с фотографией',
         ]);
-    }
-
-    /**
-     * Создает runtime-каталоги, нужные Photo::assignFile().
-     */
-    private function ensurePhotoRuntimeDirectories(): void
-    {
-        foreach ([
-            Yii::$app->params['photos']['storagePath'],
-            Yii::$app->params['photos']['storageTemp'],
-            Yii::$app->params['photos']['thumbnailPath'],
-            Yii::$app->params['photos']['thumbnailTemp'],
-        ] as $directory) {
-            if (!is_dir($directory)) {
-                mkdir($directory, 0777, true);
-            }
-        }
-    }
-
-    /**
-     * Создает маленький JPEG-файл, имитирующий загруженное фото.
-     */
-    private function createUploadedJpegFixture(): string
-    {
-        $file = tempnam(Yii::$app->params['photos']['storageTemp'], 'upload');
-        $image = imagecreatetruecolor(8, 8);
-        imagefill($image, 0, 0, imagecolorallocate($image, 80, 120, 160));
-        imagejpeg($image, $file);
-        imagedestroy($image);
-
-        return $file;
     }
 }

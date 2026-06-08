@@ -28,7 +28,7 @@ final class PostFormServiceTest extends DbTestCase
      */
     public function testPrepareForCreateAndSaveCreatesPostWithUploadedPhoto(): void
     {
-        [$repo, $item] = $this->prepareFixture();
+        [, $item] = $this->prepareFixture();
         $uploadedFile = $this->createUploadedJpegFixture();
         $service = new PostFormService();
 
@@ -76,7 +76,7 @@ final class PostFormServiceTest extends DbTestCase
      */
     public function testPrepareForUpdateAndSaveUpdatesPost(): void
     {
-        [$repo, $item, $user] = $this->prepareFixture();
+        [, $item, $user] = $this->prepareFixture();
         $post = $this->createPost($item, $user, [
             'title' => 'Старая заметка',
             'text' => 'Старый текст',
@@ -121,20 +121,6 @@ final class PostFormServiceTest extends DbTestCase
         ]);
 
         return [$repo, $item, $user];
-    }
-
-    /**
-     * Создает маленький JPEG-файл, имитирующий загруженное фото.
-     */
-    private function createUploadedJpegFixture(): string
-    {
-        $file = tempnam(Yii::$app->params['photos']['storageTemp'], 'upload');
-        $image = imagecreatetruecolor(8, 8);
-        imagefill($image, 0, 0, imagecolorallocate($image, 80, 120, 160));
-        imagejpeg($image, $file);
-        imagedestroy($image);
-
-        return $file;
     }
 
     /**

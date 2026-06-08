@@ -76,6 +76,25 @@ final class RepoControllerTest extends DbTestCase
     }
 
     /**
+     * GET update рендерит форму с текущими значениями репозитория и пользовательского приоритета.
+     */
+    public function testUpdateGetRendersExistingRepoValues(): void
+    {
+        [$controller, $repo, $repoUser] = $this->prepareRepoFixture();
+        $repoUser->priority = 8;
+        $this->saveModel($repoUser);
+
+        $this->setGetRequest([], "/repo/{$repo->id}/update");
+
+        $response = $controller->actionUpdate($repo->id);
+
+        self::assertIsString($response);
+        self::assertStringContainsString('Редактируемый репозиторий', $response);
+        self::assertStringContainsString('Старое описание', $response);
+        self::assertStringContainsString('value="8"', $response);
+    }
+
+    /**
      * POST delete удаляет репозиторий и редиректит к списку репозиториев.
      */
     public function testDeletePostDeletesRepoAndRedirectsToIndex(): void

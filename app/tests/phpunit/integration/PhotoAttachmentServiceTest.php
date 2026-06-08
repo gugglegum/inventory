@@ -6,15 +6,11 @@ namespace tests\phpunit\integration;
 
 use backend\services\PhotoAttachmentService;
 use common\models\Item;
-use common\models\ItemPhoto;
-use common\models\Photo;
 use common\models\Post;
 use common\models\PostPhoto;
-use common\models\Repo;
 use common\models\RepoUser;
 use common\models\User;
 use tests\phpunit\DbTestCase;
-use Yii;
 
 /**
  * Integration-тесты сервиса управления связями фотографий.
@@ -28,7 +24,7 @@ final class PhotoAttachmentServiceTest extends DbTestCase
      */
     public function testSortUpMovesItemPhotoWithinItemList(): void
     {
-        [$item, $post] = $this->prepareFixture();
+        [$item] = $this->prepareFixture();
         $firstPhoto = $this->createItemPhoto($item);
         $secondPhoto = $this->createItemPhoto($item);
 
@@ -47,7 +43,7 @@ final class PhotoAttachmentServiceTest extends DbTestCase
      */
     public function testSortDownMovesPostPhotoWithinPostList(): void
     {
-        [$item, $post] = $this->prepareFixture();
+        [, $post] = $this->prepareFixture();
         $firstPhoto = $this->createPostPhoto($post);
         $secondPhoto = $this->createPostPhoto($post);
 
@@ -66,7 +62,7 @@ final class PhotoAttachmentServiceTest extends DbTestCase
      */
     public function testDeleteRemovesPostPhoto(): void
     {
-        [$item, $post] = $this->prepareFixture();
+        [, $post] = $this->prepareFixture();
         $postPhoto = $this->createPostPhoto($post);
 
         $result = (new PhotoAttachmentService())->delete($postPhoto->id, PhotoAttachmentService::TYPE_POST);
@@ -95,62 +91,5 @@ final class PhotoAttachmentServiceTest extends DbTestCase
         ]);
 
         return [$item, $post];
-    }
-
-    /**
-     * Создает связь фотографии с предметом.
-     */
-    private function createItemPhoto(Item $item): ItemPhoto
-    {
-        $itemPhoto = new ItemPhoto([
-            'itemId' => $item->id,
-            'photoId' => $this->createPhoto()->id,
-        ]);
-        $this->saveModel($itemPhoto);
-
-        return $itemPhoto;
-    }
-
-    /**
-     * Создает связь фотографии с заметкой.
-     */
-    private function createPostPhoto(Post $post): PostPhoto
-    {
-        $postPhoto = new PostPhoto([
-            'postId' => $post->id,
-            'photoId' => $this->createPhoto()->id,
-        ]);
-        $this->saveModel($postPhoto);
-
-        return $postPhoto;
-    }
-
-    /**
-     * Создает сохраненную фотографию из маленького JPEG.
-     */
-    private function createPhoto(): Photo
-    {
-        $uploadedFile = $this->createUploadedJpegFixture();
-
-        $photo = new Photo();
-        $photo->assignFile($uploadedFile);
-        $this->saveModel($photo);
-        @unlink($uploadedFile);
-
-        return $photo;
-    }
-
-    /**
-     * Создает маленький JPEG-файл, имитирующий загруженное фото.
-     */
-    private function createUploadedJpegFixture(): string
-    {
-        $file = tempnam(Yii::$app->params['photos']['storageTemp'], 'upload');
-        $image = imagecreatetruecolor(8, 8);
-        imagefill($image, 0, 0, imagecolorallocate($image, 80, 120, 160));
-        imagejpeg($image, $file);
-        imagedestroy($image);
-
-        return $file;
     }
 }

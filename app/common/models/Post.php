@@ -2,7 +2,6 @@
 
 namespace common\models;
 
-use common\components\ItemAccessValidator;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
@@ -35,8 +34,6 @@ class Post extends ActiveRecord
     public const string SCENARIO_UPDATE = 'update';
 
     public ?string $datetimeText = null; // виртуальное поле даты и времени в текстовом виде
-
-//    private ItemAccessValidator $itemAccessValidator;
 
     /**
      * @inheritdoc
@@ -107,8 +104,8 @@ class Post extends ActiveRecord
             'datetimeText' => 'Дата и время, к которому относится пост',
             'title' => 'Заголовок поста',
             'text' => 'Текст поста',
-            'createdBy' => 'ID создавшего предмет пользователя',
-            'updatedBy' => 'ID последнего изменившего предмет пользователя',
+            'createdBy' => 'ID создавшего пост пользователя',
+            'updatedBy' => 'ID последнего изменившего пост пользователя',
             'created' => 'Время создания',
             'updated' => 'Время последнего изменения',
         ];
@@ -127,8 +124,7 @@ class Post extends ActiveRecord
         }
 
         if ($this->datetimeText !== null && $this->datetimeText !== '') {
-            // ВАЖНО: реши в какой TZ пользователь вводит дату.
-            // Если пока считаешь, что ввод в TZ приложения (или сервера) — ок:
+            // Пользовательский ввод даты интерпретируется в timezone приложения.
             $tz = new \DateTimeZone(Yii::$app->timeZone ?: 'UTC');
 
             $dt = \DateTimeImmutable::createFromFormat('d.m.Y H:i', $this->datetimeText, $tz);
@@ -150,13 +146,7 @@ class Post extends ActiveRecord
     public function beforeDelete(): bool
     {
         if (parent::beforeDelete()) {
-//            if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->repoId, RepoUser::ACCESS_DELETE_ITEMS)) {
-//                $this->addError('', 'Недостаточно прав для удаления предмета.');
-//                return false;
-//            }
-
             foreach ($this->postPhotos as $postPhoto) {
-//                $postPhoto->setItemAccessValidator($this->itemAccessValidator);
                 $postPhoto->delete();
             }
             return true;
@@ -164,22 +154,6 @@ class Post extends ActiveRecord
             return false;
         }
     }
-
-//    public function beforeSave($insert): bool
-//    {
-//        if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->repoId, $insert ? RepoUser::ACCESS_CREATE_ITEMS : RepoUser::ACCESS_EDIT_ITEMS)) {
-//            $this->addError('', 'Недостаточно прав для сохранения предмета.');
-//            return false;
-//        }
-//
-//        return parent::beforeSave($insert);
-//    }
-
-//    public function setItemAccessValidator(ItemAccessValidator $itemAccessValidator): static
-//    {
-//        $this->itemAccessValidator = $itemAccessValidator;
-//        return $this;
-//    }
 
     public function getItem(): ActiveQuery
     {

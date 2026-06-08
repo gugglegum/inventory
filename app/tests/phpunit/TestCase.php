@@ -32,6 +32,7 @@ abstract class TestCase extends BaseTestCase
     protected function tearDown(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/';
         $this->destroyApplication();
         parent::tearDown();
     }
@@ -70,10 +71,12 @@ abstract class TestCase extends BaseTestCase
      * Переключает тестовый request в GET-режим с заданными query-параметрами.
      *
      * @param array $queryParams GET-параметры для текущего тестового запроса.
+     * @param string $requestUri URI текущего тестового запроса.
      */
-    protected function setGetRequest(array $queryParams = []): void
+    protected function setGetRequest(array $queryParams = [], string $requestUri = '/'): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = $requestUri;
         Yii::$app->request->setQueryParams($queryParams);
         Yii::$app->request->setBodyParams([]);
     }
@@ -83,10 +86,12 @@ abstract class TestCase extends BaseTestCase
      *
      * @param array $bodyParams POST-параметры тела запроса.
      * @param array $queryParams GET-параметры текущего запроса.
+     * @param string $requestUri URI текущего тестового запроса.
      */
-    protected function setPostRequest(array $bodyParams = [], array $queryParams = []): void
+    protected function setPostRequest(array $bodyParams = [], array $queryParams = [], string $requestUri = '/'): void
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REQUEST_URI'] = $requestUri;
         Yii::$app->request->setQueryParams($queryParams);
         Yii::$app->request->setBodyParams($bodyParams);
     }

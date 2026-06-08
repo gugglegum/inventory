@@ -7,8 +7,6 @@ namespace tests\phpunit\integration;
 use backend\controllers\PhotoController;
 use backend\services\PhotoAttachmentService;
 use common\models\Item;
-use common\models\ItemPhoto;
-use common\models\Photo;
 use common\models\Post;
 use common\models\PostPhoto;
 use common\models\RepoUser;
@@ -28,7 +26,7 @@ final class PhotoControllerTest extends DbTestCase
      */
     public function testSortUpDefaultsToItemPhotoType(): void
     {
-        [$controller, $item, $post] = $this->prepareFixture();
+        [$controller, $item] = $this->prepareFixture();
         $firstPhoto = $this->createItemPhoto($item);
         $secondPhoto = $this->createItemPhoto($item);
 
@@ -50,7 +48,7 @@ final class PhotoControllerTest extends DbTestCase
      */
     public function testSortDownSupportsPostPhotoType(): void
     {
-        [$controller, $item, $post] = $this->prepareFixture();
+        [$controller, , $post] = $this->prepareFixture();
         $firstPhoto = $this->createPostPhoto($post);
         $secondPhoto = $this->createPostPhoto($post);
 
@@ -73,7 +71,7 @@ final class PhotoControllerTest extends DbTestCase
      */
     public function testDeleteSupportsPostPhotoType(): void
     {
-        [$controller, $item, $post] = $this->prepareFixture();
+        [$controller, , $post] = $this->prepareFixture();
         $postPhoto = $this->createPostPhoto($post);
 
         $this->setPostRequest([
@@ -109,62 +107,5 @@ final class PhotoControllerTest extends DbTestCase
         Yii::$app->controller = $controller;
 
         return [$controller, $item, $post];
-    }
-
-    /**
-     * Создает связь фотографии с предметом.
-     */
-    private function createItemPhoto(Item $item): ItemPhoto
-    {
-        $itemPhoto = new ItemPhoto([
-            'itemId' => $item->id,
-            'photoId' => $this->createPhoto()->id,
-        ]);
-        $this->saveModel($itemPhoto);
-
-        return $itemPhoto;
-    }
-
-    /**
-     * Создает связь фотографии с заметкой.
-     */
-    private function createPostPhoto(Post $post): PostPhoto
-    {
-        $postPhoto = new PostPhoto([
-            'postId' => $post->id,
-            'photoId' => $this->createPhoto()->id,
-        ]);
-        $this->saveModel($postPhoto);
-
-        return $postPhoto;
-    }
-
-    /**
-     * Создает сохраненную фотографию из маленького JPEG.
-     */
-    private function createPhoto(): Photo
-    {
-        $uploadedFile = $this->createUploadedJpegFixture();
-
-        $photo = new Photo();
-        $photo->assignFile($uploadedFile);
-        $this->saveModel($photo);
-        @unlink($uploadedFile);
-
-        return $photo;
-    }
-
-    /**
-     * Создает маленький JPEG-файл, имитирующий загруженное фото.
-     */
-    private function createUploadedJpegFixture(): string
-    {
-        $file = tempnam(Yii::$app->params['photos']['storageTemp'], 'upload');
-        $image = imagecreatetruecolor(8, 8);
-        imagefill($image, 0, 0, imagecolorallocate($image, 80, 120, 160));
-        imagejpeg($image, $file);
-        imagedestroy($image);
-
-        return $file;
     }
 }
