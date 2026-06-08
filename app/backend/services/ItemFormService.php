@@ -1,0 +1,85 @@
+<?php
+
+declare(strict_types=1);
+
+namespace backend\services;
+
+use backend\models\ItemTagsForm;
+use common\components\ItemAccessValidator;
+use common\models\Item;
+use common\models\Repo;
+use yii\web\User;
+
+/**
+ * Готовит и сохраняет модель предмета для create/update форм.
+ *
+ * Сервис содержит настройку сценариев, служебных полей и формы тегов, чтобы ItemsController
+ * оставался HTTP-обвязкой вокруг form workflow.
+ */
+final class ItemFormService
+{
+    /**
+     * Создает новую модель предмета, подготовленную для формы создания.
+     *
+     * @param Repo $repo Репозиторий, в котором создается предмет.
+     * @param ?Item $parent Родительский контейнер, если предмет создается внутри контейнера.
+     * @param User $user Текущий пользователь, записываемый в createdBy.
+     * @param ItemAccessValidator $itemAccessValidator Валидатор прав для сохранения предмета.
+     * @param bool $isContainer Начальное значение флага контейнера из query-параметра.
+     */
+    public function prepareForCreate(
+        Repo $repo,
+        ?Item $parent,
+        User $user,
+        ItemAccessValidator $itemAccessValidator,
+        bool $isContainer,
+    ): Item {
+        $item = new Item();
+        $item->scenario = Item::SCENARIO_CREATE;
+        $item->setItemAccessValidator($itemAccessValidator);
+        $item->repoId = $repo->id;
+        $item->priority = 0;
+        $item->createdBy = (int) $user->id;
+        $item->parentItemId = $parent?->itemId;
+        $item->isContainer = $isContainer ? 1 : 0;
+
+        return $item;
+    }
+
+    /**
+     * Подготавливает существующую модель предмета для формы обновления.
+     */
+    public function prepareForUpdate(Item $item, User $user, ItemAccessValidator $itemAccessValidator): Item
+    {
+        $item->scenario = Item::SCENARIO_UPDATE;
+        $item->setItemAccessValidator($itemAccessValidator);
+        $item->updatedBy = (int) $user->id;
+
+        return $item;
+    }
+
+    /**
+     * Создает форму тегов; для существующего предмета заполняет ее текущими тегами.
+     *
+     * @throws \yii\db\Exception
+     */
+    public function createTagsForm(?Item $item = null): ItemTagsForm
+    {
+        $tagsForm = new ItemTagsForm();
+        if ($item !== null) {
+            $tagsForm->tags = $item->fetchTagsAsString();
+        }
+
+        return $tagsForm;
+    }
+
+    /**
+     * Загружает POST-данные в Item и сохраняет модель.
+     *
+     * @throws \yii\db\Exception
+     */
+    public function save(Item $item, array $postData): bool
+    {
+        return $item->load($postData) && $item->save();
+    }
+}

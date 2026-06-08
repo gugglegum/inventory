@@ -4,9 +4,9 @@ declare(strict_types=1);
 namespace backend\controllers;
 
 use backend\models\ItemDeleteForm;
-use backend\models\ItemTagsForm;
 use backend\services\ItemDeletionService;
 use backend\services\ItemFormAssetService;
+use backend\services\ItemFormService;
 use backend\services\ItemImportService;
 use backend\services\ItemSearchService;
 use common\components\ItemAccessValidator;
@@ -224,28 +224,22 @@ class ItemsController extends Controller
     public function actionCreate(int $repoId, ?int $parentItemId): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $item = new Item();
-        $item->scenario = Item::SCENARIO_CREATE;
-        $item->setItemAccessValidator($this->getItemAccessValidator());
-        $item->repoId = $repo->id;
-        $item->priority = 0;
-        $item->createdBy = $this->getLoggedUser()->id;
-
-        $tagsForm = new ItemTagsForm();
-
-        if ($parentItemId) {
-            $parent = $this->findParentItem($repo->id, $parentItemId);
-            $item->parentItemId = $parent->itemId;
-        } else {
-            $parent = null;
-        }
-        $item->isContainer = (bool) Yii::$app->request->getQueryParam('isContainer');
+        $itemFormService = new ItemFormService();
+        $parent = $parentItemId ? $this->findParentItem($repo->id, $parentItemId) : null;
+        $item = $itemFormService->prepareForCreate(
+            $repo,
+            $parent,
+            $this->getLoggedUser(),
+            $this->getItemAccessValidator(),
+            (bool) Yii::$app->request->getQueryParam('isContainer'),
+        );
+        $tagsForm = $itemFormService->createTagsForm();
 
         $goto = Yii::$app->request->post('goto', Yii::$app->request->getQueryParam('goto', 'view'));
 
         if (Yii::$app->request->isPost) {
             /** @noinspection NestedPositiveIfStatementsInspection */
-            if ($item->load(Yii::$app->request->post()) && $item->save()) {
+            if ($itemFormService->save($item, Yii::$app->request->post())) {
                 (new ItemFormAssetService())->save($item, $tagsForm, Yii::$app->request->post(), $_FILES);
 
                 return $this->redirect($goto === 'create'
@@ -276,16 +270,17 @@ class ItemsController extends Controller
     public function actionUpdate(int $repoId, int $itemId): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $item = $this->findModel($repoId, $itemId);
-        $item->scenario = Item::SCENARIO_UPDATE;
-        $item->updatedBy = $this->getLoggedUser()->id;
-
-        $tagsForm = new ItemTagsForm();
-        $tagsForm->tags = $item->fetchTagsAsString();
+        $itemFormService = new ItemFormService();
+        $item = $itemFormService->prepareForUpdate(
+            $this->findModel($repoId, $itemId),
+            $this->getLoggedUser(),
+            $this->getItemAccessValidator(),
+        );
+        $tagsForm = $itemFormService->createTagsForm($item);
 
         if (Yii::$app->request->isPost) {
             /** @noinspection NestedPositiveIfStatementsInspection */
-            if ($item->load(Yii::$app->request->post()) && $item->save()) {
+            if ($itemFormService->save($item, Yii::$app->request->post())) {
                 (new ItemFormAssetService())->save($item, $tagsForm, Yii::$app->request->post(), $_FILES);
 
                 return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
