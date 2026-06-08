@@ -34,7 +34,7 @@ class ValidateErrorsFormatter
      * @param Model $model              Модель (форма), при валидации которой возникли ошибки
      * @return string                   Сообщение об ошибки для подстановки Exception
      */
-    public static function getMessage(Model $model, $text = '%MODEL% validated with errors:'): string
+    public static function getMessage(Model $model, string $text = '%MODEL% validated with errors:'): string
     {
         return str_replace(['%MODEL%'], [get_class($model)], $text)
             . "\n" . self::allErrors($model)

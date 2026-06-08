@@ -2,6 +2,7 @@
 
 namespace common\models;
 
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
 /**
@@ -46,9 +47,9 @@ class ItemTag extends ActiveRecord
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery<Item>
      */
-    public function getItem(): \yii\db\ActiveQuery
+    public function getItem(): ActiveQuery
     {
         return $this->hasOne(Item::class, ['id' => 'itemId']);
     }

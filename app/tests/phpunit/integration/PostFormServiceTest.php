@@ -54,7 +54,6 @@ final class PostFormServiceTest extends DbTestCase
 
         @unlink($uploadedFile);
 
-        /** @var PostPhoto|null $postPhoto */
         $postPhoto = $post->getPostPhotos()->one();
 
         self::assertTrue($result);
@@ -130,6 +129,9 @@ final class PostFormServiceTest extends DbTestCase
     {
         $timezone = new DateTimeZone(Yii::$app->timeZone ?: 'UTC');
 
-        return DateTimeImmutable::createFromFormat('d.m.Y H:i', $datetimeText, $timezone)->getTimestamp();
+        $dateTime = DateTimeImmutable::createFromFormat('d.m.Y H:i', $datetimeText, $timezone);
+        self::assertNotFalse($dateTime);
+
+        return $dateTime->getTimestamp();
     }
 }

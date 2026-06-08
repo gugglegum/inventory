@@ -2,6 +2,7 @@
 
 namespace common\models;
 
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\db\Query;
 use yii\db\StaleObjectException;
@@ -91,7 +92,7 @@ class PostPhoto extends ActiveRecord
                     ->from(self::tableName())
                     ->where('postId = :postId', ['postId' => $this->postId])
                     ->scalar();
-                $this->sortIndex = $maxSortIndex !== null ? $maxSortIndex + 1 : 0;
+                $this->sortIndex = $maxSortIndex !== null && $maxSortIndex !== false ? (int) $maxSortIndex + 1 : 0;
             }
             return true;
         } else {
@@ -99,12 +100,18 @@ class PostPhoto extends ActiveRecord
         }
     }
 
-    public function getPost(): \yii\db\ActiveQuery
+    /**
+     * @return ActiveQuery<Post>
+     */
+    public function getPost(): ActiveQuery
     {
         return $this->hasOne(Post::class, ['id' => 'postId']);
     }
 
-    public function getPhoto(): \yii\db\ActiveQuery
+    /**
+     * @return ActiveQuery<Photo>
+     */
+    public function getPhoto(): ActiveQuery
     {
         return $this->hasOne(Photo::class, ['id' => 'photoId']);
     }

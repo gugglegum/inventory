@@ -13,14 +13,28 @@ use yii\db\ActiveQuery;
  */
 class ItemQuery extends ActiveQuery
 {
+    /**
+     * Добавляет условие выборки только неудаленных предметов.
+     *
+     * @return $this
+     */
     public function notDeleted(): self
     {
-        return $this->andWhere(['deleted' => null]);
+        $this->andWhere(['deleted' => null]);
+
+        return $this;
     }
 
+    /**
+     * Добавляет условие выборки только мягко удаленных предметов.
+     *
+     * @return $this
+     */
     public function onlyDeleted(): self
     {
-        return $this->andWhere(['not', ['deleted' => null]]);
+        $this->andWhere(['not', ['deleted' => null]]);
+
+        return $this;
     }
 
 }

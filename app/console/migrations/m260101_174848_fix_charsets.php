@@ -17,7 +17,9 @@ class m260101_174848_fix_charsets extends Migration
 
         // 2) Convert current database defaults
         // (Yii dbname is already selected; DATABASE() returns it)
-        $dbName = (string)$this->db->createCommand('SELECT DATABASE()')->queryScalar();
+        /** @var \yii\db\Connection $db */
+        $db = $this->db;
+        $dbName = (string)$db->createCommand('SELECT DATABASE()')->queryScalar();
         if ($dbName === '') {
             throw new \RuntimeException('No database selected (DATABASE() returned empty).');
         }
@@ -27,7 +29,7 @@ class m260101_174848_fix_charsets extends Migration
         $this->execute("ALTER DATABASE `{$quotedDb}` CHARACTER SET " . self::CHARSET . " COLLATE " . self::COLLATE);
 
         // 3) Convert every base table
-        $tables = $this->db->createCommand("
+        $tables = $db->createCommand("
             SELECT table_name
             FROM information_schema.tables
             WHERE table_schema = DATABASE()

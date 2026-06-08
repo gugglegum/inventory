@@ -2,6 +2,7 @@
 
 namespace common\models;
 
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\db\Query;
 use yii\db\StaleObjectException;
@@ -91,7 +92,7 @@ class ItemPhoto extends ActiveRecord
                     ->from(self::tableName())
                     ->where('itemId = :itemId', ['itemId' => $this->itemId])
                     ->scalar();
-                $this->sortIndex = $maxSortIndex !== null ? $maxSortIndex + 1 : 0;
+                $this->sortIndex = $maxSortIndex !== null && $maxSortIndex !== false ? (int) $maxSortIndex + 1 : 0;
             }
             return true;
         } else {
@@ -99,12 +100,18 @@ class ItemPhoto extends ActiveRecord
         }
     }
 
-    public function getItem(): \yii\db\ActiveQuery
+    /**
+     * @return ActiveQuery<Item>
+     */
+    public function getItem(): ActiveQuery
     {
         return $this->hasOne(Item::class, ['id' => 'itemId']);
     }
 
-    public function getPhoto(): \yii\db\ActiveQuery
+    /**
+     * @return ActiveQuery<Photo>
+     */
+    public function getPhoto(): ActiveQuery
     {
         return $this->hasOne(Photo::class, ['id' => 'photoId']);
     }

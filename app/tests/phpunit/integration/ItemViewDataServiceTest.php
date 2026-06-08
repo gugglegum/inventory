@@ -27,6 +27,8 @@ final class ItemViewDataServiceTest extends DbTestCase
         $viewData = (new ItemViewDataService())->prepare($secondChild);
 
         self::assertSame([], $viewData->children);
+        self::assertNotNull($viewData->prevItem);
+        self::assertNotNull($viewData->nextItem);
         self::assertSame((int) $firstChild->id, (int) $viewData->prevItem->id);
         self::assertSame((int) $thirdChild->id, (int) $viewData->nextItem->id);
 

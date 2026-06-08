@@ -211,7 +211,7 @@ final class ItemImportService
                 $itemModel->parentItemId = $parentItem->itemId;
                 $itemModel->isContainer = !empty($item['container']) ? 1 : 0;
                 $itemModel->description = $item['description'] ?? '';
-                $itemModel->createdBy = $user->id;
+                $itemModel->createdBy = (int) $user->id;
 
                 if (!$itemModel->save()) {
                     throw new Exception(ValidateErrorsFormatter::getMessage($itemModel));

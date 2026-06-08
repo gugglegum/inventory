@@ -1,17 +1,20 @@
 <?php
 namespace frontend\controllers;
 
-use Yii;
+use common\helpers\PostDataHelper;
 use common\models\LoginForm;
+use frontend\models\ContactForm;
 use frontend\models\PasswordResetRequestForm;
 use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
-use frontend\models\ContactForm;
+use Yii;
 use yii\base\InvalidParamException;
+use yii\captcha\CaptchaAction;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\web\BadRequestHttpException;
 use yii\web\Controller;
-use yii\filters\VerbFilter;
-use yii\filters\AccessControl;
+use yii\web\ErrorAction;
 
 /**
  * Site controller
@@ -21,11 +24,11 @@ class SiteController extends Controller
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             'access' => [
-                'class' => AccessControl::className(),
+                'class' => AccessControl::class,
                 'only' => ['logout', 'signup'],
                 'rules' => [
                     [
@@ -41,7 +44,7 @@ class SiteController extends Controller
                 ],
             ],
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'logout' => ['post'],
                 ],
@@ -52,14 +55,14 @@ class SiteController extends Controller
     /**
      * @inheritdoc
      */
-    public function actions()
+    public function actions(): array
     {
         return [
             'error' => [
-                'class' => 'yii\web\ErrorAction',
+                'class' => ErrorAction::class,
             ],
             'captcha' => [
-                'class' => 'yii\captcha\CaptchaAction',
+                'class' => CaptchaAction::class,
                 'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
             ],
         ];
@@ -87,7 +90,7 @@ class SiteController extends Controller
         }
 
         $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
+        if ($model->load(PostDataHelper::toArray(Yii::$app->request->post())) && $model->login()) {
             return $this->goBack();
         } else {
             return $this->render('login', [
@@ -116,7 +119,7 @@ class SiteController extends Controller
     public function actionContact()
     {
         $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+        if ($model->load(PostDataHelper::toArray(Yii::$app->request->post())) && $model->validate()) {
             if ($model->sendEmail(Yii::$app->params['adminEmail'])) {
                 Yii::$app->session->setFlash('success', 'Thank you for contacting us. We will respond to you as soon as possible.');
             } else {
@@ -149,7 +152,7 @@ class SiteController extends Controller
     public function actionSignup()
     {
         $model = new SignupForm();
-        if ($model->load(Yii::$app->request->post())) {
+        if ($model->load(PostDataHelper::toArray(Yii::$app->request->post()))) {
             if ($user = $model->signup()) {
                 if (Yii::$app->getUser()->login($user)) {
                     return $this->goHome();
@@ -170,7 +173,7 @@ class SiteController extends Controller
     public function actionRequestPasswordReset()
     {
         $model = new PasswordResetRequestForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+        if ($model->load(PostDataHelper::toArray(Yii::$app->request->post())) && $model->validate()) {
             if ($model->sendEmail()) {
                 Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
 
@@ -200,7 +203,7 @@ class SiteController extends Controller
             throw new BadRequestHttpException($e->getMessage());
         }
 
-        if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
+        if ($model->load(PostDataHelper::toArray(Yii::$app->request->post())) && $model->validate() && $model->resetPassword()) {
             Yii::$app->session->setFlash('success', 'New password was saved.');
 
             return $this->goHome();

@@ -12,6 +12,7 @@ use backend\services\ItemImportService;
 use backend\services\ItemListService;
 use backend\services\ItemSearchService;
 use backend\services\ItemViewDataService;
+use common\helpers\PostDataHelper;
 use Yii;
 use yii\base\Exception;
 use yii\filters\AccessControl;
@@ -206,9 +207,10 @@ class ItemsController extends RepoAwareController
         $goto = Yii::$app->request->post('goto', Yii::$app->request->getQueryParam('goto', 'view'));
 
         if (Yii::$app->request->isPost) {
+            $postData = PostDataHelper::toArray(Yii::$app->request->post());
             /** @noinspection NestedPositiveIfStatementsInspection */
-            if ($itemFormService->save($item, Yii::$app->request->post())) {
-                (new ItemFormAssetService())->save($item, $tagsForm, Yii::$app->request->post(), $_FILES);
+            if ($itemFormService->save($item, $postData)) {
+                (new ItemFormAssetService())->save($item, $tagsForm, $postData, $_FILES);
 
                 return $this->redirect($goto === 'create'
                     ? ['items/create', 'repoId' => $repo->id, 'parentItemId' => $parentItemId, 'goto' => $goto]
@@ -247,9 +249,10 @@ class ItemsController extends RepoAwareController
         $tagsForm = $itemFormService->createTagsForm($item);
 
         if (Yii::$app->request->isPost) {
+            $postData = PostDataHelper::toArray(Yii::$app->request->post());
             /** @noinspection NestedPositiveIfStatementsInspection */
-            if ($itemFormService->save($item, Yii::$app->request->post())) {
-                (new ItemFormAssetService())->save($item, $tagsForm, Yii::$app->request->post(), $_FILES);
+            if ($itemFormService->save($item, $postData)) {
+                (new ItemFormAssetService())->save($item, $tagsForm, $postData, $_FILES);
 
                 return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
             }
@@ -280,7 +283,7 @@ class ItemsController extends RepoAwareController
         $itemDeleteForm = new ItemDeleteForm();
         if (Yii::$app->request->isPost) {
             $parentItemId = $item->parentItemId;
-            if ($itemDeleteForm->load(Yii::$app->request->post()) && $itemDeleteForm->validate()) {
+            if ($itemDeleteForm->load(PostDataHelper::toArray(Yii::$app->request->post())) && $itemDeleteForm->validate()) {
                 $deletionResult = (new ItemDeletionService())->delete(
                     $item,
                     $itemDeleteForm->hardDelete,

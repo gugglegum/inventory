@@ -6,6 +6,7 @@ namespace backend\controllers;
 
 use backend\services\PostDeletionService;
 use backend\services\PostFormService;
+use common\helpers\PostDataHelper;
 use common\models\Post;
 use Yii;
 use yii\base\Exception;
@@ -93,7 +94,7 @@ class PostsController extends RepoAwareController
         $post = $postFormService->prepareForCreate($item, $this->getLoggedUser());
 
         if (Yii::$app->request->isPost) {
-            if ($postFormService->save($post, Yii::$app->request->post(), $_FILES)) {
+            if ($postFormService->save($post, PostDataHelper::toArray(Yii::$app->request->post()), $_FILES)) {
                 return $this->redirect(['posts/view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
             }
         }
@@ -126,7 +127,7 @@ class PostsController extends RepoAwareController
         );
 
         if (Yii::$app->request->isPost) {
-            if ($postFormService->save($post, Yii::$app->request->post(), $_FILES)) {
+            if ($postFormService->save($post, PostDataHelper::toArray(Yii::$app->request->post()), $_FILES)) {
                 return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
             }
         }

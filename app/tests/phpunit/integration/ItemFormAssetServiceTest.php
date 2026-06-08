@@ -47,7 +47,6 @@ final class ItemFormAssetServiceTest extends DbTestCase
 
         @unlink($uploadedFile);
 
-        /** @var ItemPhoto|null $itemPhoto */
         $itemPhoto = $item->getItemPhotos()->one();
 
         self::assertEqualsCanonicalizing(['фото', 'проверка'], $item->fetchTags());

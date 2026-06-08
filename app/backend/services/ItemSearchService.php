@@ -117,10 +117,12 @@ final class ItemSearchService
      */
     private function splitQuery(string $queryString): array
     {
-        return array_filter(
-            preg_split('/[\s,]+/', $queryString, -1, PREG_SPLIT_NO_EMPTY),
-            static fn($value): bool => $value !== ''
-        );
+        $queryWords = preg_split('/[\s,]+/', $queryString, -1, PREG_SPLIT_NO_EMPTY);
+        if ($queryWords === false) {
+            return [];
+        }
+
+        return array_values(array_filter($queryWords, static fn($value): bool => $value !== ''));
     }
 
     /**

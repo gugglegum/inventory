@@ -2,11 +2,13 @@
 
 namespace backend\controllers;
 
+use common\helpers\PostDataHelper;
+use common\models\LoginForm;
 use Yii;
 use yii\filters\AccessControl;
-use yii\web\Controller;
-use common\models\LoginForm;
 use yii\filters\VerbFilter;
+use yii\web\Controller;
+use yii\web\ErrorAction;
 use yii\web\Response;
 
 /**
@@ -50,7 +52,7 @@ class SiteController extends Controller
     {
         return [
             'error' => [
-                'class' => 'yii\web\ErrorAction',
+                'class' => ErrorAction::class,
             ],
         ];
     }
@@ -65,7 +67,7 @@ class SiteController extends Controller
         }
 
         $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
+        if ($model->load(PostDataHelper::toArray(Yii::$app->request->post())) && $model->login()) {
             return $this->goBack();
         } else {
             return $this->render('login', [

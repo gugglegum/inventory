@@ -30,10 +30,14 @@ final class ItemImportServiceTest extends TestCase
 
         self::assertFalse($result->hasError());
         self::assertCount(1, $result->items);
-        self::assertSame('Коробка', $result->items[0]['name']);
-        self::assertSame("Первая строка описания\nВторая строка описания", $result->items[0]['description']);
-        self::assertSame('контейнер, хранение, пластик', $result->items[0]['tags']);
-        self::assertSame('1', $result->items[0]['container']);
+        $item = $result->items[0];
+        self::assertArrayHasKey('description', $item);
+        self::assertArrayHasKey('tags', $item);
+        self::assertArrayHasKey('container', $item);
+        self::assertSame('Коробка', $item['name']);
+        self::assertSame("Первая строка описания\nВторая строка описания", $item['description'] ?? null);
+        self::assertSame('контейнер, хранение, пластик', $item['tags'] ?? null);
+        self::assertSame('1', $item['container'] ?? null);
     }
 
     /**

@@ -18,7 +18,6 @@ final class ItemViewDataService
      */
     public function prepare(Item $item): ItemViewData
     {
-        /** @var Item[] $children */
         $children = $item->getItems()
             ->orderBy([
                 'priority' => SORT_DESC,

@@ -83,10 +83,11 @@ class RepoForm extends Model
     public function save(): bool
     {
         $this->repo->load($this->attributes, '');
+        $userId = (int) \Yii::$app->getUser()->getId();
         if ($this->scenario === self::SCENARIO_CREATE) {
-            $this->repo->createdBy = \Yii::$app->getUser()->getId();
+            $this->repo->createdBy = $userId;
         } elseif ($this->scenario === self::SCENARIO_UPDATE) {
-            $this->repo->updatedBy = \Yii::$app->getUser()->getId();
+            $this->repo->updatedBy = $userId;
         }
 
         $this->repoUser->load($this->attributes, '');

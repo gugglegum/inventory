@@ -326,6 +326,9 @@ class Item extends ActiveRecord
     public function saveTagsFromString(string $tagsString): void
     {
         $tags = preg_split('/\s*,\s*/', $tagsString, -1, PREG_SPLIT_NO_EMPTY);
+        if ($tags === false) {
+            $tags = [];
+        }
         $this->saveTags($tags);
     }
 
@@ -349,91 +352,145 @@ class Item extends ActiveRecord
         return implode($separator, $tags);
     }
 
+    /**
+     * @return ActiveQuery<Repo>
+     */
     public function getRepo(): ActiveQuery
     {
         return $this->hasOne(Repo::class, ['id' => 'repoId']);
     }
 
+    /**
+     * @return ActiveQuery<ItemRelation>
+     */
     public function getItemRelations(): ActiveQuery
     {
         return $this->hasMany(ItemRelation::class, ['srcItemId' => 'id']);
     }
 
+    /**
+     * @return ActiveQuery<ItemRelation>
+     */
     public function getItemBackRelations(): ActiveQuery
     {
         return $this->hasMany(ItemRelation::class, ['dstItemId' => 'id']);
     }
 
+    /**
+     * @return ActiveQuery<Item>
+     */
     public function getParentItem(): ActiveQuery
     {
         return $this->hasOne(Item::class, ['repoId' => 'repoId', 'itemId' => 'parentItemId']);
     }
 
+    /**
+     * @return ActiveQuery<Item>
+     */
     public function getItems(): ActiveQuery
     {
         return $this->hasMany(Item::class, ['repoId' => 'repoId', 'parentItemId' => 'itemId'])->orderBy(['isContainer' => SORT_DESC, 'id' => SORT_ASC]);
     }
 
+    /**
+     * @return ActiveQuery<ItemPhoto>
+     */
     public function getItemPhotos(): ActiveQuery
     {
         return $this->hasMany(ItemPhoto::class, ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC]);
     }
 
+    /**
+     * @return ActiveQuery<ItemPhoto>
+     */
     public function getPrimaryPhoto(): ActiveQuery
     {
         return $this->hasOne(ItemPhoto::class, ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC])->limit(1);
     }
 
+    /**
+     * @return ActiveQuery<ItemPhoto>
+     */
     public function getSecondaryPhotos(): ActiveQuery
     {
         return $this->hasMany(ItemPhoto::class, ['itemId' => 'id'])->orderBy(['sortIndex' => SORT_ASC])->offset(1);
     }
 
+    /**
+     * @return ActiveQuery<ItemTag>
+     */
     public function getItemTags(): ActiveQuery
     {
         return $this->hasMany(ItemTag::class, ['itemId' => 'id']);
     }
 
+    /**
+     * @return ActiveQuery<Inventory>
+     */
     public function getInventories(): ActiveQuery
     {
         return $this->hasMany(Inventory::class, ['containerId' => 'id']);
     }
 
+    /**
+     * @return ActiveQuery<Inventory>
+     */
     public function getLastOpenedInventory(): ActiveQuery
     {
         return $this->hasOne(Inventory::class, ['containerId' => 'id'])->where(['status' => Inventory::STATUS_OPENED])->orderBy(['id' => SORT_DESC])->limit(1);
     }
 
+    /**
+     * @return ActiveQuery<Inventory>
+     */
     public function getLastClosedInventory(): ActiveQuery
     {
         return $this->hasOne(Inventory::class, ['containerId' => 'id'])->where(['status' => Inventory::STATUS_CLOSED])->orderBy(['id' => SORT_DESC])->limit(1);
     }
 
+    /**
+     * @return ActiveQuery<InventoryItem>
+     */
     public function getInventoryItems(): ActiveQuery
     {
         return $this->hasMany(InventoryItem::class, ['itemId' => 'id']);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getLastSeenByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'lastSeenBy']);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getMissingSinceByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'missingSinceBy']);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getCreatedByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'createdBy']);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getUpdatedByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'updatedBy']);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getDeletedByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'deletedBy']);
@@ -460,6 +517,9 @@ class Item extends ActiveRecord
         return $query;
     }
 
+    /**
+     * @return ActiveQuery<Post>
+     */
     public function getPosts(): ActiveQuery
     {
         return $this->hasMany(Post::class, ['itemId' => 'id']);

@@ -159,19 +159,22 @@ class UserController extends Controller
                 . addslashes($prompt)
                 . '", "", ""))');
             $command = 'cscript //nologo ' . escapeshellarg($vbScript);
-            $password = rtrim(shell_exec($command));
+            $output = shell_exec($command);
+            $password = is_string($output) ? rtrim($output) : '';
             unlink($vbScript);
             return $password;
         } else {
             $command = "/usr/bin/env bash -c 'echo OK'";
-            if (rtrim(shell_exec($command)) !== 'OK') {
+            $output = shell_exec($command);
+            if (!is_string($output) || rtrim($output) !== 'OK') {
                 trigger_error("Can't invoke bash");
                 return '';
             }
             $command = "/usr/bin/env bash -c 'read -s -p \""
                 . addslashes($prompt)
                 . "\" mypassword && echo \$mypassword'";
-            $password = rtrim(shell_exec($command));
+            $output = shell_exec($command);
+            $password = is_string($output) ? rtrim($output) : '';
             echo "\n";
             return $password;
         }
@@ -192,7 +195,8 @@ class UserController extends Controller
                 echo ' [' . ($default ? 'yes' : 'no') . ']';
             }
             echo ': ';
-            $input = strtolower(trim(fgets(STDIN)));
+            $line = fgets(STDIN);
+            $input = $line !== false ? strtolower(trim($line)) : '';
 
             if ($input === '' && $default !== null) {
                 return $default;

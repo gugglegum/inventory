@@ -40,7 +40,9 @@ final class RepoAwareControllerTest extends DbTestCase
 
         $this->saveModel($resolvedRepo);
 
-        self::assertSame('Репозиторий после обновления', Repo::findOne($repo->id)->name);
+        $updatedRepo = Repo::findOne($repo->id);
+        self::assertNotNull($updatedRepo);
+        self::assertSame('Репозиторий после обновления', $updatedRepo->name);
     }
 
     /**
@@ -64,7 +66,9 @@ final class RepoAwareControllerTest extends DbTestCase
 
         $this->saveModel($resolvedItem);
 
-        self::assertSame('Предмет после обновления', Item::findOne($item->id)->name);
+        $updatedItem = Item::findOne($item->id);
+        self::assertNotNull($updatedItem);
+        self::assertSame('Предмет после обновления', $updatedItem->name);
     }
 
     /**

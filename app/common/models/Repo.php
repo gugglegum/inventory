@@ -128,21 +128,33 @@ class Repo extends ActiveRecord
         return $this;
     }
 
+    /**
+     * @return ActiveQuery<Item>
+     */
     public function getItems(): ActiveQuery
     {
         return $this->hasMany(Item::class, ['repoId' => 'id']);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getCreatedByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'createdBy']);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getUpdatedByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'updatedBy']);
     }
 
+    /**
+     * @return ActiveQuery<RepoUser>
+     */
     public function getRepoUsers(): ActiveQuery
     {
         return $this->hasMany(RepoUser::class, ['repoId' => 'id']);

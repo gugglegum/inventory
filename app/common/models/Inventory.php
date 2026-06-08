@@ -63,21 +63,33 @@ final class Inventory extends ActiveRecord
         ];
     }
 
+    /**
+     * @return ActiveQuery<Item>
+     */
     public function getContainer(): ActiveQuery
     {
         return $this->hasOne(Item::class, ['id' => 'containerId']);
     }
 
+    /**
+     * @return ActiveQuery<InventoryItem>
+     */
     public function getInventoryItems(): ActiveQuery
     {
         return $this->hasMany(InventoryItem::class, ['inventoryId' => 'id']);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getCreatedByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'createdBy']);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getClosedByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'closedBy']);

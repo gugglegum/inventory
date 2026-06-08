@@ -89,7 +89,6 @@ final class InventoryCloseService
             $missingItemsQuery->andWhere(['not in', Item::tableName() . '.id', $confirmedItemIds]);
         }
 
-        /** @var Item[] $missingItems */
         $missingItems = $missingItemsQuery->all();
         foreach ($missingItems as $item) {
             $item->setItemAccessValidator($itemAccessValidator);

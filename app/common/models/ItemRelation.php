@@ -2,6 +2,7 @@
 
 namespace common\models;
 
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
 /**
@@ -53,17 +54,17 @@ class ItemRelation extends ActiveRecord
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery<Item>
      */
-    public function getSrcItem(): \yii\db\ActiveQuery
+    public function getSrcItem(): ActiveQuery
     {
         return $this->hasOne(Item::class, ['id' => 'srcItemId']);
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery<Item>
      */
-    public function getDstItem(): \yii\db\ActiveQuery
+    public function getDstItem(): ActiveQuery
     {
         return $this->hasOne(Item::class, ['id' => 'dstItemId']);
     }

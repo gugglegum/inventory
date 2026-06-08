@@ -140,6 +140,10 @@ class Photo extends ActiveRecord
         parent::afterSave($insert, $changedAttributes);
 
         if ($insert) {
+            if ($this->tempFile === null) {
+                throw new Exception('Photo temporary file is not assigned');
+            }
+
             $file = $this->getFile();
             $dir = dirname($file);
             if (!file_exists($dir) && !@mkdir($dir, 0777, true) && !is_dir($dir)) {
@@ -173,9 +177,15 @@ class Photo extends ActiveRecord
             Yii::$app->params['photos']['resize']['crop']
         );
 
-        $this->tempFile = tempnam(Yii::$app->params['photos']['storageTemp'], 'inv');
+        $tempFile = tempnam(Yii::$app->params['photos']['storageTemp'], 'inv');
+        if ($tempFile === false) {
+            throw new Exception('Failed to create temporary photo file');
+        }
+        $this->tempFile = $tempFile;
 
-        imagejpeg($image, $this->tempFile, Yii::$app->params['photos']['resize']['quality']);
+        if (!imagejpeg($image, $this->tempFile, Yii::$app->params['photos']['resize']['quality'])) {
+            throw new Exception('Failed to write resized photo file "' . $this->tempFile . '"');
+        }
 
         if (($md5 = md5_file($this->tempFile)) === false) {
             throw new Exception('Failed to calculate MD5 sum of file "' . $this->tempFile . '"');
@@ -367,6 +377,9 @@ class Photo extends ActiveRecord
         }
 
         $tempFile = tempnam(Yii::$app->params['photos']['thumbnailTemp'], (string) $this->primaryKey);
+        if ($tempFile === false) {
+            throw new Exception('Failed to create temporary thumbnail file');
+        }
 
         if (file_put_contents($tempFile, ImageResize::getImageJPEG($image, $quality)) === false) {
             throw new Exception('Failed to create thumbnail file "' . $thumbnailFile . '"');

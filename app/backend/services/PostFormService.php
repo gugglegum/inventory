@@ -33,7 +33,7 @@ final class PostFormService
         $post = new Post();
         $post->scenario = Post::SCENARIO_CREATE;
         $post->itemId = $item->id;
-        $post->createdBy = $user->id;
+        $post->createdBy = (int) $user->id;
         $post->datetimeText = new DateTimeImmutable('now', new DateTimeZone('UTC'))->format('d.m.Y H:i');
 
         return $post;
@@ -47,7 +47,7 @@ final class PostFormService
     public function prepareForUpdate(Post $post, User $user): Post
     {
         $post->scenario = Post::SCENARIO_UPDATE;
-        $post->updatedBy = $user->id;
+        $post->updatedBy = (int) $user->id;
 
         return $post;
     }

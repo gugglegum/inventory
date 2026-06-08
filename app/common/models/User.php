@@ -228,6 +228,9 @@ class User extends ActiveRecord implements IdentityInterface
         $this->passwordResetToken = null;
     }
 
+    /**
+     * @return ActiveQuery<Item>
+     */
     public function getCreatedItems(): ActiveQuery
     {
         return $this->hasMany(Item::class, ['createdBy' => 'id']);

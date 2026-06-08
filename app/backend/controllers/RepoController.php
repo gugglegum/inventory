@@ -7,6 +7,7 @@ namespace backend\controllers;
 use backend\services\RepoDeletionService;
 use backend\services\RepoFormService;
 use common\components\UserAccess;
+use common\helpers\PostDataHelper;
 use common\models\Repo;
 use Yii;
 use yii\base\Exception;
@@ -107,7 +108,7 @@ class RepoController extends RepoAwareController
         $repoForm = $repoFormService->prepareForCreate($this->getItemAccessValidator());
 
         if (Yii::$app->request->isPost) {
-            if ($repoFormService->save($repoForm, Yii::$app->request->post())) {
+            if ($repoFormService->save($repoForm, PostDataHelper::toArray(Yii::$app->request->post()))) {
                 return $this->redirect(['repo/index']);
             }
         }
@@ -132,7 +133,7 @@ class RepoController extends RepoAwareController
         $repoForm = $repoFormService->prepareForUpdate($repo, $repoUser);
 
         if (Yii::$app->request->isPost) {
-            if ($repoFormService->save($repoForm, Yii::$app->request->post())) {
+            if ($repoFormService->save($repoForm, PostDataHelper::toArray(Yii::$app->request->post()))) {
                 return $this->redirect(['view', 'repoId' => $repo->id]);
             }
         }

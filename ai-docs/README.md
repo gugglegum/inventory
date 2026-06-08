@@ -169,12 +169,12 @@ docker compose exec php composer run quality
 
 - PHPUnit 13.2 - regression/integration/unit тесты из `tests/phpunit/`.
 - PHPStan 2.2 - текущий уровень `level: 3`, конфиг `phpstan.neon`.
-- Psalm 6.16 через `psalm/phar`, текущий `errorLevel="4"`, конфиг `psalm.xml`. PHAR выбран потому, что обычный пакет `vimeo/psalm` в актуальных версиях конфликтует с PHPUnit 13 по `sebastian/diff`, а старые версии Psalm не подходят для текущего PHP 8.4-стека.
+- Psalm 6.16 через `psalm/phar`, текущий `errorLevel="3"`, конфиг `psalm.xml`. PHAR выбран потому, что обычный пакет `vimeo/psalm` в актуальных версиях конфликтует с PHPUnit 13 по `sebastian/diff`, а старые версии Psalm не подходят для текущего PHP 8.4-стека.
 - PHPCS 3.13 - `phpcs.xml` проверяет PSR-12 на активно рефакторимом backend-контуре (`backend/controllers`, `backend/services`, `common/services`, `tests/static-analysis`), а `phpcs-compat.xml` отдельно прогоняет PHPCompatibility по широкому дереву приложения.
 
 Psalm настроен без baseline. В конфиге подавлен типичный шум Yii/PHPUnit: route action методы и тестовые классы как unused, требование `#[Override]`, шаблонные параметры Yii-классов и Yii view-контекст. View-файлы не анализируются Psalm как обычные PHP-классы, потому что в них `$this` и переданные переменные живут в контексте шаблона.
 
-Для Psalm добавлен отдельный stub `tests/static-analysis/psalm-yii-stubs.php`. Он не участвует в runtime-загрузке приложения, а только связывает generic-шаблон Yii `BaseYii<TUserIdentity>` с проектной моделью `common\models\User`. Благодаря этому Psalm корректно видит `Yii::$app->getUser()` как `yii\web\User<common\models\User>`, а сервисные phpdoc-сигнатуры с пользователем тоже указывают `yii\web\User<common\models\User>`. Для анализа `Yii::$app` намеренно типизирован как `yii\web\Application<common\models\User>|null`: основной код и тесты работают с web-приложением, а console-код в проекте не требует console-only компонентов.
+Для Psalm добавлен отдельный stub `tests/static-analysis/psalm-yii-stubs.php`. Он не участвует в runtime-загрузке приложения, а только связывает generic-шаблон Yii `BaseYii<TUserIdentity>` с проектной моделью `common\models\User`. Благодаря этому Psalm корректно видит `Yii::$app->getUser()` как `yii\web\User<common\models\User>`, а сервисные phpdoc-сигнатуры с пользователем тоже указывают `yii\web\User<common\models\User>`. Для анализа основного кода `Yii::$app` намеренно типизирован как уже поднятое `yii\web\Application<common\models\User>`: bootstrap статического анализа создает web-приложение, а nullable-вариант дает много ложного шума на `errorLevel="3"`.
 
 PHPStan использует bootstrap `tests/static-analysis/bootstrap.php`, который подключает Yii и выставляет project aliases. Кэши PHPStan/Psalm пишутся в `/tmp` внутри контейнера, чтобы не зависеть от прав на `tests/phpunit/_runtime`.
 
@@ -185,6 +185,12 @@ View/mail-шаблоны стоит аннотировать через `/** @va
 При переходе Psalm на `errorLevel="5"` query-классы дополнительно сделаны generic-обертками над `ActiveQuery<TModel>`, а `ActiveRecord::find()` в моделях документирован как `@return SomeQuery<static>`. Это согласует кастомные query-классы с Yii 2.0.55, где базовый `ActiveRecord::find()` возвращает `ActiveQuery<static>`. Также явно обработаны `false|null` от GD/буферных функций в `ImageResize` и от `preg_replace_callback()` в `MarkdownFormatter`.
 
 При переходе Psalm на `errorLevel="4"` исправлены оставшиеся строгие места: ленивое поле пользователя в `ItemAccessValidator` стало nullable, неявные scalar-приведения в фото/thumbnail console-коде сделаны явными, Yii `ColumnSchemaBuilder` в миграциях явно приводится к строке перед `addColumn()`/`alterColumn()`, а намеренный `shell_exec()` в console-команде запроса пароля подавлен локальным `@psalm-suppress ForbiddenCode`.
+
+При переходе Psalm на `errorLevel="3"` основные исправления были вокруг потенциальных `null|false` и слишком широких типов Yii API. POST-данные для `Model::load()` теперь нормализуются через `common\helpers\PostDataHelper::toArray()`, в который явно передается сырой результат `Yii::$app->request->post()`. `LoginForm::login()` явно проверяет найденного пользователя перед `Yii::$app->user->login()`, `Photo` и console-код обрабатывают `tempnam()`, `imagejpeg()`, `shell_exec()`, `preg_split()` и похожие функции, а `ItemQuery::notDeleted()`/`onlyDeleted()` документированы как fluent-методы `@return $this`, чтобы Psalm не терял generic тип `ItemQuery<static>`. В Psalm stub также уточнены relation-методы `yii\db\ActiveRecord::hasOne()`/`hasMany()` до concrete `ActiveQuery`, что соответствует runtime-поведению Yii и убирает ложные ошибки на model relations.
+
+В `RepoAwareController::getLoggedUser()` оставлена локальная `@phpstan-var` вместе с `@psalm-suppress UnnecessaryVarAnnotation`: Psalm получает generic-тип пользователя из своего Yii stub, а PHPStan на текущей конфигурации не выводит `yii\web\User<common\models\User>` из `Yii::$app->getUser()` без этой подсказки.
+
+Relations в `common/models` типизированы через `@return ActiveQuery<Model>`, а Psalm stub для `ActiveRecord::hasOne()`/`hasMany()` дополнительно связывает `class-string<TModel>` с `ActiveQuery<TModel>`. Это позволяет Psalm/PHPStan выводить типы после `one()` и `all()` без локальных `/** @var Model|null $model */` и `/** @var Model[] $models */`. Когда добавляются новые relation generics, лишние локальные подсказки удобно выявлять обычным `composer run psalm`: Psalm поднимает их как `UnnecessaryVarAnnotation`.
 
 ## Git и локальные файлы
 

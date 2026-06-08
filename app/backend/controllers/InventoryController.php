@@ -10,6 +10,7 @@ use backend\services\InventoryCloseService;
 use backend\services\InventoryItemConfirmationService;
 use backend\services\InventoryLifecycleService;
 use backend\services\InventoryViewDataService;
+use common\helpers\PostDataHelper;
 use common\models\Inventory;
 use Yii;
 use yii\base\Exception;
@@ -99,9 +100,10 @@ class InventoryController extends RepoAwareController
         $inventoryItemUnconfirm = new InventoryItemUnconfirmForm();
         $inventoryItemConfirmationService = new InventoryItemConfirmationService();
         if (Yii::$app->request->isPost) {
-            if ($inventoryItemConfirm->load(Yii::$app->request->post())) {
+            $postData = PostDataHelper::toArray(Yii::$app->request->post());
+            if ($inventoryItemConfirm->load($postData)) {
                 $inventoryItemConfirm->repoId = $repo->id;
-                if ($inventoryItemConfirm->validate()) {
+                if ($inventoryItemConfirm->validate() && $inventoryItemConfirm->itemId !== null) {
                     $item = $this->findItem($repo->id, $inventoryItemConfirm->itemId);
                     $confirmResult = $inventoryItemConfirmationService->confirm($inventory, $item, $this->getLoggedUser());
                     if (!$confirmResult->hasError()) {
@@ -109,9 +111,9 @@ class InventoryController extends RepoAwareController
                     }
                     $inventoryItemConfirm->addError('itemId', $confirmResult->errorMessage ?? 'Unknown error');
                 }
-            } elseif ($inventoryItemUnconfirm->load(Yii::$app->request->post())) {
+            } elseif ($inventoryItemUnconfirm->load($postData)) {
                 $inventoryItemUnconfirm->repoId = $repo->id;
-                if ($inventoryItemUnconfirm->validate()) {
+                if ($inventoryItemUnconfirm->validate() && $inventoryItemUnconfirm->itemId !== null) {
                     $item = $this->findItem($repo->id, $inventoryItemUnconfirm->itemId);
                     if ($inventoryItemConfirmationService->unconfirm($inventory, $item)) {
                         return $this->redirect(['inventory/view', 'repoId' => $repo->id, 'itemId' => $container->itemId, 'inventoryId' => $inventory->id]);

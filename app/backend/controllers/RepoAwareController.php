@@ -8,6 +8,7 @@ use common\components\ItemAccessValidator;
 use common\models\Item;
 use common\models\Repo;
 use common\models\RepoUser;
+use common\models\User as Identity;
 use Yii;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
@@ -111,10 +112,17 @@ abstract class RepoAwareController extends Controller
 
     /**
      * Возвращает текущий Yii user-компонент.
+     *
+     * @return WebUser<Identity>
      */
     protected function getLoggedUser(): WebUser
     {
-        return Yii::$app->getUser();
+        /**
+         * @psalm-suppress UnnecessaryVarAnnotation
+         * @phpstan-var WebUser<Identity> $user
+         */
+        $user = Yii::$app->getUser();
+        return $user;
     }
 
     /**

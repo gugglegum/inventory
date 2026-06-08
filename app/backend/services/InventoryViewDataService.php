@@ -22,7 +22,6 @@ final class InventoryViewDataService
      */
     public function prepare(Repo $repo, Item $container, Inventory $inventory): InventoryViewData
     {
-        /** @var Item[] $confirmedItems */
         $confirmedItems = $repo->getItems()
             ->innerJoinWith('inventoryItems')
             ->where(['inventory_item.inventoryId' => $inventory->id])
@@ -33,7 +32,6 @@ final class InventoryViewDataService
             ])
             ->all();
 
-        /** @var Item[] $notConfirmedItems */
         $notConfirmedItems = $container->getItems()
             ->andWhere(['not in', Item::tableName() . '.id', ArrayHelper::getColumn($confirmedItems, 'id')])
             ->orderBy([

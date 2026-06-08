@@ -57,16 +57,25 @@ class InventoryItem extends ActiveRecord
         ];
     }
 
+    /**
+     * @return ActiveQuery<Inventory>
+     */
     public function getInventory(): ActiveQuery
     {
         return $this->hasOne(Inventory::class, ['id' => 'inventoryId']);
     }
 
+    /**
+     * @return ActiveQuery<Item>
+     */
     public function getItem(): ActiveQuery
     {
         return $this->hasOne(Item::class, ['id' => 'itemId']);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getCreatedByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'createdBy']);

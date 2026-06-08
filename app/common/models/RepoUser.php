@@ -67,7 +67,7 @@ class RepoUser extends ActiveRecord
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery<User>
      */
     public function getUser(): ActiveQuery
     {
@@ -75,7 +75,7 @@ class RepoUser extends ActiveRecord
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery<Repo>
      */
     public function getRepo(): ActiveQuery
     {

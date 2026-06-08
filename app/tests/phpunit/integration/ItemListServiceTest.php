@@ -56,6 +56,7 @@ final class ItemListServiceTest extends DbTestCase
 
         $pickerData = (new ItemListService())->prepareContainerPicker($repo, (string) $rootContainer->itemId);
 
+        self::assertNotNull($pickerData->parentContainer);
         self::assertSame((int) $rootContainer->id, (int) $pickerData->parentContainer->id);
         self::assertSame(
             [(int) $secondChildContainer->id, (int) $firstChildContainer->id, (int) $matchingContainer->id],

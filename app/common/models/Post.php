@@ -155,31 +155,49 @@ class Post extends ActiveRecord
         }
     }
 
+    /**
+     * @return ActiveQuery<Item>
+     */
     public function getItem(): ActiveQuery
     {
         return $this->hasOne(Item::class, ['id' => 'itemId']);
     }
 
+    /**
+     * @return ActiveQuery<PostPhoto>
+     */
     public function getPostPhotos(): ActiveQuery
     {
         return $this->hasMany(PostPhoto::class, ['postId' => 'id'])->orderBy(['sortIndex' => SORT_ASC]);
     }
 
+    /**
+     * @return ActiveQuery<PostPhoto>
+     */
     public function getPrimaryPhoto(): ActiveQuery
     {
         return $this->hasOne(PostPhoto::class, ['postId' => 'id'])->orderBy(['sortIndex' => SORT_ASC])->limit(1);
     }
 
+    /**
+     * @return ActiveQuery<PostPhoto>
+     */
     public function getSecondaryPhotos(): ActiveQuery
     {
         return $this->hasMany(PostPhoto::class, ['postId' => 'id'])->orderBy(['sortIndex' => SORT_ASC])->offset(1);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getCreatedByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'createdBy']);
     }
 
+    /**
+     * @return ActiveQuery<User>
+     */
     public function getUpdatedByUser(): ActiveQuery
     {
         return $this->hasOne(User::class, ['id' => 'updatedBy']);

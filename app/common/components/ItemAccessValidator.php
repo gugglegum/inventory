@@ -48,7 +48,6 @@ final class ItemAccessValidator
 
     public function hasUserAccessToRepo(Repo $repo, int $accessType): bool
     {
-        /** @var RepoUser|null $repoUser */
         $repoUser = $repo->getRepoUsers()->where(['userId' => $this->getUser()->id])->one();
         if ($repoUser !== null) {
             if (($repoUser->access & $accessType) === $accessType) {

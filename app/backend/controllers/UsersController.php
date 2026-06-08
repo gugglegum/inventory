@@ -6,6 +6,7 @@ namespace backend\controllers;
 
 use backend\services\UserFormService;
 use common\components\UserAccess;
+use common\helpers\PostDataHelper;
 use common\models\User;
 use common\models\UserSearch;
 use Yii;
@@ -90,7 +91,7 @@ class UsersController extends Controller
         $userFormService = new UserFormService();
         $form = $userFormService->prepareForCreate();
 
-        if ($userFormService->save($form, Yii::$app->request->post())) {
+        if ($userFormService->save($form, PostDataHelper::toArray(Yii::$app->request->post()))) {
             return $this->redirect(['view', 'id' => $form->getUser()->id]);
         } else {
             return $this->render('create', [
@@ -113,7 +114,7 @@ class UsersController extends Controller
         $userFormService = new UserFormService();
         $form = $userFormService->prepareForUpdate($this->findModel($id));
 
-        if ($userFormService->save($form, Yii::$app->request->post())) {
+        if ($userFormService->save($form, PostDataHelper::toArray(Yii::$app->request->post()))) {
             return $this->redirect(['view', 'id' => $form->getUser()->id]);
         } else {
             return $this->render('update', [
