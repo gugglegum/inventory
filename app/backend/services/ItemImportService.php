@@ -13,6 +13,23 @@ use yii\web\User;
 
 final class ItemImportService
 {
+    private const array PROPERTY_ALIASES = [
+        'метки' => 'tags',
+        'теги' => 'tags',
+        'тэги' => 'tags',
+        'desc' => 'description',
+        'описание' => 'description',
+        'cont' => 'container',
+        'контейнер' => 'container',
+        'конт' => 'container',
+    ];
+
+    private const array SUPPORTED_PROPERTIES = [
+        'description',
+        'tags',
+        'container',
+    ];
+
     /**
      * @throws Exception
      * @throws \yii\db\Exception
@@ -66,31 +83,28 @@ final class ItemImportService
 
     public function parse(string $text): ItemImportResult
     {
+        /** @var list<array{name:string, description?:string, tags?:string, container?:string}> $items */
         $items = [];
         $errorLine = null;
         $errorStr = null;
         $errorMsg = null;
         $line = 1;
+        /** @var array{name?:string, description?:string, tags?:string, container?:string} $item */
         $item = [];
 
         $addProperty = static function (string $key, string $value) use (&$item): void {
-            if (!in_array($key, ['description', 'tags', 'container'], true)) {
+            if (!in_array($key, self::SUPPORTED_PROPERTIES, true)) {
                 throw new Exception('Unknown property "' . $key . '"');
             }
             if ($key === 'container') {
                 $value = $value ? '1' : '0';
             }
             if (array_key_exists($key, $item)) {
-                switch ($key) {
-                    case 'description':
-                        $item[$key] .= "\n" . $value;
-                        break;
-                    case 'tags':
-                        $item[$key] .= ', ' . $value;
-                        break;
-                    default:
-                        $item[$key] = $value;
-                }
+                $item[$key] = match ($key) {
+                    'description' => $item[$key] . "\n" . $value,
+                    'tags' => $item[$key] . ', ' . $value,
+                    default => $value,
+                };
             } else {
                 $item[$key] = $value;
             }
@@ -109,22 +123,7 @@ final class ItemImportService
                     case '*':
                         if (preg_match('/^\*\s*(\w+)\s*:\s*(.*)$/ui', $str, $m)) {
                             $key = mb_strtolower(trim($m[1]));
-                            $replacements = [
-                                'метки' => 'tags',
-                                'теги' => 'tags',
-                                'тэги' => 'tags',
-                                'desc' => 'description',
-                                'описание' => 'description',
-                                'cont' => 'container',
-                                'контейнер' => 'container',
-                                'конт' => 'container',
-                            ];
-                            foreach ($replacements as $from => $to) {
-                                if ($key === $from) {
-                                    $key = $to;
-                                    break;
-                                }
-                            }
+                            $key = self::PROPERTY_ALIASES[$key] ?? $key;
                             $value = trim($m[2]);
                             $addProperty($key, $value);
                         } else {
