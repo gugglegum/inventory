@@ -5,6 +5,7 @@ namespace backend\controllers;
 
 use backend\models\ItemDeleteForm;
 use backend\models\ItemTagsForm;
+use backend\services\ItemDeletionService;
 use backend\services\ItemImportService;
 use backend\services\ItemSearchService;
 use common\components\ItemAccessValidator;
@@ -355,15 +356,25 @@ class ItemsController extends Controller
         $repo = $this->findRepo($repoId);
         $item = $this->findModel($repoId, $itemId);
 
-        $itemDeleteForm = new ItemDeleteForm()->setItem($item);
+        $itemDeleteForm = new ItemDeleteForm();
         if (Yii::$app->request->isPost) {
             $parentItemId = $item->parentItemId;
-            if ($itemDeleteForm->load(Yii::$app->request->post()) && $itemDeleteForm->save()) {
-                return $this->redirect(
-                    $parentItemId
-                        ? ['items/view', 'repoId' => $repo->id, 'itemId' => $parentItemId]
-                        : ['items/index', 'repoId' => $repo->id]
+            if ($itemDeleteForm->load(Yii::$app->request->post()) && $itemDeleteForm->validate()) {
+                $deletionResult = (new ItemDeletionService())->delete(
+                    $item,
+                    $itemDeleteForm->hardDelete,
+                    $this->getLoggedUser(),
                 );
+
+                if ($deletionResult->hasError()) {
+                    $itemDeleteForm->addError('', $deletionResult->errorMessage ?? 'Unknown error');
+                } else {
+                    return $this->redirect(
+                        $parentItemId
+                            ? ['items/view', 'repoId' => $repo->id, 'itemId' => $parentItemId]
+                            : ['items/index', 'repoId' => $repo->id]
+                    );
+                }
             }
         }
         return $this->render('delete', [

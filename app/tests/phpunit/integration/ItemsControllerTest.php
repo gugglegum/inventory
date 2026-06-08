@@ -87,6 +87,56 @@ final class ItemsControllerTest extends DbTestCase
     }
 
     /**
+     * POST delete без hardDelete мягко удаляет предмет и редиректит к родительскому контейнеру.
+     */
+    public function testDeletePostSoftDeletesItemAndRedirectsToParent(): void
+    {
+        [$controller, $repo, $parent, $item] = $this->prepareDeleteFixture();
+
+        $this->setPostRequest([
+            'ItemDeleteForm' => [
+                'hardDelete' => '0',
+            ],
+        ]);
+
+        $response = $controller->actionDelete($repo->id, $item->itemId);
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(302, $response->statusCode);
+        self::assertStringContainsString(
+            "/repo/{$repo->id}/items/{$parent->itemId}",
+            $response->headers->get('Location')
+        );
+        self::assertNull(Item::findOne($item->id));
+
+        $deletedItem = Item::findWithDeleted()->where(['id' => $item->id])->one();
+        self::assertNotNull($deletedItem);
+        self::assertNotNull($deletedItem->deleted);
+        self::assertSame((int) Yii::$app->user->id, (int) $deletedItem->deletedBy);
+    }
+
+    /**
+     * POST delete с hardDelete полностью удаляет корневой предмет и редиректит к списку предметов.
+     */
+    public function testDeletePostHardDeletesRootItemAndRedirectsToIndex(): void
+    {
+        [$controller, $repo, $item] = $this->prepareRootDeleteFixture();
+
+        $this->setPostRequest([
+            'ItemDeleteForm' => [
+                'hardDelete' => '1',
+            ],
+        ]);
+
+        $response = $controller->actionDelete($repo->id, $item->itemId);
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(302, $response->statusCode);
+        self::assertStringContainsString("/repo/{$repo->id}/items", $response->headers->get('Location'));
+        self::assertNull(Item::findWithDeleted()->where(['id' => $item->id])->one());
+    }
+
+    /**
      * Создает минимальный набор предметов для проверки поиска по словам и исключениям.
      *
      * @return array{0:ItemsController, 1:\common\models\Repo, 2:Item}
@@ -115,5 +165,64 @@ final class ItemsControllerTest extends DbTestCase
         Yii::$app->controller = $controller;
 
         return [$controller, $repo, $dviItem];
+    }
+
+    /**
+     * Создает дочерний предмет для проверки удаления с возвратом к родителю.
+     *
+     * @return array{0:ItemsController, 1:\common\models\Repo, 2:Item, 3:Item}
+     */
+    private function prepareDeleteFixture(): array
+    {
+        $user = $this->createUser([
+            'access' => User::ACCESS_CREATE_REPO,
+        ]);
+        $repo = $this->createRepo($user);
+        $this->grantRepoAccess(
+            $repo,
+            $user,
+            RepoUser::ACCESS_CREATE_ITEMS | RepoUser::ACCESS_EDIT_ITEMS | RepoUser::ACCESS_DELETE_ITEMS
+        );
+
+        $parent = $this->createItem($repo, $user, [
+            'name' => 'Контейнер',
+            'isContainer' => true,
+        ]);
+        $item = $this->createItem($repo, $user, [
+            'name' => 'Удаляемый предмет',
+            'parentItemId' => $parent->itemId,
+        ]);
+
+        $controller = new ItemsController('items', Yii::$app);
+        Yii::$app->controller = $controller;
+
+        return [$controller, $repo, $parent, $item];
+    }
+
+    /**
+     * Создает корневой предмет для проверки удаления с возвратом к списку предметов.
+     *
+     * @return array{0:ItemsController, 1:\common\models\Repo, 2:Item}
+     */
+    private function prepareRootDeleteFixture(): array
+    {
+        $user = $this->createUser([
+            'access' => User::ACCESS_CREATE_REPO,
+        ]);
+        $repo = $this->createRepo($user);
+        $this->grantRepoAccess(
+            $repo,
+            $user,
+            RepoUser::ACCESS_CREATE_ITEMS | RepoUser::ACCESS_EDIT_ITEMS | RepoUser::ACCESS_DELETE_ITEMS
+        );
+
+        $item = $this->createItem($repo, $user, [
+            'name' => 'Корневой предмет',
+        ]);
+
+        $controller = new ItemsController('items', Yii::$app);
+        Yii::$app->controller = $controller;
+
+        return [$controller, $repo, $item];
     }
 }
