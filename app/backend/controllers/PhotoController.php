@@ -2,8 +2,9 @@
 
 namespace backend\controllers;
 
-use common\models\ItemPhoto;
+use backend\services\PhotoAttachmentService;
 use common\models\Photo;
+use InvalidArgumentException;
 use Yii;
 use yii\base\Exception;
 use yii\filters\AccessControl;
@@ -38,6 +39,8 @@ class PhotoController extends Controller
                 'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['post'],
+                    'sort-up' => ['post'],
+                    'sort-down' => ['post'],
                 ],
             ],
         ];
@@ -89,28 +92,9 @@ class PhotoController extends Controller
      */
     public function actionSortUp(): void
     {
-        $id = Yii::$app->request->post('id');
-        if (!$id) {
-            throw new HttpException(400, 'Missing required parameter "id"');
-        }
-
-        /** @var ItemPhoto $photo */
-        $photo = ItemPhoto::findOne($id);
-        if (! $photo instanceof ItemPhoto) {
-            throw new HttpException(404, 'Photo #' . $id . ' is not found');
-        }
-
-        /** @var ItemPhoto $prevPhoto */
-        $prevPhoto = ItemPhoto::find()
-            ->where('itemId = :itemId', ['itemId' => $photo->itemId])
-            ->andWhere('sortIndex < :sortIndex', ['sortIndex' => $photo->sortIndex])
-            ->orderBy(['sortIndex' => SORT_DESC])
-            ->limit(1)
-            ->one();
-
-        if ($prevPhoto instanceof ItemPhoto) {
-            $this->swapSortIndexes($photo, $prevPhoto);
-        }
+        $this->runPhotoOperation(
+            fn(PhotoAttachmentService $service, int $id, string $type): bool => $service->sortUp($id, $type)
+        );
     }
 
     /**
@@ -121,47 +105,9 @@ class PhotoController extends Controller
      */
     public function actionSortDown(): void
     {
-        $id = Yii::$app->request->post('id');
-        if (!$id) {
-            throw new HttpException(400, 'Missing required parameter "id"');
-        }
-
-        /** @var ItemPhoto $photo */
-        $photo = ItemPhoto::findOne($id);
-        if (! $photo instanceof ItemPhoto) {
-            throw new HttpException(404, 'Photo #' . $id . ' is not found');
-        }
-
-        /** @var ItemPhoto $prevPhoto */
-        $nextPhoto = ItemPhoto::find()
-            ->where('itemId = :itemId', ['itemId' => $photo->itemId])
-            ->andWhere('sortIndex > :sortIndex', ['sortIndex' => $photo->sortIndex])
-            ->orderBy(['sortIndex' => SORT_ASC])
-            ->limit(1)
-            ->one();
-
-        if ($nextPhoto instanceof ItemPhoto) {
-            $this->swapSortIndexes($photo, $nextPhoto);
-        }
-    }
-
-    /**
-     * @param ItemPhoto $photo1
-     * @param ItemPhoto $photo2
-     * @return void
-     * @throws \yii\db\Exception
-     */
-    private function swapSortIndexes(ItemPhoto $photo1, ItemPhoto $photo2): void
-    {
-        $transaction = ItemPhoto::getDb()->beginTransaction();
-        $prevSortIndex = $photo2->sortIndex;
-        $photo2->sortIndex = -1;
-        $photo2->save();
-        $photo2->sortIndex = $photo1->sortIndex;
-        $photo1->sortIndex = $prevSortIndex;
-        $photo1->save();
-        $photo2->save();
-        $transaction->commit();
+        $this->runPhotoOperation(
+            fn(PhotoAttachmentService $service, int $id, string $type): bool => $service->sortDown($id, $type)
+        );
     }
 
     /**
@@ -174,15 +120,41 @@ class PhotoController extends Controller
      */
     public function actionDelete(): void
     {
-        $id = Yii::$app->request->post('id');
+        $this->runPhotoOperation(
+            fn(PhotoAttachmentService $service, int $id, string $type): bool => $service->delete($id, $type)
+        );
+    }
+
+    /**
+     * Выполняет POST-операцию над связью фотографии.
+     *
+     * @param callable(PhotoAttachmentService, int, string): bool $operation
+     * @throws HttpException
+     * @throws \Throwable
+     */
+    private function runPhotoOperation(callable $operation): void
+    {
+        $id = (int) Yii::$app->request->post('id');
         if (!$id) {
             throw new HttpException(400, 'Missing required parameter "id"');
         }
 
-        /** @var ItemPhoto $itemPhoto */
-        $itemPhoto = ItemPhoto::findOne($id);
-        if ($itemPhoto instanceof ItemPhoto) {
-            $itemPhoto->delete();
+        try {
+            $isFound = $operation(new PhotoAttachmentService(), $id, $this->getPhotoType());
+        } catch (InvalidArgumentException $exception) {
+            throw new HttpException(400, $exception->getMessage(), 0, $exception);
         }
+
+        if (!$isFound) {
+            throw new HttpException(404, 'Photo attachment #' . $id . ' is not found');
+        }
+    }
+
+    /**
+     * Возвращает тип связи фотографии из POST.
+     */
+    private function getPhotoType(): string
+    {
+        return (string) Yii::$app->request->post('photoType', PhotoAttachmentService::TYPE_ITEM);
     }
 }

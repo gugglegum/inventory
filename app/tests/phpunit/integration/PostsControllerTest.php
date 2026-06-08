@@ -6,7 +6,9 @@ namespace tests\phpunit\integration;
 
 use backend\controllers\PostsController;
 use common\models\Item;
+use common\models\Photo;
 use common\models\Post;
+use common\models\PostPhoto;
 use common\models\Repo;
 use common\models\RepoUser;
 use common\models\User;
@@ -111,6 +113,26 @@ final class PostsControllerTest extends DbTestCase
     }
 
     /**
+     * GET update рендерит кнопки управления фотографиями заметки с явным photoType=post.
+     */
+    public function testUpdateGetRendersPostPhotoTypeButtons(): void
+    {
+        [$controller, $repo, $item, $user] = $this->prepareFixture();
+        $post = $this->createPost($item, $user, [
+            'title' => 'Заметка с фото',
+        ]);
+        $postPhoto = $this->createPostPhoto($post);
+
+        $this->setGetRequest();
+
+        $response = $controller->actionUpdate($repo->id, $item->itemId, $post->id);
+
+        self::assertIsString($response);
+        self::assertStringContainsString('data-id="' . $postPhoto->id . '"', $response);
+        self::assertStringContainsString('data-photo-type="post"', $response);
+    }
+
+    /**
      * Создает контроллер, репозиторий и предмет для HTTP-сценариев заметок.
      *
      * @return array{0:PostsController, 1:Repo, 2:Item, 3:User}
@@ -130,5 +152,48 @@ final class PostsControllerTest extends DbTestCase
         Yii::$app->controller = $controller;
 
         return [$controller, $repo, $item, $user];
+    }
+
+    /**
+     * Создает связь фотографии с заметкой.
+     */
+    private function createPostPhoto(Post $post): PostPhoto
+    {
+        $postPhoto = new PostPhoto([
+            'postId' => $post->id,
+            'photoId' => $this->createPhoto()->id,
+        ]);
+        $this->saveModel($postPhoto);
+
+        return $postPhoto;
+    }
+
+    /**
+     * Создает сохраненную фотографию из маленького JPEG.
+     */
+    private function createPhoto(): Photo
+    {
+        $uploadedFile = $this->createUploadedJpegFixture();
+
+        $photo = new Photo();
+        $photo->assignFile($uploadedFile);
+        $this->saveModel($photo);
+        @unlink($uploadedFile);
+
+        return $photo;
+    }
+
+    /**
+     * Создает маленький JPEG-файл, имитирующий загруженное фото.
+     */
+    private function createUploadedJpegFixture(): string
+    {
+        $file = tempnam(Yii::$app->params['photos']['storageTemp'], 'upload');
+        $image = imagecreatetruecolor(8, 8);
+        imagefill($image, 0, 0, imagecolorallocate($image, 80, 120, 160));
+        imagejpeg($image, $file);
+        imagedestroy($image);
+
+        return $file;
     }
 }

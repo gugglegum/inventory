@@ -49,15 +49,15 @@ $tabIndex = 1;
         if (count($photos) !== 0) {
             echo Html::beginTag('div', ['class' => 'uploaded-photos']);
 
-            foreach ($photos as $itemPhoto) {
-                /** @var \common\models\ItemPhoto $itemPhoto */
+            foreach ($photos as $postPhoto) {
+                /** @var \common\models\PostPhoto $postPhoto */
                 echo Html::beginTag('div', ['class' => 'photo-wrapper']);
                 echo Html::beginTag('div', ['class' => 'photo-frame']);
-                echo '<button type="button" class="btn btn-mini btn-delete" data-action="' . Html::encode(Url::to(['photo/delete'])) . '" data-id="' . $itemPhoto->id . '"><i class="glyphicon glyphicon-trash"></i></button>';
-                echo '<button type="button" class="btn btn-mini btn-sort-up" data-action="' . Html::encode(Url::to(['photo/sort-up'])) . '" data-id="' . $itemPhoto->id . '"><i class="glyphicon glyphicon-arrow-up"></i></button>';
-                echo '<button type="button" class="btn btn-mini btn-sort-down" data-action="' . Html::encode(Url::to(['photo/sort-down'])) . '" data-id="' . $itemPhoto->id . '"><i class="glyphicon glyphicon-arrow-down"></i></button>';
-                echo Html::beginTag('a', ['href' => $itemPhoto->photo->getUrl(), 'rel' => 'item-photos', 'class' => 'fancybox']);
-                echo Html::img($itemPhoto->photo->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
+                echo '<button type="button" class="btn btn-mini btn-delete" data-action="' . Html::encode(Url::to(['photo/delete'])) . '" data-id="' . $postPhoto->id . '" data-photo-type="post"><i class="glyphicon glyphicon-trash"></i></button>';
+                echo '<button type="button" class="btn btn-mini btn-sort-up" data-action="' . Html::encode(Url::to(['photo/sort-up'])) . '" data-id="' . $postPhoto->id . '" data-photo-type="post"><i class="glyphicon glyphicon-arrow-up"></i></button>';
+                echo '<button type="button" class="btn btn-mini btn-sort-down" data-action="' . Html::encode(Url::to(['photo/sort-down'])) . '" data-id="' . $postPhoto->id . '" data-photo-type="post"><i class="glyphicon glyphicon-arrow-down"></i></button>';
+                echo Html::beginTag('a', ['href' => $postPhoto->photo->getUrl(), 'rel' => 'post-photos', 'class' => 'fancybox']);
+                echo Html::img($postPhoto->photo->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
                 echo Html::endTag('a');
                 echo Html::endTag('div');
                 echo Html::endTag('div');

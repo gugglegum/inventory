@@ -50,12 +50,14 @@ $(document).ready(function() {
         var button = $(e.target).closest('button');
         var url = button.data('action');
         var id = button.data('id');
+        var photoType = button.data('photoType') || 'item';
         var wrapper = button.closest('.photo-wrapper');
 
         $.ajax(url, {
             type : 'post',
             data : {
-                id : id
+                id : id,
+                photoType : photoType
             },
             success : function() {
                 wrapper.remove();
@@ -82,12 +84,14 @@ $(document).ready(function() {
         var button = $(e.target).closest('button');
         var url = button.data('action');
         var id = button.data('id');
+        var photoType = button.data('photoType') || 'item';
         var wrapper = button.closest('.photo-wrapper');
 
         $.ajax(url, {
             type : 'post',
             data : {
-                id : id
+                id : id,
+                photoType : photoType
             },
             success : function() {
                 wrapper.after(wrapper.prev('.photo-wrapper'));
@@ -112,12 +116,14 @@ $(document).ready(function() {
         var button = $(e.target).closest('button');
         var url = button.data('action');
         var id = button.data('id');
+        var photoType = button.data('photoType') || 'item';
         var wrapper = button.closest('.photo-wrapper');
 
         $.ajax(url, {
             type : 'post',
             data : {
-                id : id
+                id : id,
+                photoType : photoType
             },
             success : function() {
                 wrapper.before(wrapper.next('.photo-wrapper'));
