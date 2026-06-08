@@ -18,7 +18,6 @@
         "yiisoft/yii2": "^2.0.55",
         "yiisoft/yii2-bootstrap": "^2.0.11",
         "yiisoft/yii2-swiftmailer": "^2.1",
-        "symfony/polyfill-php70": "^1.1",
         "ext-gd": "*",
         "ext-exif": "*",
         "ext-mbstring": "*",
