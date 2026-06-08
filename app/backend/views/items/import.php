@@ -5,8 +5,7 @@ use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-/* @var $this yii\web\View */
-
+/** @var \yii\web\View $this */
 /** @var string $text */
 /** @var Item $parent */
 /** @var Repo $repo */

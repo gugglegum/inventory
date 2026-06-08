@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace backend\services;
 
 use common\models\Repo;
+use common\models\RepoUser;
 use common\models\User;
 use yii\db\StaleObjectException;
 use yii\web\User as WebUser;
@@ -25,6 +26,7 @@ final class RepoDeletionService
     {
         $affectedUsers = [];
         foreach ($repo->getRepoUsers()->innerJoinWith('user')->where(['user.status' => User::STATUS_ACTIVE])->each() as $repoUser) {
+            /** @var RepoUser $repoUser */
             if ((int) $repoUser->userId !== (int) $currentUser->id) {
                 $affectedUsers[] = $repoUser->user;
             }

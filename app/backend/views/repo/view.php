@@ -74,6 +74,7 @@ if ($description !== '') {
                             <th>Создано предметов</th>
                         </tr>
                         <?php foreach ($repo->getRepoUsers()->innerJoinWith('user')->where(['user.status' => \common\models\User::STATUS_ACTIVE])->each() as $repoUser) {
+                            /** @var RepoUser $repoUser */
                             echo '<tr><td class="username">' . Html::encode($repoUser->user->username) . '</td>'
                                     . '<td class="permissions">'
                                     . '<input type="checkbox" ' . ($repoUser->access & \common\models\RepoUser::ACCESS_CREATE_ITEMS ? 'checked="checked"' : '') . ' disabled="disabled"> Создание предметов<br>' . "\n"

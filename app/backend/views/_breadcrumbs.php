@@ -4,6 +4,7 @@ use common\models\Item;
 use common\models\Repo;
 use yii\helpers\Html;
 
+/** @var \yii\web\View $this */
 /** @var Item $item */
 /** @var ?Repo $repo */
 /** @var ?array $suffix */

@@ -4,9 +4,9 @@ use yii\helpers\Html;
 use yii\grid\GridView;
 use common\models\User;
 
-/* @var $this yii\web\View */
-/* @var $searchModel common\models\UserSearch */
-/* @var $dataProvider yii\data\ActiveDataProvider */
+/** @var yii\web\View $this */
+/** @var common\models\UserSearch $searchModel */
+/** @var yii\data\ActiveDataProvider $dataProvider */
 
 $this->title = 'Users';
 $this->params['breadcrumbs'][] = $this->title;

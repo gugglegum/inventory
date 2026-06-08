@@ -18,7 +18,7 @@ use Yii;
  * @property int $id ID предмета (глобальный по всем репозиториям)
  * @property int $itemId ID предмета (внутри репозитория)
  * @property ?int $parentItemId ID родительского предмета-контейнера (ссылка на itemId)
- * @property int repoId ID репозитория
+ * @property int $repoId ID репозитория
  * @property string $name Наименование
  * @property ?string $description Описание
  * @property int $isContainer Является ли предмет контейнером?

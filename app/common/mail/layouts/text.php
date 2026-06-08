@@ -1,8 +1,8 @@
 <?php
 
-/* @var $this \yii\web\View view component instance */
-/* @var $message \yii\mail\MessageInterface the message being composed */
-/* @var $content string main view render result */
+/** @var \yii\web\View $this */
+/** @var \yii\mail\MessageInterface $message */
+/** @var string $content */
 ?>
 <?php $this->beginPage() ?>
 <?php $this->beginBody() ?>

@@ -1,8 +1,8 @@
 <?php
 
-/* @var $this yii\web\View */
-/* @var $form yii\bootstrap\ActiveForm */
-/* @var $model \frontend\models\ContactForm */
+/** @var yii\web\View $this */
+/** @var yii\bootstrap\ActiveForm $form */
+/** @var \frontend\models\ContactForm $model */
 
 use yii\helpers\Html;
 use yii\bootstrap\ActiveForm;

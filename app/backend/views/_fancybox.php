@@ -1,4 +1,7 @@
 <?php
+
+/** @var \yii\web\View $this */
+
 /*
  * Подключалка Fancybox
  *

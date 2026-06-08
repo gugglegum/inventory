@@ -30,7 +30,7 @@ $this->registerCssFile('@web/css/inventory-view.css', ['appendTimestamp' => true
 
 $this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
 
-$unconfirmedBottomCallback = function (Item $item) use ($repo, $container, $inventory) {
+$unconfirmedBottomCallback = function (Item $item) use ($inventory) {
     if ($inventory->status !== Inventory::STATUS_OPENED) {
         return;
     }
@@ -48,7 +48,7 @@ $unconfirmedBottomCallback = function (Item $item) use ($repo, $container, $inve
     ]);
     ActiveForm::end();
 };
-$confirmedBottomCallback = function (Item $item) use ($repo, $container, $inventory) {
+$confirmedBottomCallback = function (Item $item) use ($inventory) {
     if ($inventory->status !== Inventory::STATUS_OPENED) {
         return;
     }

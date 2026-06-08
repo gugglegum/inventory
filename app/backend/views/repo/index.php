@@ -6,8 +6,8 @@ use common\components\UserAccess;
 use yii\helpers\Html;
 use common\models\Repo;
 
-/* @var $this yii\web\View */
-/* @var $repos Repo[] */
+/** @var yii\web\View $this */
+/** @var Repo[] $repos */
 
 $this->title = 'Репозитории';
 $this->registerCssFile('@web/css/repos.css', ['appendTimestamp' => true], 'repos');

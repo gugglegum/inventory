@@ -5,6 +5,7 @@ use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
+/** @var \yii\web\View $this */
 /** @var Item[] $containers */
 /** @var boolean $isSearch */
 /** @var Repo $repo */

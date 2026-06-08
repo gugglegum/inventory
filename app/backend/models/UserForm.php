@@ -8,6 +8,8 @@ use yii\base\Model;
 
 /**
  * Create/Edit user form
+ *
+ * @property-read bool $isNewRecord Признак того, что связанный пользователь еще не сохранен.
  */
 class UserForm extends Model
 {
