@@ -10,13 +10,28 @@ use Yii;
 
 final class ItemAccessValidator
 {
+    /**
+     * Компонент авторизации текущего пользователя приложения.
+     *
+     * @var \yii\web\User<\common\models\User>
+     */
     private \yii\web\User $user;
 
+    /**
+     * Возвращает компонент авторизации пользователя, заданный явно или взятый из приложения.
+     *
+     * @return \yii\web\User<\common\models\User>
+     */
     public function getUser(): \yii\web\User
     {
         return $this->user ?? Yii::$app->getUser();
     }
 
+    /**
+     * Задает компонент авторизации пользователя для проверки прав.
+     *
+     * @param \yii\web\User<\common\models\User> $user
+     */
     public function setUser(\yii\web\User $user): self
     {
         $this->user = $user;

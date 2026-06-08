@@ -20,6 +20,7 @@ final class RepoDeletionService
     /**
      * Возвращает активных пользователей, кроме текущего, которые потеряют доступ при удалении репозитория.
      *
+     * @param WebUser<User> $currentUser Текущий пользователь, который сохраняет доступ к удаляемому репозиторию.
      * @return User[]
      */
     public function getAffectedUsers(Repo $repo, WebUser $currentUser): array

@@ -8,6 +8,7 @@ use backend\models\ItemTagsForm;
 use common\components\ItemAccessValidator;
 use common\models\Item;
 use common\models\Repo;
+use common\models\User as Identity;
 use yii\web\User;
 
 /**
@@ -23,7 +24,7 @@ final class ItemFormService
      *
      * @param Repo $repo Репозиторий, в котором создается предмет.
      * @param ?Item $parent Родительский контейнер, если предмет создается внутри контейнера.
-     * @param User $user Текущий пользователь, записываемый в createdBy.
+     * @param User<Identity> $user Текущий пользователь, записываемый в createdBy.
      * @param ItemAccessValidator $itemAccessValidator Валидатор прав для сохранения предмета.
      * @param bool $isContainer Начальное значение флага контейнера из query-параметра.
      */
@@ -48,6 +49,8 @@ final class ItemFormService
 
     /**
      * Подготавливает существующую модель предмета для формы обновления.
+     *
+     * @param User<Identity> $user Текущий пользователь, записываемый в updatedBy.
      */
     public function prepareForUpdate(Item $item, User $user, ItemAccessValidator $itemAccessValidator): Item
     {

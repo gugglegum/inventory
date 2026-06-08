@@ -8,6 +8,7 @@ use common\components\ItemAccessValidator;
 use common\helpers\ValidateErrorsFormatter;
 use common\models\Item;
 use common\models\Repo;
+use common\models\User as Identity;
 use Throwable;
 use yii\base\Exception;
 use yii\web\User;
@@ -53,7 +54,7 @@ final class ItemImportService
      * @param Item $parentItem Родительский контейнер для импортируемых предметов.
      * @param ?string $text Пользовательский текст импорта.
      * @param bool $confirm Нужно ли сохранять распознанные предметы в базе.
-     * @param User $user Текущий пользователь, который будет записан как автор созданных предметов.
+     * @param User<Identity> $user Текущий пользователь, который будет записан как автор созданных предметов.
      * @param ItemAccessValidator $itemAccessValidator Валидатор прав для создаваемых предметов.
      *
      * @throws Exception
@@ -183,7 +184,7 @@ final class ItemImportService
      * @param Repo $repo Репозиторий, в котором создаются предметы.
      * @param Item $parentItem Родительский контейнер для импортируемых предметов.
      * @param list<array{name:string, description?:string, tags?:string, container?:string}> $items Распознанные предметы.
-     * @param User $user Текущий пользователь, который будет записан как автор созданных предметов.
+     * @param User<Identity> $user Текущий пользователь, который будет записан как автор созданных предметов.
      * @param ItemAccessValidator $itemAccessValidator Валидатор прав для создаваемых предметов.
      *
      * @return ?string HTML-якорь первого созданного предмета.

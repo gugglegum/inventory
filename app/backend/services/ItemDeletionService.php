@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace backend\services;
 
 use common\models\Item;
+use common\models\User as Identity;
 use yii\web\User;
 
 /**
@@ -20,7 +21,7 @@ final class ItemDeletionService
      *
      * @param Item $item Удаляемый предмет.
      * @param bool $hardDelete True для полного удаления из базы, false для мягкого удаления.
-     * @param User $user Пользователь, выполняющий удаление.
+     * @param User<Identity> $user Пользователь, выполняющий удаление.
      *
      * @throws \yii\db\Exception
      * @throws \Throwable

@@ -7,6 +7,7 @@ namespace backend\services;
 use common\models\Inventory;
 use common\models\InventoryItem;
 use common\models\Item;
+use common\models\User as Identity;
 use yii\db\StaleObjectException;
 use yii\web\User;
 
@@ -23,7 +24,7 @@ final class InventoryItemConfirmationService
      *
      * @param Inventory $inventory Инвентаризация, в которой подтверждается предмет.
      * @param Item $item Предмет, который пользователь отметил найденным.
-     * @param User $user Текущий пользователь, записываемый в createdBy.
+     * @param User<Identity> $user Текущий пользователь, записываемый в createdBy.
      */
     public function confirm(Inventory $inventory, Item $item, User $user): InventoryItemConfirmationResult
     {

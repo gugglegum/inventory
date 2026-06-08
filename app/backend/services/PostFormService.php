@@ -9,6 +9,7 @@ use common\models\Item;
 use common\models\Photo;
 use common\models\Post;
 use common\models\PostPhoto;
+use common\models\User as Identity;
 use DateTimeImmutable;
 use DateTimeZone;
 use yii\base\Exception;
@@ -24,6 +25,8 @@ final class PostFormService
 {
     /**
      * Создает новую модель заметки с полями, нужными форме создания.
+     *
+     * @param User<Identity> $user Текущий пользователь, записываемый в createdBy.
      */
     public function prepareForCreate(Item $item, User $user): Post
     {
@@ -38,6 +41,8 @@ final class PostFormService
 
     /**
      * Переводит существующую заметку в update-сценарий и записывает автора изменения.
+     *
+     * @param User<Identity> $user Текущий пользователь, записываемый в updatedBy.
      */
     public function prepareForUpdate(Post $post, User $user): Post
     {

@@ -7,6 +7,7 @@ namespace backend\services;
 use common\helpers\ValidateErrorsFormatter;
 use common\models\Inventory;
 use common\models\Item;
+use common\models\User as Identity;
 use yii\base\Exception;
 use yii\db\StaleObjectException;
 use yii\web\User;
@@ -23,7 +24,7 @@ final class InventoryLifecycleService
      * Открывает новую инвентаризацию для контейнера.
      *
      * @param Item $container Контейнер, внутри которого проводится инвентаризация.
-     * @param User $user Пользователь, начавший инвентаризацию.
+     * @param User<Identity> $user Пользователь, начавший инвентаризацию.
      *
      * @throws Exception
      */

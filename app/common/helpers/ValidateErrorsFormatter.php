@@ -87,7 +87,14 @@ class ValidateErrorsFormatter
     public static function firstError(Model $model, string $text = '%FIELD%: %ERROR%'): string
     {
         $firstErrors = $model->getFirstErrors();
-        return str_replace(['%MODEL%', '%FIELD%', '%ERROR%'], [get_class($model), key($firstErrors), current($firstErrors)], $text);
+        $field = key($firstErrors);
+        $error = current($firstErrors);
+
+        return str_replace(
+            ['%MODEL%', '%FIELD%', '%ERROR%'],
+            [get_class($model), $field !== null ? (string) $field : '', $error !== false ? $error : ''],
+            $text
+        );
     }
 
     /**

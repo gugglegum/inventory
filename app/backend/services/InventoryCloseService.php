@@ -8,6 +8,7 @@ use common\components\ItemAccessValidator;
 use common\helpers\ValidateErrorsFormatter;
 use common\models\Inventory;
 use common\models\Item;
+use common\models\User as Identity;
 use yii\base\Exception;
 use yii\web\User;
 
@@ -24,7 +25,7 @@ final class InventoryCloseService
      *
      * @param Inventory $inventory Закрываемая инвентаризация.
      * @param Item $container Контейнер, внутри которого проводилась инвентаризация.
-     * @param User $user Пользователь, закрывающий инвентаризацию.
+     * @param User<Identity> $user Пользователь, закрывающий инвентаризацию.
      * @param ItemAccessValidator $itemAccessValidator Валидатор прав, который будет передан изменяемым предметам.
      * @param ?int $closedAt Фиксированное время закрытия; полезно для тестов. Если не задано, используется текущее время.
      *
@@ -53,6 +54,8 @@ final class InventoryCloseService
 
     /**
      * Выполняет изменения предметов и инвентаризации внутри уже открытой транзакции.
+     *
+     * @param User<Identity> $user Пользователь, закрывающий инвентаризацию.
      *
      * @throws Exception
      * @throws \yii\db\Exception
