@@ -129,6 +129,8 @@ Read-часть `InventoryController::actionView()` вынесена в `backend
 
 Финальная уборка после основных шагов рефакторинга убрала старый закомментированный access-validator код вокруг `Post`/`PostPhoto` и устаревший закомментированный `PostsController::actionIndex()`. Общие test helpers для создания JPEG-фикстуры, `Photo`, `ItemPhoto` и `PostPhoto` перенесены в `tests/phpunit/DbTestCase.php`; там же тестовые request helpers теперь умеют задавать `REQUEST_URI` для render-сценариев форм. Дополнительное regression-покрытие закрывает `PostsController::actionView()` и GET-ветку `RepoController::actionUpdate()`.
 
+Общий access/context lookup repo-aware контроллеров вынесен в `backend/controllers/RepoAwareController.php`. `ItemsController`, `PostsController`, `InventoryController` и `RepoController` наследуются от него и используют общие protected helpers `findRepo()`, `findItem()`, `findParentItem()`, `findRepoUser()`, `getItemAccessValidator()` и `getLoggedUser()`. Это закрыло прежнюю пометку о дублировании в `RepoController` и убрало повторяющиеся private helper-методы из нескольких контроллеров. Прямой контракт базового контроллера покрыт `tests/phpunit/integration/RepoAwareControllerTest.php`, а существующие controller-тесты остаются regression-защитой HTTP-слоя.
+
 ## Git и локальные файлы
 
 В корневом `.gitignore` намеренно игнорируются:

@@ -6,16 +6,12 @@ namespace backend\controllers;
 
 use backend\services\PostDeletionService;
 use backend\services\PostFormService;
-use common\components\ItemAccessValidator;
-use common\models\Item;
 use common\models\Post;
-use common\models\Repo;
 use Yii;
 use yii\base\Exception;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
-use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -23,7 +19,7 @@ use yii\web\Response;
 /**
  * PostsController implements the CRUD actions for Post model.
  */
-class PostsController extends Controller
+class PostsController extends RepoAwareController
 {
     /**
      * @inheritdoc
@@ -180,44 +176,6 @@ class PostsController extends Controller
     }
 
     /**
-     * @param int $repoId
-     * @param int $accessType
-     * @return Repo
-     * @throws ForbiddenHttpException
-     * @throws NotFoundHttpException
-     */
-    private function findRepo(int $repoId, int $accessType = 0): Repo
-    {
-        if (($repo = Repo::findOne($repoId)) !== null) {
-            if (new ItemAccessValidator()->hasUserAccessToRepo($repo, $accessType)) {
-                return $repo;
-            } else {
-                throw new ForbiddenHttpException("У вас нет доступа к репозиторию {$repoId} или достаточных прав на выполнение данной операции");
-            }
-        } else {
-            throw new NotFoundHttpException("Запрошенный репозиторий {$repoId} не существует");
-        }
-    }
-
-    /**
-     * Finds the Item model based on its repoId and itemId.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param int $repoId
-     * @param int $id
-     * @return Item the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    private function findItem(int $repoId, int $id): Item
-    {
-        if (($model = Item::findOne(['repoId' => $repoId, 'itemId' => $id])) !== null) {
-            $model->setItemAccessValidator($this->getItemAccessValidator());
-            return $model;
-        } else {
-            throw new NotFoundHttpException("Запрошенный предмет {$repoId}#{$id} не существует");
-        }
-    }
-
-    /**
      * @param int $itemId
      * @param int $postId
      * @return Post the loaded model
@@ -230,15 +188,5 @@ class PostsController extends Controller
         } else {
             throw new NotFoundHttpException("Запрошенный пост {$postId} не существует");
         }
-    }
-
-    private function getItemAccessValidator(): ItemAccessValidator
-    {
-        return new ItemAccessValidator()->setUser($this->getLoggedUser());
-    }
-
-    private function getLoggedUser(): \yii\web\User
-    {
-        return Yii::$app->getUser();
     }
 }

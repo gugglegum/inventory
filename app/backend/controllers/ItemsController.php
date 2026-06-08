@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace backend\controllers;
 
 use backend\models\ItemDeleteForm;
@@ -10,23 +11,20 @@ use backend\services\ItemFormService;
 use backend\services\ItemImportService;
 use backend\services\ItemSearchService;
 use backend\services\ItemViewDataService;
-use common\components\ItemAccessValidator;
-use common\models\Repo;
-use Yii;
 use common\models\Item;
+use Yii;
 use yii\base\Exception;
 use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\helpers\Url;
-use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\web\Response;
 
 /**
  * ItemsController implements the CRUD actions for Item model.
  */
-class ItemsController extends Controller
+class ItemsController extends RepoAwareController
 {
     /**
      * @inheritdoc
@@ -145,7 +143,7 @@ class ItemsController extends Controller
         $containerId = Yii::$app->request->getQueryParam('c') !== null ? (int) Yii::$app->request->getQueryParam('c') : null;
         $itemId = Yii::$app->request->getQueryParam('id');
 
-        $container = $containerId !== null ? $this->findModel($repo->id, $containerId) : null;
+        $container = $containerId !== null ? $this->findItem($repo->id, $containerId) : null;
         $searchResult = (new ItemSearchService())->search($repo, $queryString, $container, $itemId);
         $items = $searchResult->items;
 
@@ -178,7 +176,7 @@ class ItemsController extends Controller
     public function actionView(int $repoId, int $itemId): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $model = $this->findModel($repo->id, $itemId);
+        $model = $this->findItem($repo->id, $itemId);
         $queryString = Yii::$app->request->getQueryParam('q', '');
         $viewData = (new ItemViewDataService())->prepare($model);
 
@@ -255,7 +253,7 @@ class ItemsController extends Controller
         $repo = $this->findRepo($repoId);
         $itemFormService = new ItemFormService();
         $item = $itemFormService->prepareForUpdate(
-            $this->findModel($repoId, $itemId),
+            $this->findItem($repoId, $itemId),
             $this->getLoggedUser(),
             $this->getItemAccessValidator(),
         );
@@ -290,7 +288,7 @@ class ItemsController extends Controller
     public function actionDelete(int $repoId, int $itemId): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $item = $this->findModel($repoId, $itemId);
+        $item = $this->findItem($repoId, $itemId);
 
         $itemDeleteForm = new ItemDeleteForm();
         if (Yii::$app->request->isPost) {
@@ -369,7 +367,7 @@ class ItemsController extends Controller
     public function actionJsonPreview(int $repoId, int $itemId): Response
     {
         $repo = $this->findRepo($repoId);
-        $model = $this->findModel($repo->id, $itemId);
+        $model = $this->findItem($repo->id, $itemId);
         $previewData = (new ItemViewDataService())->preparePreview($model);
 
         return $this->asJson([
@@ -384,68 +382,4 @@ class ItemsController extends Controller
         ]);
     }
 
-    /**
-     * @param int $repoId
-     * @param int $accessType
-     * @return Repo
-     * @throws ForbiddenHttpException
-     * @throws NotFoundHttpException
-     */
-    private function findRepo(int $repoId, int $accessType = 0): Repo
-    {
-        if (($repo = Repo::findOne($repoId)) !== null) {
-            if (new ItemAccessValidator()->hasUserAccessToRepo($repo, $accessType)) {
-                return $repo;
-            } else {
-                throw new ForbiddenHttpException("У вас нет доступа к репозиторию {$repoId} или достаточных прав на выполнение данной операции");
-            }
-        } else {
-            throw new NotFoundHttpException("Запрошенный репозиторий {$repoId} не существует");
-        }
-    }
-
-    /**
-     * Finds the Item model based on its repoId and itemId.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param int $repoId
-     * @param int $id
-     * @return Item the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    private function findModel(int $repoId, int $id): Item
-    {
-        if (($model = Item::findOne(['repoId' => $repoId, 'itemId' => $id])) !== null) {
-            $model->setItemAccessValidator($this->getItemAccessValidator());
-            return $model;
-        } else {
-            throw new NotFoundHttpException("Запрошенный предмет {$repoId}#{$id} не существует");
-        }
-    }
-
-    /**
-     * Finds the Item model based on its repoId and parentItemId.
-     * @param int $repoId
-     * @param int $parentItemId
-     * @return Item
-     * @throws NotFoundHttpException
-     */
-    private function findParentItem(int $repoId, int $parentItemId): Item
-    {
-        if (($model = Item::findOne(['repoId' => $repoId, 'itemId' => $parentItemId])) !== null) {
-            $model->setItemAccessValidator($this->getItemAccessValidator());
-            return $model;
-        } else {
-            throw new NotFoundHttpException("Родительский контейнер {$repoId}#{$parentItemId} не существует");
-        }
-    }
-
-    private function getItemAccessValidator(): ItemAccessValidator
-    {
-        return new ItemAccessValidator()->setUser($this->getLoggedUser());
-    }
-
-    private function getLoggedUser(): \yii\web\User
-    {
-        return Yii::$app->getUser();
-    }
 }

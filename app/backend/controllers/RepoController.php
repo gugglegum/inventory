@@ -6,24 +6,21 @@ namespace backend\controllers;
 
 use backend\services\RepoDeletionService;
 use backend\services\RepoFormService;
-use common\components\ItemAccessValidator;
 use common\components\UserAccess;
 use common\models\Repo;
-use common\models\RepoUser;
 use Yii;
 use yii\base\Exception;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
-use yii\web\Controller;
+use yii\filters\VerbFilter;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\web\Response;
 
 /**
  * RepoController implements the CRUD actions for Repo model.
  */
-class RepoController extends Controller
+class RepoController extends RepoAwareController
 {
     /**
      * @inheritdoc
@@ -173,54 +170,4 @@ class RepoController extends Controller
         }
     }
 
-    /**
-     * todo: это копия из ItemsController -- вынести это куда-то.
-     * @param int $repoId
-     * @param int $accessType
-     * @return Repo
-     * @throws ForbiddenHttpException
-     * @throws NotFoundHttpException
-     */
-    private function findRepo(int $repoId, int $accessType = 0): Repo
-    {
-        if (($repo = Repo::findOne($repoId)) !== null) {
-            $repo->setItemAccessValidator($this->getItemAccessValidator());
-            if (new ItemAccessValidator()->hasUserAccessToRepo($repo, $accessType)) {
-                return $repo;
-            } else {
-                throw new ForbiddenHttpException("У вас нет доступа к репозиторию {$repoId} или достаточных прав на выполнение данной операции");
-            }
-        } else {
-            throw new NotFoundHttpException("Запрошенный репозиторий {$repoId} не существует");
-        }
-    }
-
-    /**
-     * @param Repo $repo
-     * @return RepoUser
-     */
-    private function findRepoUser(Repo $repo): RepoUser
-    {
-        /** @var RepoUser $repoUser */
-        $repoUser = $repo->getRepoUsers()->andWhere(['userId' => Yii::$app->getUser()->id])->one();
-        return $repoUser;
-    }
-
-    /**
-     * todo: это копия из ItemsController -- вынести это куда-то.
-     * @return ItemAccessValidator
-     */
-    private function getItemAccessValidator(): ItemAccessValidator
-    {
-        return new ItemAccessValidator()->setUser($this->getLoggedUser());
-    }
-
-    /**
-     * todo: это копия из ItemsController -- вынести это куда-то.
-     * @return \yii\web\User
-     */
-    private function getLoggedUser(): \yii\web\User
-    {
-        return Yii::$app->getUser();
-    }
 }

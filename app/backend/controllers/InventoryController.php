@@ -10,18 +10,14 @@ use backend\services\InventoryCloseService;
 use backend\services\InventoryItemConfirmationService;
 use backend\services\InventoryLifecycleService;
 use backend\services\InventoryViewDataService;
-use common\components\ItemAccessValidator;
 use common\models\Inventory;
-use common\models\Repo;
 use Yii;
-use common\models\Item;
 use yii\base\Exception;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
-use yii\web\Controller;
+use yii\filters\VerbFilter;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 use yii\web\Response;
 
 /**
@@ -30,7 +26,7 @@ use yii\web\Response;
  * Управляет списком инвентаризаций, просмотром текущей проверки, подтверждением найденных предметов
  * и HTTP-обвязкой закрытия/удаления инвентаризации.
  */
-class InventoryController extends Controller
+class InventoryController extends RepoAwareController
 {
     /**
      * @inheritdoc
@@ -216,44 +212,6 @@ class InventoryController extends Controller
     }
 
     /**
-     * @param int $repoId
-     * @param int $accessType
-     * @return Repo
-     * @throws ForbiddenHttpException
-     * @throws NotFoundHttpException
-     */
-    private function findRepo(int $repoId, int $accessType = 0): Repo
-    {
-        if (($repo = Repo::findOne($repoId)) !== null) {
-            if (new ItemAccessValidator()->hasUserAccessToRepo($repo, $accessType)) {
-                return $repo;
-            } else {
-                throw new ForbiddenHttpException("У вас нет доступа к репозиторию {$repoId} или достаточных прав на выполнение данной операции");
-            }
-        } else {
-            throw new NotFoundHttpException("Запрошенный репозиторий {$repoId} не существует");
-        }
-    }
-
-    /**
-     * Finds the Item model based on its repoId and itemId.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param int $repoId
-     * @param int $itemId
-     * @return Item the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    private function findItem(int $repoId, int $itemId): Item
-    {
-        if (($model = Item::findOne(['repoId' => $repoId, 'itemId' => $itemId])) !== null) {
-            $model->setItemAccessValidator($this->getItemAccessValidator());
-            return $model;
-        } else {
-            throw new NotFoundHttpException("Запрошенный предмет {$repoId}#{$itemId} не существует");
-        }
-    }
-
-    /**
      * @param int $itemId
      * @param int $inventoryId
      * @return Inventory the loaded model
@@ -262,20 +220,9 @@ class InventoryController extends Controller
     private function findInventory(int $itemId, int $inventoryId): Inventory
     {
         if (($model = Inventory::findOne(['containerId' => $itemId, 'id' => $inventoryId])) !== null) {
-//            $model->setItemAccessValidator($this->getItemAccessValidator());
             return $model;
         } else {
             throw new NotFoundHttpException("Запрошенная инвентаризация {$inventoryId} не существует");
         }
-    }
-
-    private function getItemAccessValidator(): ItemAccessValidator
-    {
-        return new ItemAccessValidator()->setUser($this->getLoggedUser());
-    }
-
-    private function getLoggedUser(): \yii\web\User
-    {
-        return Yii::$app->getUser();
     }
 }
