@@ -7,10 +7,30 @@ APP_DIR=$(dirname "$SCRIPT_DIR")
 
 if [ -f /.dockerenv ]; then
     cd "$APP_DIR"
-    exec composer run quality
+
+    run_step() {
+        title=$1
+        shift
+
+        printf '\n'
+        printf '== %s ==\n' "$title"
+        printf '%s\n' '----------------------------------------'
+        "$@"
+    }
+
+    run_step 'Composer validation' composer validate --strict
+    run_step 'PHPUnit' composer run test
+    run_step 'PHPStan' composer run phpstan
+    run_step 'Psalm' composer run psalm
+    run_step 'PHPCS style' composer run phpcs:style
+    run_step 'PHPCS PHP compatibility' composer run phpcs:compat
+
+    printf '\n'
+    printf 'All quality checks passed.\n'
+    exit 0
 fi
 
 REPO_DIR=$(dirname "$APP_DIR")
 
 cd "$REPO_DIR"
-exec docker compose exec -T php composer run quality
+exec docker compose exec -T php bin/check-quality
