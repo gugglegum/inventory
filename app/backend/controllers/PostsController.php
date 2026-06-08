@@ -3,21 +3,18 @@
 declare(strict_types=1);
 namespace backend\controllers;
 
+use backend\services\PostDeletionService;
+use backend\services\PostFormService;
 use common\components\ItemAccessValidator;
-use common\helpers\ValidateErrorsFormatter;
-use common\models\Photo;
 use common\models\Post;
-use common\models\PostPhoto;
 use common\models\Repo;
 use Yii;
 use common\models\Item;
 use yii\base\Exception;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
-use yii\helpers\Url;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
-use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -117,39 +114,15 @@ class PostsController extends Controller
     {
         $repo = $this->findRepo($repoId);
         $item = $this->findItem($repo->id, $itemId);
-        $post = new Post();
-        $post->scenario = Post::SCENARIO_CREATE;
-//        $post->setItemAccessValidator($this->getItemAccessValidator());
-        $post->itemId = $item->id;
-        $post->createdBy = $this->getLoggedUser()->id;
+        $postFormService = new PostFormService();
+        $post = $postFormService->prepareForCreate($item, $this->getLoggedUser());
 
         if (Yii::$app->request->isPost) {
-            if ($post->load(Yii::$app->request->post()) && $post->save()) {
-
-                $tmpNames = $_FILES['photos']['tmp_name'];
-
-                $sortIndex = 0;
-                foreach ($tmpNames as $photoId => $photoValue) {
-                    if ($photoValue === '') {
-                        continue;
-                    }
-                    if (array_key_exists($photoId, $tmpNames)) {
-                        $photo = new Photo();
-                        $photo->assignFile($_FILES['photos']['tmp_name'][$photoId]);
-                        $photo->save();
-                        $postPhoto = new PostPhoto();
-                        $postPhoto->postId = $post->id;
-                        $postPhoto->photoId = $photo->id;
-                        $postPhoto->sortIndex = $sortIndex;
-                        $postPhoto->save();
-                        $sortIndex++;
-                    }
-                }
+            if ($postFormService->save($post, Yii::$app->request->post(), $_FILES)) {
                 return $this->redirect(['posts/view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
             }
         }
 
-        $post->datetimeText = new \DateTimeImmutable('now', new \DateTimeZone('UTC'))->format('d.m.Y H:i');
         return $this->render('create', [
             'post' => $post,
             'item' => $item,
@@ -171,30 +144,15 @@ class PostsController extends Controller
     {
         $repo = $this->findRepo($repoId);
         $item = $this->findItem($repo->id, $itemId);
-        $post = $this->findPost($item->id, $postId);
-        $post->scenario = Post::SCENARIO_UPDATE;
-        $post->updatedBy = $this->getLoggedUser()->id;
+        $postFormService = new PostFormService();
+        $post = $postFormService->prepareForUpdate(
+            $this->findPost($item->id, $postId),
+            $this->getLoggedUser(),
+        );
 
         if (Yii::$app->request->isPost) {
             /** @noinspection NestedPositiveIfStatementsInspection */
-            if ($post->load(Yii::$app->request->post()) && $post->save()) {
-
-                $tmpNames = $_FILES['photos']['tmp_name'];
-
-                foreach ($tmpNames as $photoId => $photoValue) {
-                    if ($photoValue === '') { // Check "upload_max_filesize"
-                        continue;
-                    }
-                    if (array_key_exists($photoId, $tmpNames)) {
-                        $photo = new Photo();
-                        $photo->assignFile($_FILES['photos']['tmp_name'][$photoId]);
-                        $photo->save();
-                        $postPhoto = new PostPhoto();
-                        $postPhoto->postId = $post->id;
-                        $postPhoto->photoId = $photo->id;
-                        $postPhoto->save();
-                    }
-                }
+            if ($postFormService->save($post, Yii::$app->request->post(), $_FILES)) {
                 return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
             }
         }
@@ -224,7 +182,7 @@ class PostsController extends Controller
         $post = $this->findPost($item->id, $postId);
 
         if (Yii::$app->request->isPost) {
-            if ($post->delete() === false) {
+            if (!(new PostDeletionService())->delete($post)) {
                 return $this->render('delete', [
                     'item' => $item,
                     'repo' => $repo,

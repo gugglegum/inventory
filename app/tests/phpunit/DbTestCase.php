@@ -8,6 +8,7 @@ use common\components\ItemAccessValidator;
 use common\models\Inventory;
 use common\models\InventoryItem;
 use common\models\Item;
+use common\models\Post;
 use common\models\Repo;
 use common\models\RepoUser;
 use common\models\User;
@@ -139,6 +140,28 @@ abstract class DbTestCase extends TestCase
         $this->saveModel($item);
 
         return $item;
+    }
+
+    /**
+     * Создает заметку к предмету.
+     *
+     * @param array{datetimeText?:string, title?:string, text?:?string} $attributes Переопределяемые поля заметки.
+     */
+    protected function createPost(Item $item, User $user, array $attributes = []): Post
+    {
+        $this->login($user);
+
+        $post = new Post();
+        $post->scenario = Post::SCENARIO_CREATE;
+        $post->itemId = $item->id;
+        $post->datetimeText = $attributes['datetimeText'] ?? '01.06.2026 12:30';
+        $post->title = $attributes['title'] ?? 'Тестовая заметка';
+        $post->text = $attributes['text'] ?? 'Текст тестовой заметки';
+        $post->createdBy = $user->id;
+
+        $this->saveModel($post);
+
+        return $post;
     }
 
     /**
