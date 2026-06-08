@@ -8,6 +8,7 @@ use backend\models\InventoryItemConfirmForm;
 use backend\models\InventoryItemUnconfirmForm;
 use backend\services\InventoryCloseService;
 use backend\services\InventoryItemConfirmationService;
+use backend\services\InventoryViewDataService;
 use common\components\ItemAccessValidator;
 use common\models\Inventory;
 use common\models\Repo;
@@ -16,7 +17,6 @@ use common\models\Item;
 use yii\base\Exception;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
-use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
@@ -98,19 +98,6 @@ class InventoryController extends Controller
         $container = $this->findItem($repo->id, $itemId);
         $inventory = $this->findInventory($container->id, $inventoryId);
 
-        /** @var Item[] $confirmedItems */
-        $confirmedItems = $repo->getItems()->innerJoinWith('inventoryItems')->where(['inventory_item.inventoryId' => $inventory->id])->orderBy(['inventory_item.created' => SORT_DESC, 'isContainer' => SORT_DESC, 'id' => SORT_ASC])->all();
-        /** @var Item[] $notConfirmedItems */
-        $notConfirmedItems = $container->getItems()->andWhere(['NOT IN', 'id', ArrayHelper::getColumn($confirmedItems, 'id')])->orderBy(['priority' => SORT_DESC, 'isContainer' => SORT_DESC, 'id' => SORT_ASC])->all();
-
-        $paths = [];
-        foreach ($confirmedItems as $item) {
-            $paths[$item->id] = $this->getItemPathForView($item, $repo, $container);
-        }
-        foreach ($notConfirmedItems as $item) {
-            $paths[$item->id] = $this->getItemPathForView($item, $repo, $container);
-        }
-
         $inventoryItemConfirm = new InventoryItemConfirmForm();
         $inventoryItemUnconfirm = new InventoryItemUnconfirmForm();
         $inventoryItemConfirmationService = new InventoryItemConfirmationService();
@@ -138,12 +125,14 @@ class InventoryController extends Controller
             }
         }
 
+        $inventoryViewData = (new InventoryViewDataService())->prepare($repo, $container, $inventory);
+
         return $this->render('view', [
             'inventory' => $inventory,
             'container' => $container,
-            'notConfirmedItems' => $notConfirmedItems,
-            'confirmedItems' => $confirmedItems,
-            'paths' => $paths,
+            'notConfirmedItems' => $inventoryViewData->notConfirmedItems,
+            'confirmedItems' => $inventoryViewData->confirmedItems,
+            'paths' => $inventoryViewData->paths,
             'repo' => $repo,
             'inventoryItemConfirm' => $inventoryItemConfirm,
             'inventoryItemUnconfirm' => $inventoryItemUnconfirm,
@@ -293,26 +282,6 @@ class InventoryController extends Controller
             throw new NotFoundHttpException("Запрошенная инвентаризация {$inventoryId} не существует");
         }
     }
-
-    private function getItemPathForView(Item $item, Repo $repo, Item $container): array
-    {
-        if ($item->parentItemId === $container->itemId) {
-            return [];
-        }
-        $path = [];
-        $tmpItem = $item;
-        while ($tmpItem) {
-            $path[] = [
-                'itemId' => $tmpItem->itemId,
-                'repoId' => $tmpItem->repoId,
-                'label' => $tmpItem->name,
-                'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => $tmpItem->itemId],
-            ];
-            $tmpItem = $tmpItem->parentItem;
-        }
-        return $path;
-    }
-
 
     private function getItemAccessValidator(): ItemAccessValidator
     {
