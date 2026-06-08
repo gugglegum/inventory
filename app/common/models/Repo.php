@@ -4,6 +4,7 @@ namespace common\models;
 
 use common\components\ItemAccessValidator;
 use common\components\UserAccess;
+use common\services\RepoDeletionCascadeService;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
@@ -97,21 +98,11 @@ class Repo extends ActiveRecord
      */
     public function beforeDelete(): bool
     {
-        if (parent::beforeDelete()) {
-            if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->id, RepoUser::ACCESS_DELETE_REPO)) {
-                $this->addError('', 'Недостаточно прав для удаления репозитория.');
-                return false;
-            }
-            // Удаляем корневые контейнеры в репозитории, они каскадно должны удалить все вложенные предметы и все фото
-            /** @var Item $item */
-            foreach ($this->getItems()->where(['parentItemId' => null])->each() as $item) {
-                $item->setItemAccessValidator($this->itemAccessValidator);
-                $item->delete();
-            }
-            return true;
-        } else {
+        if (!parent::beforeDelete()) {
             return false;
         }
+
+        return (new RepoDeletionCascadeService())->beforeDelete($this, $this->itemAccessValidator);
     }
 
     public function beforeSave($insert): bool

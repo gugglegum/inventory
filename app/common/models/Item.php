@@ -3,6 +3,7 @@
 namespace common\models;
 
 use common\components\ItemAccessValidator;
+use common\services\ItemDeletionCascadeService;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
@@ -149,37 +150,7 @@ class Item extends ActiveRecord
      */
     public function softDelete(?int $userId): bool
     {
-        if ($this->deleted !== null) {
-            return true; // уже удалён
-        }
-
-        $transaction = Yii::$app->db->beginTransaction();
-        try {
-            if (!$this->beforeSoftDelete($userId)) {
-                return false;
-            }
-
-            $now = time();
-
-            // Обновляем напрямую, чтобы не триггерить валидаторы/behaviors непредсказуемо
-            // и чтобы можно было сделать "условное" обновление (deleted IS NULL).
-            static::getDb()->createCommand()->update(
-                static::tableName(),
-                [
-                    'deleted' => $now,
-                    'deletedBy' => $userId,
-                ],
-                ['and', ['id' => $this->id], ['deleted' => null]]
-            )->execute();
-
-            $this->refresh();
-            $transaction->commit();
-            return true;
-        } catch (Exception $e) {
-            $transaction->rollBack();
-            $this->addError('', 'Ошибка при удалении предмета: ' . $e->getMessage());
-            return false;
-        }
+        return (new ItemDeletionCascadeService())->softDelete($this, $userId, $this->itemAccessValidator);
     }
 
     /**
@@ -188,17 +159,7 @@ class Item extends ActiveRecord
      */
     public function beforeSoftDelete(?int $userId): bool
     {
-        if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->repoId, RepoUser::ACCESS_DELETE_ITEMS)) {
-            $this->addError('', 'Недостаточно прав для удаления предмета.');
-            return false;
-        }
-
-        foreach ($this->items as $item) {
-            $item->setItemAccessValidator($this->itemAccessValidator);
-            $item->softDelete($userId);
-        }
-
-        return true;
+        return (new ItemDeletionCascadeService())->beforeSoftDelete($this, $userId, $this->itemAccessValidator);
     }
 
     /**
@@ -237,26 +198,11 @@ class Item extends ActiveRecord
      */
     public function beforeDelete(): bool
     {
-        if (parent::beforeDelete()) {
-            if (!$this->itemAccessValidator->hasUserAccessToRepoById($this->repoId, RepoUser::ACCESS_DELETE_ITEMS)) {
-                $this->addError('', 'Недостаточно прав для удаления предмета.');
-                return false;
-            }
-
-            foreach ($this->items as $item) {
-                $item->setItemAccessValidator($this->itemAccessValidator);
-                $item->delete();
-            }
-            foreach ($this->itemPhotos as $itemPhoto) {
-                $itemPhoto->delete();
-            }
-            foreach ($this->posts as $post) {
-                $post->delete();
-            }
-            return true;
-        } else {
+        if (!parent::beforeDelete()) {
             return false;
         }
+
+        return (new ItemDeletionCascadeService())->beforeHardDelete($this, $this->itemAccessValidator);
     }
 
     /**
