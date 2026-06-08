@@ -169,10 +169,12 @@ docker compose exec php composer run quality
 
 - PHPUnit 13.2 - regression/integration/unit тесты из `tests/phpunit/`.
 - PHPStan 2.2 - текущий уровень `level: 3`, конфиг `phpstan.neon`.
-- Psalm 6.16 через `psalm/phar`, конфиг `psalm.xml`. PHAR выбран потому, что обычный пакет `vimeo/psalm` в актуальных версиях конфликтует с PHPUnit 13 по `sebastian/diff`, а старые версии Psalm не подходят для текущего PHP 8.4-стека.
+- Psalm 6.16 через `psalm/phar`, текущий `errorLevel="7"`, конфиг `psalm.xml`. PHAR выбран потому, что обычный пакет `vimeo/psalm` в актуальных версиях конфликтует с PHPUnit 13 по `sebastian/diff`, а старые версии Psalm не подходят для текущего PHP 8.4-стека.
 - PHPCS 3.13 - `phpcs.xml` проверяет PSR-12 на активно рефакторимом backend-контуре (`backend/controllers`, `backend/services`, `common/services`, `tests/static-analysis`), а `phpcs-compat.xml` отдельно прогоняет PHPCompatibility по широкому дереву приложения.
 
 Psalm настроен без baseline. В конфиге подавлен типичный шум Yii/PHPUnit: route action методы и тестовые классы как unused, требование `#[Override]`, шаблонные параметры Yii-классов и Yii view-контекст. View-файлы не анализируются Psalm как обычные PHP-классы, потому что в них `$this` и переданные переменные живут в контексте шаблона.
+
+Пробный запуск Psalm на `errorLevel="6"` показывал уже отдельный пласт работ: generic identity-типы Yii `yii\web\User<TUserIdentity>`, nullable/magic-свойства ActiveRecord, несколько конкретных проверок аргументов и возвращаемых типов. Это лучше делать отдельным шагом, а не включать level 6 без подготовки.
 
 PHPStan использует bootstrap `tests/static-analysis/bootstrap.php`, который подключает Yii и выставляет project aliases. Кэши PHPStan/Psalm пишутся в `/tmp` внутри контейнера, чтобы не зависеть от прав на `tests/phpunit/_runtime`.
 
