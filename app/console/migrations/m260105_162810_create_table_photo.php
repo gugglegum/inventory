@@ -54,10 +54,10 @@ class m260105_162810_create_table_photo extends Migration
         ");
 
         // 3) В item_photo добавляем photoId и заполняем (= id для уже существующих строк)
-        $this->addColumn('{{%item_photo}}', 'photoId', $this->integer()->unsigned()->null()->comment('ID фотографии')->after('itemId'));
+        $this->addColumn('{{%item_photo}}', 'photoId', (string) $this->integer()->unsigned()->null()->comment('ID фотографии')->after('itemId'));
         $this->execute("UPDATE {{%item_photo}} SET photoId = id");
-        $this->alterColumn('{{%item_photo}}', 'photoId', $this->integer()->unsigned()->notNull()->comment('ID фотографии'));
-        $this->alterColumn('{{%item_photo}}', 'id', $this->integer()->unsigned()->notNull()->append('AUTO_INCREMENT')->comment('ID фотографии предмета'));
+        $this->alterColumn('{{%item_photo}}', 'photoId', (string) $this->integer()->unsigned()->notNull()->comment('ID фотографии'));
+        $this->alterColumn('{{%item_photo}}', 'id', (string) $this->integer()->unsigned()->notNull()->append('AUTO_INCREMENT')->comment('ID фотографии предмета'));
 
         $this->createIndex('idx_item_photo_photoId', '{{%item_photo}}', 'photoId');
         $this->addForeignKey(
@@ -90,12 +90,12 @@ class m260105_162810_create_table_photo extends Migration
         // Возврат к исходной структуре item_photo
 
         // 4 back) вернуть колонки md5/size/width/height/created/updated
-        $this->addColumn('{{%item_photo}}', 'md5', $this->char(32)->notNull()->comment('MD5 содержимого файла')->after('itemId'));
-        $this->addColumn('{{%item_photo}}', 'size', $this->integer()->unsigned()->notNull()->comment('Размер файла')->after('md5'));
-        $this->addColumn('{{%item_photo}}', 'width', $this->integer()->unsigned()->notNull()->comment('Ширина фотографии')->after('size'));
-        $this->addColumn('{{%item_photo}}', 'height', $this->integer()->unsigned()->notNull()->comment('Высота фотографии')->after('width'));
-        $this->addColumn('{{%item_photo}}', 'created', $this->integer()->notNull()->comment('Время создания')->after('sortIndex'));
-        $this->addColumn('{{%item_photo}}', 'updated', $this->integer()->notNull()->comment('Время последнего изменения')->after('created'));
+        $this->addColumn('{{%item_photo}}', 'md5', (string) $this->char(32)->notNull()->comment('MD5 содержимого файла')->after('itemId'));
+        $this->addColumn('{{%item_photo}}', 'size', (string) $this->integer()->unsigned()->notNull()->comment('Размер файла')->after('md5'));
+        $this->addColumn('{{%item_photo}}', 'width', (string) $this->integer()->unsigned()->notNull()->comment('Ширина фотографии')->after('size'));
+        $this->addColumn('{{%item_photo}}', 'height', (string) $this->integer()->unsigned()->notNull()->comment('Высота фотографии')->after('width'));
+        $this->addColumn('{{%item_photo}}', 'created', (string) $this->integer()->notNull()->comment('Время создания')->after('sortIndex'));
+        $this->addColumn('{{%item_photo}}', 'updated', (string) $this->integer()->notNull()->comment('Время последнего изменения')->after('created'));
 
         // Заполнить их из photo
         $this->execute("
@@ -114,7 +114,7 @@ class m260105_162810_create_table_photo extends Migration
         // 3 back) убрать связь на photo
         $this->dropForeignKey('fk_item_photo_photoId', '{{%item_photo}}');
         $this->dropIndex('idx_item_photo_photoId', '{{%item_photo}}');
-        $this->alterColumn('{{%item_photo}}', 'id', $this->integer()->unsigned()->notNull()->append('AUTO_INCREMENT')->comment('ID фотографии'));
+        $this->alterColumn('{{%item_photo}}', 'id', (string) $this->integer()->unsigned()->notNull()->append('AUTO_INCREMENT')->comment('ID фотографии'));
         $this->dropColumn('{{%item_photo}}', 'photoId');
 
         // 1 back) удалить photo (сначала FK)

@@ -12,7 +12,7 @@ class m260119_223735_move_repo_priority_to_repo_user extends Migration
         $this->addColumn(
             '{{%repo_user}}',
             'priority',
-            $this->integer()
+            (string) $this->integer()
                 ->notNull()
                 ->defaultValue(0)
                 ->comment('Приоритет сортировки')
@@ -29,7 +29,7 @@ class m260119_223735_move_repo_priority_to_repo_user extends Migration
         $this->addColumn(
             '{{%repo}}',
             'priority',
-            $this->integer()
+            (string) $this->integer()
                 ->notNull()
                 ->defaultValue(0)
                 ->after('description')

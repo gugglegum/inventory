@@ -9,8 +9,8 @@ class m260122_230302_item_soft_delete extends Migration
      */
     public function safeUp(): void
     {
-        $this->addColumn('{{%item}}', 'deleted', $this->integer()->unsigned()->null()->comment('Время удаления'));
-        $this->addColumn('{{%item}}', 'deletedBy', $this->integer()->unsigned()->null()->comment('ID удалившего пользователя')->after('updatedBy'));
+        $this->addColumn('{{%item}}', 'deleted', (string) $this->integer()->unsigned()->null()->comment('Время удаления'));
+        $this->addColumn('{{%item}}', 'deletedBy', (string) $this->integer()->unsigned()->null()->comment('ID удалившего пользователя')->after('updatedBy'));
 
         $this->createIndex('idx_item_deleted', '{{%item}}', 'deleted');
         $this->createIndex('idx_item_deletedBy', '{{%item}}', 'deletedBy');

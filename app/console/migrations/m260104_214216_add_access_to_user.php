@@ -16,7 +16,7 @@ class m260104_214216_add_access_to_user extends Migration
         $this->addColumn(
             '{{%user}}',
             'access',
-            $this->integer()
+            (string) $this->integer()
                 ->unsigned()
                 ->notNull()
                 ->defaultValue(0)

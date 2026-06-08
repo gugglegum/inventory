@@ -131,9 +131,9 @@ final class ItemsControllerTest extends DbTestCase
 
         self::assertNotNull($adapter);
         self::assertNotNull($box);
-        self::assertSame((int) $parent->itemId, (int) $adapter->parentItemId);
+        self::assertSame($parent->itemId, $adapter->parentItemId);
         self::assertSame('Черный переходник', $adapter->description);
-        self::assertSame(0, (int) $adapter->isContainer);
+        self::assertSame(0, $adapter->isContainer);
         self::assertEqualsCanonicalizing(['video', 'dvi'], $adapter->fetchTags());
         self::assertSame(1, (int) $box->isContainer);
         self::assertEqualsCanonicalizing(['коробка', 'мелочи'], $box->fetchTags());

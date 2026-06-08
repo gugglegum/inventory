@@ -148,6 +148,7 @@ class UserController extends Controller
      *
      * @param string $prompt
      * @return string
+     * @psalm-suppress ForbiddenCode Shell commands are used intentionally to request a hidden console password.
      */
     private function _promptPassword($prompt = 'Enter new password: ')
     {

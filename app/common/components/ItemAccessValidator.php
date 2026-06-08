@@ -13,9 +13,9 @@ final class ItemAccessValidator
     /**
      * Компонент авторизации текущего пользователя приложения.
      *
-     * @var \yii\web\User<\common\models\User>
+     * @var \yii\web\User<\common\models\User>|null
      */
-    private \yii\web\User $user;
+    private ?\yii\web\User $user = null;
 
     /**
      * Возвращает компонент авторизации пользователя, заданный явно или взятый из приложения.

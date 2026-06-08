@@ -25,7 +25,8 @@ class ThumbnailsController extends Controller
                 echo "{$photo->id}: ";
                 $photo->createThumbnail($width, $height, $upscale, $crop, $quality);
                 $file = $photo->getThumbnailFile($width, $height, $upscale, $crop, $quality);
-                echo "{$file} (" . filesize($file) . " bytes)\n";
+                $fileSize = filesize($file);
+                echo "{$file} (" . ($fileSize !== false ? (string) $fileSize : 'unknown') . " bytes)\n";
                 $counter++;
             }
         }

@@ -366,7 +366,7 @@ class Photo extends ActiveRecord
             throw new Exception('Failed to create directory "' . $dir . '"');
         }
 
-        $tempFile = tempnam(Yii::$app->params['photos']['thumbnailTemp'], $this->primaryKey);
+        $tempFile = tempnam(Yii::$app->params['photos']['thumbnailTemp'], (string) $this->primaryKey);
 
         if (file_put_contents($tempFile, ImageResize::getImageJPEG($image, $quality)) === false) {
             throw new Exception('Failed to create thumbnail file "' . $thumbnailFile . '"');

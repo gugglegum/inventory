@@ -102,10 +102,10 @@ class m260111_181720_create_inventory_tables extends Migration
         );
 
         // 3) item: lastSeen, missingSince
-        $this->addColumn('{{%item}}', 'lastSeenBy', $this->integer()->unsigned()->null()->after('priority')->comment('Кем подтверждено нахождение'));
-        $this->addColumn('{{%item}}', 'missingSinceBy', $this->integer()->unsigned()->null()->after('lastSeenBy')->comment('Кем обнаружено отсутствие'));
-        $this->addColumn('{{%item}}', 'lastSeen', $this->integer()->unsigned()->null()->after('updatedBy')->comment('Когда подтверждено нахождение'));
-        $this->addColumn('{{%item}}', 'missingSince', $this->integer()->unsigned()->null()->after('lastSeen')->comment('Когда обнаружено отсутствие'));
+        $this->addColumn('{{%item}}', 'lastSeenBy', (string) $this->integer()->unsigned()->null()->after('priority')->comment('Кем подтверждено нахождение'));
+        $this->addColumn('{{%item}}', 'missingSinceBy', (string) $this->integer()->unsigned()->null()->after('lastSeenBy')->comment('Кем обнаружено отсутствие'));
+        $this->addColumn('{{%item}}', 'lastSeen', (string) $this->integer()->unsigned()->null()->after('updatedBy')->comment('Когда подтверждено нахождение'));
+        $this->addColumn('{{%item}}', 'missingSince', (string) $this->integer()->unsigned()->null()->after('lastSeen')->comment('Когда обнаружено отсутствие'));
 
         $this->createIndex('idx_item_lastSeenBy', '{{%item}}', 'lastSeenBy');
         $this->createIndex('idx_item_missingSinceBy', '{{%item}}', 'missingSinceBy');

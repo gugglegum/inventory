@@ -13,7 +13,7 @@
 class Yii extends \yii\BaseYii
 {
     /**
-     * @var \yii\web\Application<\common\models\User>|\yii\console\Application|null
+     * @var \yii\web\Application<\common\models\User>|null
      */
     public static $app;
 }

@@ -12,7 +12,7 @@ class m250927_163458_increase_item_name_length extends Migration
         $this->alterColumn(
             self::TABLE,
             'name',
-            $this->string(200)->notNull()->comment('Наименование')->append(' COLLATE utf8_unicode_ci')
+            (string) $this->string(200)->notNull()->comment('Наименование')->append(' COLLATE utf8_unicode_ci')
         );
     }
 
@@ -21,7 +21,7 @@ class m250927_163458_increase_item_name_length extends Migration
         $this->alterColumn(
             self::TABLE,
             'name',
-            $this->string(100)->notNull()->comment('Наименование')->append(' COLLATE utf8_unicode_ci')
+            (string) $this->string(100)->notNull()->comment('Наименование')->append(' COLLATE utf8_unicode_ci')
         );
     }
 }

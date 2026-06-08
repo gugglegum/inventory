@@ -134,9 +134,9 @@ abstract class ImageResize
             $kx = ($width > 0) && ($s_img_x > $width) ? $s_img_x / $width : 1;
             $ky = ($height > 0) && ($s_img_y > $height) ? $s_img_y / $height : 1;
         }
-        $k = $crop ? min($kx, $ky) : max($kx, $ky);
-        $d_img_x = (int) round($s_img_x / $k);
-        $d_img_y = (int) round($s_img_y / $k);
+        $scale = (float) ($crop ? min($kx, $ky) : max($kx, $ky));
+        $d_img_x = (int) round((float) $s_img_x / $scale);
+        $d_img_y = (int) round((float) $s_img_y / $scale);
 
         if ($d_img = imagecreatetruecolor($d_img_x, $d_img_y)) {
             if (!imagecopyresampled($d_img, $image, 0, 0, 0, 0, $d_img_x, $d_img_y, $s_img_x, $s_img_y)) {
