@@ -8,6 +8,7 @@ use common\components\ItemAccessValidator;
 use common\helpers\ValidateErrorsFormatter;
 use common\models\Item;
 use common\models\Repo;
+use Throwable;
 use yii\base\Exception;
 use yii\web\User;
 
@@ -70,29 +71,13 @@ final class ItemImportService
         $firstItemAnchor = null;
 
         if ($confirm && !$parseResult->hasError()) {
-            foreach ($parseResult->items as $item) {
-                $itemModel = new Item();
-                $itemModel->scenario = Item::SCENARIO_CREATE;
-                $itemModel->setItemAccessValidator($itemAccessValidator);
-                $itemModel->repoId = $repo->id;
-                $itemModel->name = $item['name'];
-                $itemModel->parentItemId = $parentItem->itemId;
-                $itemModel->isContainer = !empty($item['container']) ? '1' : '0';
-                $itemModel->description = $item['description'] ?? '';
-                $itemModel->createdBy = $user->id;
-
-                if (!$itemModel->save()) {
-                    throw new Exception(ValidateErrorsFormatter::getMessage($itemModel));
-                }
-
-                if (isset($item['tags'])) {
-                    $itemModel->saveTagsFromString($item['tags']);
-                }
-
-                if ($firstItemAnchor === null) {
-                    $firstItemAnchor = 'item' . $itemModel->repoId . '-' . $itemModel->itemId;
-                }
-            }
+            $firstItemAnchor = $this->createItems(
+                $repo,
+                $parentItem,
+                $parseResult->items,
+                $user,
+                $itemAccessValidator,
+            );
         }
 
         return new ItemImportResult(
@@ -188,5 +173,68 @@ final class ItemImportService
         }
 
         return new ItemImportResult($text, $items, $errorLine, $errorStr, $errorMsg);
+    }
+
+    /**
+     * Создает распознанные предметы одной атомарной пачкой.
+     *
+     * Если сохранение любого предмета или его тегов завершается ошибкой, откатываются все уже созданные предметы,
+     * теги и обновление счетчика `repo.lastItemId`.
+     *
+     * @param Repo $repo Репозиторий, в котором создаются предметы.
+     * @param Item $parentItem Родительский контейнер для импортируемых предметов.
+     * @param list<array{name:string, description?:string, tags?:string, container?:string}> $items Распознанные предметы.
+     * @param User $user Текущий пользователь, который будет записан как автор созданных предметов.
+     * @param ItemAccessValidator $itemAccessValidator Валидатор прав для создаваемых предметов.
+     *
+     * @return ?string HTML-якорь первого созданного предмета.
+     * @throws Exception
+     * @throws \yii\db\Exception
+     */
+    private function createItems(
+        Repo $repo,
+        Item $parentItem,
+        array $items,
+        User $user,
+        ItemAccessValidator $itemAccessValidator,
+    ): ?string {
+        $transaction = Item::getDb()->beginTransaction();
+        $firstItemAnchor = null;
+
+        try {
+            foreach ($items as $item) {
+                $itemModel = new Item();
+                $itemModel->scenario = Item::SCENARIO_CREATE;
+                $itemModel->setItemAccessValidator($itemAccessValidator);
+                $itemModel->repoId = $repo->id;
+                $itemModel->name = $item['name'];
+                $itemModel->parentItemId = $parentItem->itemId;
+                $itemModel->isContainer = !empty($item['container']) ? '1' : '0';
+                $itemModel->description = $item['description'] ?? '';
+                $itemModel->createdBy = $user->id;
+
+                if (!$itemModel->save()) {
+                    throw new Exception(ValidateErrorsFormatter::getMessage($itemModel));
+                }
+
+                if (isset($item['tags'])) {
+                    $itemModel->saveTagsFromString($item['tags']);
+                }
+
+                if ($firstItemAnchor === null) {
+                    $firstItemAnchor = 'item' . $itemModel->repoId . '-' . $itemModel->itemId;
+                }
+            }
+
+            $transaction->commit();
+
+            return $firstItemAnchor;
+        } catch (Throwable $e) {
+            if ($transaction->isActive) {
+                $transaction->rollBack();
+            }
+
+            throw $e;
+        }
     }
 }

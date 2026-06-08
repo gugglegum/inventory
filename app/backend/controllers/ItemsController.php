@@ -328,7 +328,6 @@ class ItemsController extends Controller
      * @return Response|string
      * @throws Exception
      * @throws \yii\db\Exception
-     * @todo Завернуть в транзакцию, чтобы исключить частичный импорт
      */
     public function actionImport(int $repoId, int $parentItemId): Response|string
     {
