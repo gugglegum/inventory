@@ -103,6 +103,8 @@ docker compose exec php ./vendor/bin/phpunit -c phpunit.xml
 
 Следующая пачка расширила regression-покрытие на права доступа к репозиториям, поиск предметов через `ItemsController::actionSearch()`, подтверждённый импорт предметов через `ItemsController::actionImport()`, валидацию форм подтверждения инвентаризации и закрытие инвентаризации через `InventoryController::actionClose()`.
 
+Первый рефакторинг после появления тестов вынес поиск и импорт из `ItemsController` в сервисы `backend/services/ItemSearchService.php` и `backend/services/ItemImportService.php`. Контроллер после этого отвечает в основном за HTTP-параметры, редиректы и render, а сервисы - за построение поискового результата, разбор текста импорта и создание импортируемых предметов.
+
 ## Git и локальные файлы
 
 В корневом `.gitignore` намеренно игнорируются:

@@ -5,9 +5,9 @@ namespace backend\controllers;
 
 use backend\models\ItemDeleteForm;
 use backend\models\ItemTagsForm;
+use backend\services\ItemImportService;
+use backend\services\ItemSearchService;
 use common\components\ItemAccessValidator;
-use common\helpers\ValidateErrorsFormatter;
-use common\models\ItemTag;
 use common\models\Photo;
 use common\models\Repo;
 use Yii;
@@ -18,7 +18,6 @@ use yii\filters\AccessControl;
 use yii\helpers\Url;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
-use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
@@ -123,31 +122,7 @@ class ItemsController extends Controller
     {
         $repo = $this->findRepo($repoId);
         $queryString = Yii::$app->request->getQueryParam('q', '');
-        $queryWords = array_filter(preg_split('/[\s,]+/', $queryString, -1, PREG_SPLIT_NO_EMPTY), function($value) { return $value !== ''; });
-        $containers = [];
-        if (count($queryWords) > 0) {
-            $query = Item::find()
-                ->where(['repoId' => $repo->id])
-                ->andWhere('isContainer != 0');
-            $i = 0;
-            $hasPositiveCondition = false;
-            foreach ($queryWords as $queryWord) {
-                if ($queryWord[0] !== '-') {
-                    $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = id");
-                    $query->andWhere("t{$i}.tag LIKE :tagMask{$i} OR name LIKE :tagMask{$i} OR description LIKE :tagMask{$i} OR id = :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
-                    $hasPositiveCondition = true;
-                } else {
-                    $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = id AND t{$i}.tag LIKE :tagMask{$i}");
-                    $queryWord = mb_substr($queryWord, 1);
-                    $query->andWhere("t{$i}.tag IS NULL AND name NOT LIKE :tagMask{$i} AND description NOT LIKE :tagMask{$i} AND id != :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
-                }
-                $i++;
-            }
-            $query->groupBy(Item::tableName() . '.id');
-            if ($hasPositiveCondition) {
-                $containers = $query->all();
-            }
-        }
+        $containers = (new ItemSearchService())->searchContainers($repo, $queryString);
         $this->layout = 'blank';
         return $this->render('search-container', [
             'containers' => $containers,
@@ -170,84 +145,23 @@ class ItemsController extends Controller
         $itemId = Yii::$app->request->getQueryParam('id');
 
         $container = $containerId !== null ? $this->findModel($repo->id, $containerId) : null;
-
-        $queryWords = $queryString !== null ? array_filter(preg_split('/[\s,]+/', $queryString, -1, PREG_SPLIT_NO_EMPTY), function($value) { return $value !== ''; }) : [];
-
-        $items = null;
-        $query = Item::find()->where(['repoId' => $repo->id]);
-        $hasPositiveCondition = false;
-        if (count($queryWords) > 0) {
-            $i = 0;
-            foreach ($queryWords as $queryWord) {
-                if ($queryWord[0] !== '-') {
-                    $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = id");
-                    $query->andWhere("t{$i}.tag LIKE :tagMask{$i} OR name LIKE :tagMask{$i} OR description LIKE :tagMask{$i} OR id = :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
-                    $hasPositiveCondition = true;
-                } else {
-                    $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = id AND t{$i}.tag LIKE :tagMask{$i}");
-                    $queryWord = mb_substr($queryWord, 1);
-                    $query->andWhere("t{$i}.tag IS NULL AND name NOT LIKE :tagMask{$i} AND description NOT LIKE :tagMask{$i} AND id != :tag{$i}", ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']);
-                }
-                $i++;
-            }
-            $query->groupBy(Item::tableName() . '.id')
-                ->orderBy(Item::tableName() . '.isContainer DESC, ' . Item::tableName() . '.id ASC');
-        }
-
-        if ($itemId !== null && $itemId !== '') {
-            $query->andWhere(Item::tableName() . '.itemId = :itemId', ['itemId' => $itemId]);
-            $hasPositiveCondition = true;
-        }
-
-        if ($hasPositiveCondition) {
-//            var_dump($query->createCommand()->getRawSql());die;
-            $items = $query->all();
-        }
+        $searchResult = (new ItemSearchService())->search($repo, $queryString, $container, $itemId);
+        $items = $searchResult->items;
 
         // Если найден ровно 1 результат, то сразу перекидываем на страницу этого предмета
         if (is_array($items) && count($items) === 1) {
             return $this->redirect(['/items/view', 'repoId' => $repo->id, 'itemId' => $items[0]->itemId, 'q' => $queryString]);
         }
 
-        $paths = [];
-        $isMoreThan = false;
-        if (is_array($items)) {
-            $maxResults = 2000;
-            $tmpItems = [];
-            $i = 0;
-            foreach ($items as $item) {
-                if ($i >= $maxResults) {
-                    $isMoreThan = true;
-                    break;
-                }
-                $doSkipItem = $containerId !== null;
-                $path = $this->getItemPathForView($item, $repo);
-                if ($containerId) {
-                    foreach ($path as $pathItem) {
-                        if ($pathItem['itemId'] == $containerId) {
-                            $doSkipItem = false;
-                            break;
-                        }
-                    }
-                }
-                if (!$doSkipItem) {
-                    $tmpItems[] = $item;
-                    $paths[$item->id] = $path;
-                    $i++;
-                }
-            }
-            $items = $tmpItems;
-        }
-
         return $this->render('search', [
             'items' => $items, // null -- если поиск не выполнялся, [] -- если ничего не найдено
-            'paths' => $paths,
+            'paths' => $searchResult->paths,
             'query' => $queryString,
             'itemId' => $itemId,
             'searchInside' => $containerId !== null,
             'containerId' => $containerId,
-            'container' => $container,
-            'isMoreThan' => $isMoreThan,
+            'container' => $searchResult->container,
+            'isMoreThan' => $searchResult->isMoreThan,
             'repo' => $repo,
         ]);
     }
@@ -466,7 +380,7 @@ class ItemsController extends Controller
      * @param int $parentItemId
      * @return Response|string
      * @throws Exception
-     * @throws HttpException
+     * @throws \yii\db\Exception
      * @todo Завернуть в транзакцию, чтобы исключить частичный импорт
      */
     public function actionImport(int $repoId, int $parentItemId): Response|string
@@ -475,139 +389,27 @@ class ItemsController extends Controller
         $parentItem = $this->findParentItem($repo->id, $parentItemId);
         $text = Yii::$app->request->post('text');
         $confirm = (bool) Yii::$app->request->post('confirm');
-        $items = [];
+        $importResult = (new ItemImportService())->import(
+            $repo,
+            $parentItem,
+            $text,
+            $confirm,
+            $this->getLoggedUser(),
+            $this->getItemAccessValidator(),
+        );
 
-        $errorLine = null;
-        $errorStr = null;
-        $errorMsg = null;
-
-        $line = 1;
-        $item = [];
-
-        $addProperty = function (string $key, string $value) use (&$item) {
-            if (!in_array($key, ['description', 'tags', 'container'], true)) {
-                throw new Exception('Unknown property "' . $key . '"');
-            }
-            if ($key === 'container') {
-                $value = $value ? '1' : '0';
-            }
-            if (array_key_exists($key, $item)) {
-                switch ($key) {
-                    case 'description' :
-                        $item[$key] .= "\n" . $value;
-                        break;
-                    case 'tags' :
-                        $item[$key] .= ', ' . $value;
-                        break;
-                    default :
-                        $item[$key] = $value;
-                }
-            } else {
-                $item[$key] = $value;
-            }
-        };
-
-        $str = '';
-        try {
-            foreach (explode("\n", $text) as $str) {
-                $str = trim($str);
-
-                if ($str === '') {
-                    continue;
-                }
-
-                switch ($str[0]) {
-                    case '*' :
-                        if (preg_match('/^\*\s*(\w+)\s*:\s*(.*)$/ui', $str, $m)) {
-                            $key = mb_strtolower(trim($m[1]));
-                            $replacements = [
-                                'метки' => 'tags',
-                                'теги' => 'tags',
-                                'тэги' => 'tags',
-                                'desc' => 'description',
-                                'описание' => 'description',
-                                'cont' => 'container',
-                                'контейнер' => 'container',
-                                'конт' => 'container',
-                            ];
-                            foreach ($replacements as $from => $to) {
-                                if ($key === $from) {
-                                    $key = $to;
-                                    break;
-                                }
-                            }
-                            $value = trim($m[2]);
-                            $addProperty($key, $value);
-                        } else {
-                            throw new Exception('Invalid property line format');
-                        }
-                        break;
-                    case '!' :
-                        $key = 'description';
-                        $value = trim(mb_substr($str, 1));
-                        $addProperty($key, $value);
-                        break;
-
-                    case '#' :
-                        $key = 'tags';
-                        $value = trim(mb_substr($str, 1));
-                        $addProperty($key, $value);
-                        break;
-
-                    default :
-                        if (isset($item['name'])) {
-                            $items[] = $item;
-                            $item = [];
-                        }
-                        $item['name'] = $str;
-                }
-                $line++;
-            }
-            if (isset($item['name'])) {
-                $items[] = $item;
-            }
-        } catch (Exception $e) {
-            $errorLine = $line;
-            $errorStr = $str;
-            $errorMsg = $e->getMessage();
-        }
-
-        $firstItemAnchor = null;
-
-        if ($confirm && $errorLine === null) {
-            foreach ($items as $item) {
-                $itemModel = new Item();
-                $itemModel->scenario = Item::SCENARIO_CREATE;
-                $itemModel->setItemAccessValidator($this->getItemAccessValidator());
-                $itemModel->repoId = $repo->id;
-                $itemModel->name = $item['name'];
-                $itemModel->parentItemId = $parentItem->itemId;
-                $itemModel->isContainer = !empty($item['container']) ? '1' : '0';
-                $itemModel->description = $item['description'] ?? '';
-                $itemModel->createdBy = $this->getLoggedUser()->id;
-                if (!$itemModel->save()) {
-                    throw new Exception(ValidateErrorsFormatter::getMessage($itemModel));
-                }
-
-                if (isset($item['tags'])) {
-                    $itemModel->saveTagsFromString($item['tags']);
-                }
-
-                if ($firstItemAnchor === null) {
-                    $firstItemAnchor = 'item' . $itemModel->repoId . '-' . $itemModel->itemId;
-                }
-            }
-            return $this->redirect(Url::to(['view', 'repoId' => $repo->id, 'itemId' => $parentItem->itemId]) . '#' . $firstItemAnchor);
+        if ($confirm && !$importResult->hasError()) {
+            return $this->redirect(Url::to(['view', 'repoId' => $repo->id, 'itemId' => $parentItem->itemId]) . '#' . $importResult->firstItemAnchor);
         }
 
         return $this->render('import', [
             'text' => $text,
             'parent' => $parentItem,
             'repo' => $repo,
-            'items' => $items,
-            'errorLine' => $errorLine,
-            'errorStr' => $errorStr,
-            'errorMsg' => $errorMsg,
+            'items' => $importResult->items,
+            'errorLine' => $importResult->errorLine,
+            'errorStr' => $importResult->errorStr,
+            'errorMsg' => $importResult->errorMsg,
         ]);
     }
 
