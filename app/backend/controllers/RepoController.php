@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace backend\controllers;
 
-use backend\models\RepoForm;
+use backend\services\RepoDeletionService;
+use backend\services\RepoFormService;
 use common\components\ItemAccessValidator;
 use common\components\UserAccess;
 use common\models\Repo;
 use common\models\RepoUser;
-use common\models\User;
 use Yii;
 use yii\base\Exception;
 use yii\db\StaleObjectException;
@@ -106,13 +106,11 @@ class RepoController extends Controller
      */
     public function actionCreate(): Response|string
     {
-        $repoForm = new RepoForm();
-        $repoForm->scenario = RepoForm::SCENARIO_CREATE;
-        $repoForm->setRepo(new Repo()->setItemAccessValidator($this->getItemAccessValidator()));
-        $repoForm->setRepoUser(new RepoUser());
+        $repoFormService = new RepoFormService();
+        $repoForm = $repoFormService->prepareForCreate($this->getItemAccessValidator());
 
         if (Yii::$app->request->isPost) {
-            if ($repoForm->load(Yii::$app->request->post()) && $repoForm->save()) {
+            if ($repoFormService->save($repoForm, Yii::$app->request->post())) {
                 return $this->redirect(['repo/index']);
             }
         }
@@ -133,18 +131,13 @@ class RepoController extends Controller
     {
         $repo = $this->findRepo($repoId);
         $repoUser = $this->findRepoUser($repo);
-
-        $repoForm = new RepoForm();
-        $repoForm->scenario = RepoForm::SCENARIO_UPDATE;
-        $repoForm->setRepo($repo);
-        $repoForm->setRepoUser($repoUser);
+        $repoFormService = new RepoFormService();
+        $repoForm = $repoFormService->prepareForUpdate($repo, $repoUser);
 
         if (Yii::$app->request->isPost) {
-            if ($repoForm->load(Yii::$app->request->post()) && $repoForm->save()) {
+            if ($repoFormService->save($repoForm, Yii::$app->request->post())) {
                 return $this->redirect(['view', 'repoId' => $repo->id]);
             }
-        } else {
-            $repoForm->load(array_merge($repo->attributes, $repoUser->attributes), '');
         }
         return $this->render('update', [
             'repo' => $repo,
@@ -163,35 +156,21 @@ class RepoController extends Controller
     public function actionDelete(int $repoId): Response|string
     {
         $repo = $this->findRepo($repoId);
+        $repoDeletionService = new RepoDeletionService();
         if (Yii::$app->request->isPost) {
-            if ($repo->delete() === false) {
+            if (!$repoDeletionService->delete($repo)) {
                 return $this->render('delete', [
                     'repo' => $repo,
-                    'affectedUsers' => $this->getAffectedUsers($repo),
+                    'affectedUsers' => $repoDeletionService->getAffectedUsers($repo, $this->getLoggedUser()),
                 ]);
             }
             return $this->redirect(['repo/index', 'repoId' => $repo->id]);
         } else {
             return $this->render('delete', [
                 'repo' => $repo,
-                'affectedUsers' => $this->getAffectedUsers($repo),
+                'affectedUsers' => $repoDeletionService->getAffectedUsers($repo, $this->getLoggedUser()),
             ]);
         }
-    }
-
-    /**
-     * Список пользователей, которые могут пострадать при удалении репозитория (кроме текущего пользователя).
-     * @return User[]
-     */
-    private function getAffectedUsers(Repo $repo): array
-    {
-        $affectedUsers = [];
-        foreach ($repo->getRepoUsers()->innerJoinWith('user')->where(['user.status' => \common\models\User::STATUS_ACTIVE])->each() as $repoUser) {
-            if ($repoUser->userId !== $this->getLoggedUser()->id) {
-                $affectedUsers[] = $repoUser->user;
-            }
-        }
-        return $affectedUsers;
     }
 
     /**
