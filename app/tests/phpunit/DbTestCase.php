@@ -15,16 +15,31 @@ use Yii;
 use yii\db\ActiveRecord;
 use yii\db\Transaction;
 
+/**
+ * Базовый класс integration-тестов, работающих с тестовой базой данных.
+ *
+ * Каждый тест запускается внутри транзакции, которая откатывается в tearDown().
+ * Хелперы создают минимальные валидные сущности проекта и сразу проверяют успешность сохранения.
+ */
 abstract class DbTestCase extends TestCase
 {
+    /**
+     * Транзакция текущего теста, откатываемая после завершения сценария.
+     */
     private ?Transaction $transaction = null;
 
+    /**
+     * Открывает транзакцию тестовой БД перед сценарием.
+     */
     protected function setUp(): void
     {
         parent::setUp();
         $this->transaction = Yii::$app->db->beginTransaction();
     }
 
+    /**
+     * Откатывает изменения теста и уничтожает Yii-приложение.
+     */
     protected function tearDown(): void
     {
         if ($this->transaction !== null && $this->transaction->isActive) {
@@ -34,6 +49,11 @@ abstract class DbTestCase extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * Создает пользователя с рабочим паролем и authKey.
+     *
+     * @param array{username?:string, email?:string, access?:int, password?:string} $attributes Переопределяемые поля пользователя.
+     */
     protected function createUser(array $attributes = []): User
     {
         $user = new User();
@@ -48,11 +68,19 @@ abstract class DbTestCase extends TestCase
         return $user;
     }
 
+    /**
+     * Авторизует пользователя в тестовом Yii-приложении.
+     */
     protected function login(User $user): void
     {
         Yii::$app->user->login($user);
     }
 
+    /**
+     * Создает репозиторий от имени пользователя и авторизует его перед сохранением.
+     *
+     * @param array{name?:string, description?:?string, lastItemId?:int} $attributes Переопределяемые поля репозитория.
+     */
     protected function createRepo(User $user, array $attributes = []): Repo
     {
         $this->login($user);
@@ -69,6 +97,11 @@ abstract class DbTestCase extends TestCase
         return $repo;
     }
 
+    /**
+     * Выдает пользователю права на репозиторий.
+     *
+     * @param int $access Битовая маска прав из RepoUser::ACCESS_*.
+     */
     protected function grantRepoAccess(Repo $repo, User $user, int $access): RepoUser
     {
         $repoUser = new RepoUser([
@@ -83,6 +116,11 @@ abstract class DbTestCase extends TestCase
         return $repoUser;
     }
 
+    /**
+     * Создает предмет в репозитории с валидатором прав и repo-scoped itemId.
+     *
+     * @param array{parentItemId?:?int, name?:string, description?:?string, isContainer?:bool|int, priority?:int} $attributes Переопределяемые поля предмета.
+     */
     protected function createItem(Repo $repo, User $user, array $attributes = []): Item
     {
         $this->login($user);
@@ -103,6 +141,11 @@ abstract class DbTestCase extends TestCase
         return $item;
     }
 
+    /**
+     * Создает инвентаризацию для контейнера.
+     *
+     * @param array{status?:int, closedBy?:?int, closed?:?int} $attributes Переопределяемые поля инвентаризации.
+     */
     protected function createInventory(Item $container, User $user, array $attributes = []): Inventory
     {
         $inventory = new Inventory([
@@ -118,6 +161,9 @@ abstract class DbTestCase extends TestCase
         return $inventory;
     }
 
+    /**
+     * Создает отметку о подтвержденном предмете внутри инвентаризации.
+     */
     protected function createInventoryItem(Inventory $inventory, Item $item, User $user): InventoryItem
     {
         $inventoryItem = new InventoryItem([
@@ -131,6 +177,9 @@ abstract class DbTestCase extends TestCase
         return $inventoryItem;
     }
 
+    /**
+     * Сохраняет ActiveRecord и сразу проваливает тест с ошибками модели, если сохранение не удалось.
+     */
     protected function saveModel(ActiveRecord $model): void
     {
         self::assertTrue(

@@ -10,8 +10,16 @@ use common\models\RepoUser;
 use common\models\User;
 use tests\phpunit\DbTestCase;
 
+/**
+ * Integration-тесты базового сохранения предметов и связанных данных.
+ *
+ * Защищают repo-scoped itemId, замену тегов и поведение soft delete в Item::find().
+ */
 final class ItemPersistenceTest extends DbTestCase
 {
+    /**
+     * Создание предметов назначает последовательные itemId внутри репозитория и обновляет счетчик repo.lastItemId.
+     */
     public function testCreatingItemsAssignsRepoScopedItemIdsAndUpdatesRepoCounter(): void
     {
         $user = $this->createUser([
@@ -41,6 +49,9 @@ final class ItemPersistenceTest extends DbTestCase
         self::assertSame(2, (int) $repo->lastItemId);
     }
 
+    /**
+     * Повторное сохранение тегов из строки заменяет старый набор тегов новым.
+     */
     public function testSavingTagsFromStringReplacesExistingTags(): void
     {
         $user = $this->createUser([
@@ -61,6 +72,9 @@ final class ItemPersistenceTest extends DbTestCase
         self::assertSame(2, (int) $item->getItemTags()->count());
     }
 
+    /**
+     * Стандартный Item::find() не возвращает мягко удаленные предметы, но findWithDeleted() их видит.
+     */
     public function testDefaultItemQueryHidesSoftDeletedItems(): void
     {
         $user = $this->createUser([

@@ -7,8 +7,16 @@ namespace tests\phpunit\unit;
 use backend\services\ItemImportService;
 use tests\phpunit\TestCase;
 
+/**
+ * Unit-тесты парсера текстового импорта предметов.
+ *
+ * Фокусируются на разборе формата без сохранения предметов в базе.
+ */
 final class ItemImportServiceTest extends TestCase
 {
+    /**
+     * Парсер понимает русские алиасы свойств и объединяет повторяющиеся описание/теги.
+     */
     public function testParseSupportsAliasesAndCombinesRepeatedProperties(): void
     {
         $result = (new ItemImportService())->parse(implode("\n", [
@@ -28,6 +36,9 @@ final class ItemImportServiceTest extends TestCase
         self::assertSame('1', $result->items[0]['container']);
     }
 
+    /**
+     * Неизвестное свойство превращается в ошибку результата с номером и текстом строки.
+     */
     public function testParseReportsUnknownPropertyLine(): void
     {
         $result = (new ItemImportService())->parse(implode("\n", [

@@ -12,8 +12,16 @@ use tests\phpunit\DbTestCase;
 use Yii;
 use yii\web\Response;
 
+/**
+ * Integration-тесты HTTP-сценариев ItemsController.
+ *
+ * Сохраняют regression-покрытие для поиска и импорта после выноса бизнес-логики в сервисы.
+ */
 final class ItemsControllerTest extends DbTestCase
 {
+    /**
+     * Поиск с позитивным и негативным словом редиректит на единственный найденный предмет.
+     */
     public function testSearchRedirectsToSingleMatchedItemByPositiveAndNegativeWords(): void
     {
         [$controller, $repo, $dviItem] = $this->prepareSearchFixture();
@@ -31,6 +39,9 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringContainsString('q=video+-hdmi', $response->headers->get('Location'));
     }
 
+    /**
+     * Подтвержденный импорт создает дочерние предметы с описанием, тегами и флагом контейнера.
+     */
     public function testImportConfirmedTextCreatesChildrenWithTagsAndContainerFlag(): void
     {
         $user = $this->createUser([
@@ -75,6 +86,11 @@ final class ItemsControllerTest extends DbTestCase
         self::assertEqualsCanonicalizing(['коробка', 'мелочи'], $box->fetchTags());
     }
 
+    /**
+     * Создает минимальный набор предметов для проверки поиска по словам и исключениям.
+     *
+     * @return array{0:ItemsController, 1:\common\models\Repo, 2:Item}
+     */
     private function prepareSearchFixture(): array
     {
         $user = $this->createUser([

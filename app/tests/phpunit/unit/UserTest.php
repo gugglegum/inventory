@@ -7,8 +7,16 @@ namespace tests\phpunit\unit;
 use common\models\User;
 use tests\phpunit\TestCase;
 
+/**
+ * Unit-тесты базовой модели пользователя.
+ *
+ * Проверяют низкоуровневые методы пароля и authKey без обращения к базе.
+ */
 final class UserTest extends TestCase
 {
+    /**
+     * Хеш пароля принимает исходный пароль и отклоняет неверный.
+     */
     public function testPasswordHashCanBeValidated(): void
     {
         $user = new User();
@@ -18,6 +26,9 @@ final class UserTest extends TestCase
         self::assertFalse($user->validatePassword('wrong-password'));
     }
 
+    /**
+     * Сгенерированный authKey проходит проверку, а произвольный ключ отклоняется.
+     */
     public function testAuthKeyCanBeGeneratedAndValidated(): void
     {
         $user = new User();

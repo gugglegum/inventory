@@ -12,8 +12,16 @@ use common\models\User;
 use tests\phpunit\DbTestCase;
 use Yii;
 
+/**
+ * Integration-тесты сервиса закрытия инвентаризации.
+ *
+ * Проверяют бизнес-эффекты сервиса без HTTP-обвязки контроллера.
+ */
 final class InventoryCloseServiceTest extends DbTestCase
 {
+    /**
+     * Подтвержденный предмет переносится в контейнер, а неподтвержденный дочерний предмет помечается отсутствующим.
+     */
     public function testCloseMovesConfirmedItemIntoContainerAndMarksMissingChildren(): void
     {
         $closedAt = 1_717_000_000;

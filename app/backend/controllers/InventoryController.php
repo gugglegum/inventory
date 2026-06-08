@@ -24,7 +24,10 @@ use yii\filters\VerbFilter;
 use yii\web\Response;
 
 /**
- * InventoryController
+ * Контроллер инвентаризаций контейнеров.
+ *
+ * Управляет списком инвентаризаций, просмотром текущей проверки, подтверждением найденных предметов
+ * и HTTP-обвязкой закрытия/удаления инвентаризации.
  */
 class InventoryController extends Controller
 {
@@ -183,6 +186,11 @@ class InventoryController extends Controller
     }
 
     /**
+     * Закрывает инвентаризацию и передает бизнес-изменения в сервисный слой.
+     *
+     * После успешного закрытия подтвержденные и отсутствующие предметы обновляются через InventoryCloseService,
+     * а пользователь возвращается на страницу контейнера.
+     *
      * @param int $repoId
      * @param int $itemId
      * @param int $inventoryId

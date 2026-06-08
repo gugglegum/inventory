@@ -7,8 +7,16 @@ namespace tests\phpunit\integration;
 use tests\phpunit\TestCase;
 use Yii;
 
+/**
+ * Smoke-тест миграций и тестовой базы данных.
+ *
+ * Проверяет, что основные таблицы приложения существуют после применения миграций на stockhub_test.
+ */
 final class SchemaTest extends TestCase
 {
+    /**
+     * Основные таблицы проекта присутствуют в схеме тестовой БД.
+     */
     public function testCoreTablesExistInTestDatabase(): void
     {
         $schema = Yii::$app->db->schema;

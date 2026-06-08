@@ -14,8 +14,16 @@ use tests\phpunit\DbTestCase;
 use Yii;
 use yii\web\Response;
 
+/**
+ * Integration-тесты инвентаризаций через формы и контроллер.
+ *
+ * Оставляют regression-покрытие HTTP-слоя поверх сервисов инвентаризации.
+ */
 final class InventoryTest extends DbTestCase
 {
+    /**
+     * Формы подтверждения/снятия подтверждения проверяют itemId в рамках текущего репозитория.
+     */
     public function testInventoryItemFormsValidateRepoScopedItemId(): void
     {
         $user = $this->createUser([
@@ -39,6 +47,9 @@ final class InventoryTest extends DbTestCase
         self::assertArrayHasKey('itemId', $unconfirmForm->getErrors());
     }
 
+    /**
+     * Контроллерный сценарий закрытия обновляет найденные и отсутствующие предметы и возвращает redirect.
+     */
     public function testClosingInventoryMarksConfirmedAndMissingItems(): void
     {
         $user = $this->createUser([

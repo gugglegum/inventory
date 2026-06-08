@@ -9,8 +9,16 @@ use common\models\RepoUser;
 use common\models\User;
 use tests\phpunit\DbTestCase;
 
+/**
+ * Integration-тесты проверки доступа к репозиториям.
+ *
+ * Фиксируют контракт ItemAccessValidator вокруг записей repo_user и битовой маски прав.
+ */
 final class AccessTest extends DbTestCase
 {
+    /**
+     * Доступ к репозиторию требует явной строки repo_user для текущего пользователя.
+     */
     public function testRepoAccessRequiresRepoUserRow(): void
     {
         $owner = $this->createUser([
@@ -30,6 +38,9 @@ final class AccessTest extends DbTestCase
         self::assertFalse($validator->hasUserAccessToRepo($repo, RepoUser::ACCESS_CREATE_ITEMS));
     }
 
+    /**
+     * Валидатор отличает разрешенные и запрещенные права внутри битовой маски доступа.
+     */
     public function testRepoAccessChecksBitmaskPermissions(): void
     {
         $user = $this->createUser([

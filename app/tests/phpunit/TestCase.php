@@ -9,14 +9,26 @@ use Yii;
 use yii\helpers\ArrayHelper;
 use yii\web\Application;
 
+/**
+ * Базовый PHPUnit-класс для тестов, которым нужен тестовый Yii backend application.
+ *
+ * Создает приложение перед каждым тестом и гарантированно уничтожает его после теста,
+ * чтобы состояние Yii::$app и request-параметры не протекали между сценариями.
+ */
 abstract class TestCase extends BaseTestCase
 {
+    /**
+     * Создает тестовое Yii-приложение перед выполнением сценария.
+     */
     protected function setUp(): void
     {
         parent::setUp();
         $this->mockApplication();
     }
 
+    /**
+     * Возвращает request в безопасное состояние и уничтожает Yii-приложение.
+     */
     protected function tearDown(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -24,16 +36,27 @@ abstract class TestCase extends BaseTestCase
         parent::tearDown();
     }
 
+    /**
+     * Возвращает базовую конфигурацию приложения для тестов.
+     */
     protected function appConfig(): array
     {
         return require __DIR__ . '/config/backend.php';
     }
 
+    /**
+     * Создает Yii backend application с возможностью точечно переопределить конфигурацию.
+     *
+     * @param array $config Дополнительная конфигурация, объединяемая с базовой тестовой.
+     */
     protected function mockApplication(array $config = []): Application
     {
         return new Application(ArrayHelper::merge($this->appConfig(), $config));
     }
 
+    /**
+     * Закрывает соединение с БД и сбрасывает глобальный Yii::$app.
+     */
     protected function destroyApplication(): void
     {
         if (Yii::$app !== null) {
@@ -43,6 +66,11 @@ abstract class TestCase extends BaseTestCase
         Yii::$app = null;
     }
 
+    /**
+     * Переключает тестовый request в GET-режим с заданными query-параметрами.
+     *
+     * @param array $queryParams GET-параметры для текущего тестового запроса.
+     */
     protected function setGetRequest(array $queryParams = []): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -50,6 +78,12 @@ abstract class TestCase extends BaseTestCase
         Yii::$app->request->setBodyParams([]);
     }
 
+    /**
+     * Переключает тестовый request в POST-режим с заданными body/query-параметрами.
+     *
+     * @param array $bodyParams POST-параметры тела запроса.
+     * @param array $queryParams GET-параметры текущего запроса.
+     */
     protected function setPostRequest(array $bodyParams = [], array $queryParams = []): void
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';

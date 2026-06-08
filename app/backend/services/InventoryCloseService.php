@@ -11,9 +11,23 @@ use common\models\Item;
 use yii\base\Exception;
 use yii\web\User;
 
+/**
+ * Закрывает инвентаризацию контейнера и переносит результаты проверки в состояние предметов.
+ *
+ * Подтвержденные предметы отмечаются как найденные и привязываются к контейнеру инвентаризации.
+ * Неподтвержденные дочерние предметы контейнера отмечаются как отсутствующие. Вся операция выполняется в транзакции.
+ */
 final class InventoryCloseService
 {
     /**
+     * Закрывает инвентаризацию как одну атомарную бизнес-операцию.
+     *
+     * @param Inventory $inventory Закрываемая инвентаризация.
+     * @param Item $container Контейнер, внутри которого проводилась инвентаризация.
+     * @param User $user Пользователь, закрывающий инвентаризацию.
+     * @param ItemAccessValidator $itemAccessValidator Валидатор прав, который будет передан изменяемым предметам.
+     * @param ?int $closedAt Фиксированное время закрытия; полезно для тестов. Если не задано, используется текущее время.
+     *
      * @throws Exception
      * @throws \yii\db\Exception
      * @throws \Throwable
@@ -38,6 +52,8 @@ final class InventoryCloseService
     }
 
     /**
+     * Выполняет изменения предметов и инвентаризации внутри уже открытой транзакции.
+     *
      * @throws Exception
      * @throws \yii\db\Exception
      */
@@ -90,6 +106,8 @@ final class InventoryCloseService
     }
 
     /**
+     * Сохраняет предмет и превращает ошибки валидации в информативное исключение.
+     *
      * @throws Exception
      * @throws \yii\db\Exception
      */

@@ -11,8 +11,18 @@ use common\models\Repo;
 use yii\base\Exception;
 use yii\web\User;
 
+/**
+ * Разбирает текстовый импорт предметов и создает дочерние предметы после подтверждения пользователем.
+ *
+ * Поддерживает строки названий, короткие маркеры описания/тегов и свойства в формате `* ключ: значение`.
+ */
 final class ItemImportService
 {
+    /**
+     * Алиасы пользовательских названий свойств к внутренним ключам импорта.
+     *
+     * @var array<string, string>
+     */
     private const array PROPERTY_ALIASES = [
         'метки' => 'tags',
         'теги' => 'tags',
@@ -24,6 +34,11 @@ final class ItemImportService
         'конт' => 'container',
     ];
 
+    /**
+     * Набор свойств, которые разрешено задавать в строках `* ключ: значение`.
+     *
+     * @var list<string>
+     */
     private const array SUPPORTED_PROPERTIES = [
         'description',
         'tags',
@@ -31,6 +46,15 @@ final class ItemImportService
     ];
 
     /**
+     * Разбирает текст импорта и, если пользователь подтвердил операцию, создает предметы внутри родительского контейнера.
+     *
+     * @param Repo $repo Репозиторий, в котором создаются предметы.
+     * @param Item $parentItem Родительский контейнер для импортируемых предметов.
+     * @param ?string $text Пользовательский текст импорта.
+     * @param bool $confirm Нужно ли сохранять распознанные предметы в базе.
+     * @param User $user Текущий пользователь, который будет записан как автор созданных предметов.
+     * @param ItemAccessValidator $itemAccessValidator Валидатор прав для создаваемых предметов.
+     *
      * @throws Exception
      * @throws \yii\db\Exception
      */
@@ -81,6 +105,15 @@ final class ItemImportService
         );
     }
 
+    /**
+     * Разбирает текст импорта в список предметов без сохранения в базе.
+     *
+     * Поддерживаемый формат:
+     * - строка без префикса начинает новый предмет и задает его название;
+     * - `!текст` добавляет строку описания;
+     * - `#теги` добавляет теги;
+     * - `* свойство: значение` задает описание, теги или флаг контейнера.
+     */
     public function parse(string $text): ItemImportResult
     {
         /** @var list<array{name:string, description?:string, tags?:string, container?:string}> $items */

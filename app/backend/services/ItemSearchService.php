@@ -5,15 +5,30 @@ declare(strict_types=1);
 namespace backend\services;
 
 use common\models\Item;
+use common\models\ItemQuery;
 use common\models\ItemTag;
 use common\models\Repo;
 
+/**
+ * Выполняет поиск предметов внутри репозитория и готовит данные для отображения результатов.
+ *
+ * Сервис понимает позитивные слова, негативные слова с префиксом `-`, прямой поиск по itemId
+ * и ограничение результатов контекстом выбранного контейнера.
+ */
 final class ItemSearchService
 {
+    /**
+     * Максимальное число найденных предметов, возвращаемых в один результат поиска.
+     */
     private const int MAX_RESULTS = 2000;
 
     /**
-     * @param string|int|null $itemId
+     * Ищет предметы в репозитории по текстовой строке и/или внутреннему ID предмета.
+     *
+     * @param Repo $repo Репозиторий, внутри которого выполняется поиск.
+     * @param ?string $queryString Поисковая строка с позитивными и негативными словами.
+     * @param ?Item $container Контейнер, которым нужно ограничить результаты поиска.
+     * @param string|int|null $itemId Внутренний ID предмета в репозитории.
      */
     public function search(Repo $repo, ?string $queryString, ?Item $container, string|int|null $itemId): ItemSearchResult
     {
@@ -74,7 +89,9 @@ final class ItemSearchService
     }
 
     /**
-     * @return Item[]
+     * Ищет контейнеры по строке запроса для выбора родительского предмета.
+     *
+     * @return Item[] Найденные предметы-контейнеры.
      */
     public function searchContainers(Repo $repo, string $queryString): array
     {
@@ -94,7 +111,9 @@ final class ItemSearchService
     }
 
     /**
-     * @return string[]
+     * Разбивает пользовательскую строку поиска на непустые слова.
+     *
+     * @return string[] Слова запроса.
      */
     private function splitQuery(string $queryString): array
     {
@@ -105,9 +124,14 @@ final class ItemSearchService
     }
 
     /**
-     * @param string[] $queryWords
+     * Добавляет в ActiveQuery условия по позитивным и негативным словам поиска.
+     *
+     * @param ItemQuery $query Запрос предметов, который будет изменен на месте.
+     * @param string[] $queryWords Слова запроса; слова с префиксом `-` исключают совпадения.
+     *
+     * @return bool True, если в запросе было хотя бы одно позитивное условие.
      */
-    private function applyWordConditions(\common\models\ItemQuery $query, array $queryWords): bool
+    private function applyWordConditions(ItemQuery $query, array $queryWords): bool
     {
         $hasPositiveCondition = false;
         $i = 0;
@@ -134,6 +158,11 @@ final class ItemSearchService
         return $hasPositiveCondition;
     }
 
+    /**
+     * Строит путь от предмета вверх по родительским контейнерам для хлебных крошек результата поиска.
+     *
+     * @return array<int, array{itemId:int, repoId:int, label:string, url:array}>
+     */
     private function getItemPathForView(Item $item, Repo $repo): array
     {
         $path = [];
