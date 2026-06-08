@@ -43,7 +43,7 @@ fastcgi_pass stockhub-php:9000;
 
 ## Приложение
 
-Проект основан на Yii 2 Advanced Application Template. `composer.json` находится в `app/`. Минимальное требование в Composer - PHP `>=8.0.0`, а текущий Docker-образ использует `php:8.4-fpm`.
+Проект основан на Yii 2 Advanced Application Template. `composer.json` находится в `app/`. Минимальное требование в Composer - PHP `>=8.4`, а текущий Docker-образ использует `php:8.4-fpm`.
 
 Ключевые зависимости и расширения:
 
@@ -82,7 +82,7 @@ docker compose exec php ./yii migrate/history 10
 
 ## Тесты
 
-Для новой разработки добавлена отдельная PHPUnit-инфраструктура в `app/tests/phpunit/`. Она не использует старую Codeception-обвязку из шаблона Yii Advanced.
+Для новой разработки добавлена отдельная PHPUnit-инфраструктура в `app/tests/phpunit/`. Она не использует старую Codeception-обвязку из шаблона Yii Advanced. Тесты ориентированы на PHPUnit 13 и PHP 8.4.
 
 Тесты запускаются внутри PHP-контейнера и используют отдельную базу `stockhub_test`. Тестовый Yii-конфиг находится в `app/tests/phpunit/config/` и не подключает обычные `main-local.php`, чтобы случайно не работать с локальной рабочей базой `stockhub`.
 
@@ -105,6 +105,8 @@ docker compose exec php ./vendor/bin/phpunit -c phpunit.xml
 
 Первый рефакторинг после появления тестов вынес поиск и импорт из `ItemsController` в сервисы `backend/services/ItemSearchService.php` и `backend/services/ItemImportService.php`. Контроллер после этого отвечает в основном за HTTP-параметры, редиректы и render, а сервисы - за построение поискового результата, разбор текста импорта и создание импортируемых предметов.
 
+Следующий шаг вынес закрытие инвентаризации из `InventoryController::actionClose()` в `backend/services/InventoryCloseService.php`. Сервис обновляет подтвержденные предметы, возвращает их в контейнер инвентаризации, отмечает неподтвержденные дочерние предметы как отсутствующие и закрывает саму инвентаризацию. Операция выполняется в транзакции, чтобы не оставить инвентаризацию частично закрытой при ошибке сохранения. Для сервиса добавлен прямой integration-тест `tests/phpunit/integration/InventoryCloseServiceTest.php`, а контроллерный тест закрытия инвентаризации остался regression-защитой HTTP-слоя.
+
 ## Git и локальные файлы
 
 В корневом `.gitignore` намеренно игнорируются:
@@ -124,4 +126,4 @@ docker compose exec php ./vendor/bin/phpunit -c phpunit.xml
 
 После переноса корня репозитория приложение успешно запускалось из корня проекта через Docker Compose. Контейнеры `stockhub-db`, `stockhub-nginx` и `stockhub-php` поднимались, `stockhub.lc` отвечал редиректом на страницу входа, Yii видел историю миграций, а новых миграций к применению не было.
 
-`composer validate` проходил без ошибок, но показывал предупреждения о незафиксированных версиях (`*`) у `yiisoft/yii2-swiftmailer` и `kartik-v/yii2-widget-datetimepicker`. `requirements.php` не находил критических ошибок, но предупреждал об отсутствующих/необязательных компонентах вроде `intl/ICU`, `pcntl`, `memcache/APC`, `ImageMagick` и включенном `expose_php`.
+`composer validate` проходит без ошибок. Ранее предупреждения о незафиксированных версиях (`*`) у `yiisoft/yii2-swiftmailer` и `kartik-v/yii2-widget-datetimepicker` были закрыты явными ограничениями. Yii обновлен до ветки `2.0.55`, PHPUnit - до `13.2`. `requirements.php` не находил критических ошибок, но предупреждал об отсутствующих/необязательных компонентах вроде `intl/ICU`, `pcntl`, `memcache/APC` и `ImageMagick`; `expose_php` был отключен отдельно.

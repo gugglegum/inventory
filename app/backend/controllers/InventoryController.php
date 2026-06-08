@@ -6,6 +6,7 @@ namespace backend\controllers;
 
 use backend\models\InventoryItemConfirmForm;
 use backend\models\InventoryItemUnconfirmForm;
+use backend\services\InventoryCloseService;
 use common\components\ItemAccessValidator;
 use common\models\Inventory;
 use common\models\InventoryItem;
@@ -189,6 +190,7 @@ class InventoryController extends Controller
      * @throws ForbiddenHttpException
      * @throws NotFoundHttpException
      * @throws \yii\db\Exception
+     * @throws \Throwable
      */
     public function actionClose(int $repoId, int $itemId, int $inventoryId): Response|string
     {
@@ -196,33 +198,13 @@ class InventoryController extends Controller
         $container = $this->findItem($repo->id, $itemId);
         $inventory = $this->findInventory($container->id, $inventoryId);
 
-        // Подтверждённые предметы
-        foreach ($inventory->inventoryItems as $inventoryItem) {
-            $item = $inventoryItem->item;
-            $item->setItemAccessValidator($this->getItemAccessValidator());
-            $item->scenario = Item::SCENARIO_UPDATE;
-            $item->lastSeen = $inventoryItem->created;
-            $item->lastSeenBy = $inventoryItem->createdBy;
-            $item->missingSince = null;
-            $item->parentItemId = $container->itemId;
-            $item->save();
-        }
-        /** @var Item[] $inventoryItems */
-        $inventoryItems = $container->getItems()->innerJoinWith('inventoryItems')->where(['inventory_item.inventoryId' => $inventory->id])->all();
-        /** @var Item[] $containerItems */
-        $containerItems = $container->getItems()->andWhere(['NOT IN', 'id', ArrayHelper::getColumn($inventoryItems, 'id')])->all();
-        $now = time();
-        foreach ($containerItems as $item) {
-            $item->setItemAccessValidator($this->getItemAccessValidator());
-            $item->scenario = Item::SCENARIO_UPDATE;
-            $item->missingSince = $now;
-            $item->missingSinceBy = $this->getLoggedUser()->id;
-            $item->save();
-        }
-        $inventory->status = Inventory::STATUS_CLOSED;
-        $inventory->closed = $now;
-        $inventory->closedBy = $this->getLoggedUser()->id;
-        $inventory->save();
+        (new InventoryCloseService())->close(
+            $inventory,
+            $container,
+            $this->getLoggedUser(),
+            $this->getItemAccessValidator(),
+        );
+
         return $this->redirect(['items/view', 'repoId' => $repo->id, 'itemId' => $container->itemId]);
     }
 
