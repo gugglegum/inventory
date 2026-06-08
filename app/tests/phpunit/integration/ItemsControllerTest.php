@@ -87,6 +87,74 @@ final class ItemsControllerTest extends DbTestCase
     }
 
     /**
+     * POST create создает предмет и сохраняет теги через общую обработку формы предмета.
+     */
+    public function testCreatePostCreatesItemWithTags(): void
+    {
+        [$controller, $repo, $parent] = $this->prepareItemFormFixture();
+        $_FILES = [];
+
+        $this->setPostRequest([
+            'Item' => [
+                'name' => 'Новый предмет',
+                'description' => 'Описание нового предмета',
+                'parentItemId' => $parent->itemId,
+                'isContainer' => '0',
+                'priority' => '7',
+            ],
+            'ItemTagsForm' => [
+                'tags' => 'новый, проверка',
+            ],
+        ]);
+
+        $response = $controller->actionCreate($repo->id, $parent->itemId);
+
+        $item = Item::findOne(['repoId' => $repo->id, 'name' => 'Новый предмет']);
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(302, $response->statusCode);
+        self::assertNotNull($item);
+        self::assertStringContainsString("/repo/{$repo->id}/items/{$item->itemId}", $response->headers->get('Location'));
+        self::assertSame((int) $parent->itemId, (int) $item->parentItemId);
+        self::assertEqualsCanonicalizing(['новый', 'проверка'], $item->fetchTags());
+    }
+
+    /**
+     * POST update обновляет предмет и заменяет его теги через общую обработку формы предмета.
+     */
+    public function testUpdatePostUpdatesItemAndReplacesTags(): void
+    {
+        [$controller, $repo, $parent, $item] = $this->prepareItemFormFixture();
+        $item->saveTagsFromString('старый, тег');
+        $_FILES = [];
+
+        $this->setPostRequest([
+            'Item' => [
+                'name' => 'Обновленный предмет',
+                'description' => 'Новое описание',
+                'parentItemId' => $parent->itemId,
+                'isContainer' => '0',
+                'priority' => '3',
+                'itemId' => $item->itemId,
+            ],
+            'ItemTagsForm' => [
+                'tags' => 'обновленный, тег',
+            ],
+        ]);
+
+        $response = $controller->actionUpdate($repo->id, $item->itemId);
+
+        $item->refresh();
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(302, $response->statusCode);
+        self::assertStringContainsString("/repo/{$repo->id}/items/{$item->itemId}", $response->headers->get('Location'));
+        self::assertSame('Обновленный предмет', $item->name);
+        self::assertSame('Новое описание', $item->description);
+        self::assertEqualsCanonicalizing(['обновленный', 'тег'], $item->fetchTags());
+    }
+
+    /**
      * POST delete без hardDelete мягко удаляет предмет и редиректит к родительскому контейнеру.
      */
     public function testDeletePostSoftDeletesItemAndRedirectsToParent(): void
@@ -165,6 +233,34 @@ final class ItemsControllerTest extends DbTestCase
         Yii::$app->controller = $controller;
 
         return [$controller, $repo, $dviItem];
+    }
+
+    /**
+     * Создает контейнер и предмет для проверки create/update форм.
+     *
+     * @return array{0:ItemsController, 1:\common\models\Repo, 2:Item, 3:Item}
+     */
+    private function prepareItemFormFixture(): array
+    {
+        $user = $this->createUser([
+            'access' => User::ACCESS_CREATE_REPO,
+        ]);
+        $repo = $this->createRepo($user);
+        $this->grantRepoAccess($repo, $user, RepoUser::ACCESS_CREATE_ITEMS | RepoUser::ACCESS_EDIT_ITEMS);
+
+        $parent = $this->createItem($repo, $user, [
+            'name' => 'Контейнер',
+            'isContainer' => true,
+        ]);
+        $item = $this->createItem($repo, $user, [
+            'name' => 'Редактируемый предмет',
+            'parentItemId' => $parent->itemId,
+        ]);
+
+        $controller = new ItemsController('items', Yii::$app);
+        Yii::$app->controller = $controller;
+
+        return [$controller, $repo, $parent, $item];
     }
 
     /**

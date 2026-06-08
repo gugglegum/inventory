@@ -6,14 +6,13 @@ namespace backend\controllers;
 use backend\models\ItemDeleteForm;
 use backend\models\ItemTagsForm;
 use backend\services\ItemDeletionService;
+use backend\services\ItemFormAssetService;
 use backend\services\ItemImportService;
 use backend\services\ItemSearchService;
 use common\components\ItemAccessValidator;
-use common\models\Photo;
 use common\models\Repo;
 use Yii;
 use common\models\Item;
-use common\models\ItemPhoto;
 use yii\base\Exception;
 use yii\filters\AccessControl;
 use yii\helpers\Url;
@@ -247,30 +246,8 @@ class ItemsController extends Controller
         if (Yii::$app->request->isPost) {
             /** @noinspection NestedPositiveIfStatementsInspection */
             if ($item->load(Yii::$app->request->post()) && $item->save()) {
+                (new ItemFormAssetService())->save($item, $tagsForm, Yii::$app->request->post(), $_FILES);
 
-                if ($tagsForm->load(Yii::$app->request->post())) {
-                    $item->saveTagsFromString($tagsForm->tags);
-                }
-
-                $tmpNames = $_FILES['photos']['tmp_name'];
-
-                $sortIndex = 0;
-                foreach ($tmpNames as $photoId => $photoValue) {
-                    if ($photoValue === '') {
-                        continue;
-                    }
-                    if (array_key_exists($photoId, $tmpNames)) {
-                        $photo = new Photo();
-                        $photo->assignFile($_FILES['photos']['tmp_name'][$photoId]);
-                        $photo->save();
-                        $itemPhoto = new ItemPhoto();
-                        $itemPhoto->itemId = $item->id;
-                        $itemPhoto->photoId = $photo->id;
-                        $itemPhoto->sortIndex = $sortIndex;
-                        $itemPhoto->save();
-                        $sortIndex++;
-                    }
-                }
                 return $this->redirect($goto === 'create'
                     ? ['items/create', 'repoId' => $repo->id, 'parentItemId' => $parentItemId, 'goto' => $goto]
                     : ['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
@@ -309,27 +286,8 @@ class ItemsController extends Controller
         if (Yii::$app->request->isPost) {
             /** @noinspection NestedPositiveIfStatementsInspection */
             if ($item->load(Yii::$app->request->post()) && $item->save()) {
+                (new ItemFormAssetService())->save($item, $tagsForm, Yii::$app->request->post(), $_FILES);
 
-                if ($tagsForm->load(Yii::$app->request->post())) {
-                    $item->saveTagsFromString($tagsForm->tags);
-                }
-
-                $tmpNames = $_FILES['photos']['tmp_name'];
-
-                foreach ($tmpNames as $photoId => $photoValue) {
-                    if ($photoValue === '') { // Check "upload_max_filesize"
-                        continue;
-                    }
-                    if (array_key_exists($photoId, $tmpNames)) {
-                        $photo = new Photo();
-                        $photo->assignFile($_FILES['photos']['tmp_name'][$photoId]);
-                        $photo->save();
-                        $itemPhoto = new ItemPhoto();
-                        $itemPhoto->itemId = $item->id;
-                        $itemPhoto->photoId = $photo->id;
-                        $itemPhoto->save();
-                    }
-                }
                 return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
             }
         }

@@ -19,10 +19,10 @@ return [
     ],
     'params' => [
         'photos' => [
-            'storagePath' => '@phpunitTests/_runtime/photos',
-            'storageTemp' => '@phpunitTests/_runtime/photos/temp',
-            'thumbnailPath' => '@phpunitTests/_runtime/thumbnails',
-            'thumbnailTemp' => '@phpunitTests/_runtime/thumbnails/temp',
+            'storagePath' => dirname(__DIR__) . '/_runtime/photos',
+            'storageTemp' => dirname(__DIR__) . '/_runtime/photos/temp',
+            'thumbnailPath' => dirname(__DIR__) . '/_runtime/thumbnails',
+            'thumbnailTemp' => dirname(__DIR__) . '/_runtime/thumbnails/temp',
             'md5salt' => 'test-salt',
         ],
     ],
