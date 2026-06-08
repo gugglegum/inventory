@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $params = yii\helpers\ArrayHelper::merge(
     require dirname(__DIR__, 3) . '/common/config/params.php',
     require dirname(__DIR__, 3) . '/backend/config/params.php',
