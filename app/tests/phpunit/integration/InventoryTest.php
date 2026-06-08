@@ -49,6 +49,50 @@ final class InventoryTest extends DbTestCase
     }
 
     /**
+     * POST create открывает новую инвентаризацию контейнера и возвращает redirect на ее страницу.
+     */
+    public function testCreatePostOpensInventoryAndRedirectsToView(): void
+    {
+        [$controller, $repo, $container] = $this->prepareInventoryContainerFixture();
+
+        $this->setPostRequest();
+
+        $response = $controller->actionCreate($repo->id, $container->itemId);
+
+        $inventory = Inventory::findOne(['containerId' => $container->id]);
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(302, $response->statusCode);
+        self::assertNotNull($inventory);
+        self::assertSame(Inventory::STATUS_OPENED, (int) $inventory->status);
+        self::assertSame((int) Yii::$app->user->id, (int) $inventory->createdBy);
+        self::assertStringContainsString(
+            "/repo/{$repo->id}/items/{$container->itemId}/inventory/{$inventory->id}",
+            $response->headers->get('Location')
+        );
+    }
+
+    /**
+     * POST delete удаляет инвентаризацию и возвращает redirect к списку инвентаризаций контейнера.
+     */
+    public function testDeletePostRemovesInventoryAndRedirectsToIndex(): void
+    {
+        [$controller, $repo, $container, $item, $inventory] = $this->prepareOpenedInventoryFixture();
+
+        $this->setPostRequest();
+
+        $response = $controller->actionDelete($repo->id, $container->itemId, $inventory->id);
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(302, $response->statusCode);
+        self::assertStringContainsString(
+            "/repo/{$repo->id}/items/{$container->itemId}/inventory",
+            $response->headers->get('Location')
+        );
+        self::assertNull(Inventory::findOne($inventory->id));
+    }
+
+    /**
      * POST confirm на странице инвентаризации создает отметку о найденном предмете и возвращает redirect.
      */
     public function testInventoryViewConfirmPostCreatesInventoryItem(): void
@@ -163,11 +207,11 @@ final class InventoryTest extends DbTestCase
     }
 
     /**
-     * Создает открытую инвентаризацию с одним неподтвержденным предметом и готовым контроллером.
+     * Создает контейнер и готовый контроллер для сценариев создания инвентаризации.
      *
-     * @return array{0:InventoryController, 1:\common\models\Repo, 2:\common\models\Item, 3:\common\models\Item, 4:Inventory, 5:User}
+     * @return array{0:InventoryController, 1:\common\models\Repo, 2:\common\models\Item, 3:User}
      */
-    private function prepareOpenedInventoryFixture(): array
+    private function prepareInventoryContainerFixture(): array
     {
         $user = $this->createUser([
             'access' => User::ACCESS_CREATE_REPO,
@@ -179,13 +223,26 @@ final class InventoryTest extends DbTestCase
             'name' => 'Контейнер',
             'isContainer' => true,
         ]);
+        $controller = new InventoryController('inventory', Yii::$app);
+        Yii::$app->controller = $controller;
+
+        return [$controller, $repo, $container, $user];
+    }
+
+    /**
+     * Создает открытую инвентаризацию с одним неподтвержденным предметом и готовым контроллером.
+     *
+     * @return array{0:InventoryController, 1:\common\models\Repo, 2:\common\models\Item, 3:\common\models\Item, 4:Inventory, 5:User}
+     */
+    private function prepareOpenedInventoryFixture(): array
+    {
+        [$controller, $repo, $container, $user] = $this->prepareInventoryContainerFixture();
+
         $item = $this->createItem($repo, $user, [
             'name' => 'Проверяемый предмет',
             'parentItemId' => $container->itemId,
         ]);
         $inventory = $this->createInventory($container, $user);
-        $controller = new InventoryController('inventory', Yii::$app);
-        Yii::$app->controller = $controller;
 
         return [$controller, $repo, $container, $item, $inventory, $user];
     }

@@ -111,6 +111,8 @@ docker compose exec php ./vendor/bin/phpunit -c phpunit.xml
 
 Read-часть `InventoryController::actionView()` вынесена в `backend/services/InventoryViewDataService.php`. Сервис готовит `confirmedItems`, `notConfirmedItems` и `paths` для шаблона `inventory/view`, а DTO `backend/services/InventoryViewData.php` переносит эти данные обратно в контроллер. Контракт сервиса покрыт `tests/phpunit/integration/InventoryViewDataServiceTest.php`, включая случай, когда в инвентаризации еще нет подтвержденных предметов.
 
+Открытие и удаление инвентаризаций вынесены из `InventoryController::actionCreate()` и `InventoryController::actionDelete()` в `backend/services/InventoryLifecycleService.php`. Контроллерные сценарии создания/удаления покрыты в `tests/phpunit/integration/InventoryTest.php`, а прямой контракт сервиса - в `tests/phpunit/integration/InventoryLifecycleServiceTest.php`.
+
 ## Git и локальные файлы
 
 В корневом `.gitignore` намеренно игнорируются:

@@ -8,6 +8,7 @@ use backend\models\InventoryItemConfirmForm;
 use backend\models\InventoryItemUnconfirmForm;
 use backend\services\InventoryCloseService;
 use backend\services\InventoryItemConfirmationService;
+use backend\services\InventoryLifecycleService;
 use backend\services\InventoryViewDataService;
 use common\components\ItemAccessValidator;
 use common\models\Inventory;
@@ -154,21 +155,9 @@ class InventoryController extends Controller
     {
         $repo = $this->findRepo($repoId);
         $container = $this->findItem($repo->id, $itemId);
-        $inventory = new Inventory();
-//        $inventory->scenario = Post::SCENARIO_CREATE;
-//        $post->setItemAccessValidator($this->getItemAccessValidator());
-        $inventory->containerId = $container->id;
-        $inventory->status = Inventory::STATUS_OPENED;
-        $inventory->createdBy = $this->getLoggedUser()->id;
 
-        if (Yii::$app->request->isPost) {
-            if (!$inventory->save()) {
-                if ($inventory->hasErrors()) {
-                    $firstErrors = $inventory->getFirstErrors();
-                    throw new Exception(reset($firstErrors));
-                }
-            }
-        }
+        $inventory = (new InventoryLifecycleService())->open($container, $this->getLoggedUser());
+
         return $this->redirect(['inventory/view', 'repoId' => $repo->id, 'itemId' => $container->itemId, 'inventoryId' => $inventory->id]);
     }
 
@@ -221,11 +210,8 @@ class InventoryController extends Controller
         $container = $this->findItem($repo->id, $itemId);
         $inventory = $this->findInventory($container->id, $inventoryId);
 
-        if (Yii::$app->request->isPost) {
-            if ($inventory->delete() === false) {
-                throw new Exception('Failed to delete inventory');
-            }
-        }
+        (new InventoryLifecycleService())->delete($inventory);
+
         return $this->redirect(['inventory/index', 'repoId' => $repo->id, 'itemId' => $container->itemId]);
     }
 
