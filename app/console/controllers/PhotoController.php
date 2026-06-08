@@ -2,7 +2,7 @@
 
 namespace console\controllers;
 
-use common\models\ItemPhoto;
+use common\models\Photo;
 use Yii;
 use yii\base\Exception;
 use yii\console\Controller;
@@ -40,7 +40,7 @@ class PhotoController extends Controller
     public function actionRelocate()
     {
         $counter = 0;
-        $photos = ItemPhoto::find()->all();
+        $photos = Photo::find()->all();
         echo 'Moving ' . count($photos) . " photos\n";
         foreach ($photos as $photo) {
             $oldFile = Yii::$app->params['photos']['storagePath'] . '/' . self::getOldFileRelativePath($photo->id);

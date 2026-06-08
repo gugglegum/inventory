@@ -2,7 +2,7 @@
 
 namespace console\controllers;
 
-use common\models\ItemPhoto;
+use common\models\Photo;
 use Yii;
 use yii\console\Controller;
 
@@ -19,7 +19,7 @@ class ThumbnailsController extends Controller
     public function actionCreate(int $width, int $height, bool $upscale, bool $crop, int $quality)
     {
         $counter = 0;
-        $photos = ItemPhoto::find()->all();
+        $photos = Photo::find()->all();
         foreach ($photos as $photo) {
             if (!file_exists($photo->getThumbnailFile($width, $height, $upscale, $crop, $quality))) {
                 echo "{$photo->id}: ";
