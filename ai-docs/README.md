@@ -131,6 +131,8 @@ Read-часть `InventoryController::actionView()` вынесена в `backend
 
 Общий access/context lookup repo-aware контроллеров вынесен в `backend/controllers/RepoAwareController.php`. `ItemsController`, `PostsController`, `InventoryController` и `RepoController` наследуются от него и используют общие protected helpers `findRepo()`, `findItem()`, `findParentItem()`, `findRepoUser()`, `getItemAccessValidator()` и `getLoggedUser()`. Это закрыло прежнюю пометку о дублировании в `RepoController` и убрало повторяющиеся private helper-методы из нескольких контроллеров. Прямой контракт базового контроллера покрыт `tests/phpunit/integration/RepoAwareControllerTest.php`, а существующие controller-тесты остаются regression-защитой HTTP-слоя.
 
+Read-side ветки `ItemsController::actionIndex()`, `ItemsController::actionPickContainer()` и `ItemsController::actionSearchContainer()` вынесены в `backend/services/ItemListService.php`. Сервис возвращает корневые предметы репозитория, готовит данные модального выбора контейнера через DTO `backend/services/ItemContainerPickerData.php` и делегирует поиск контейнеров существующему `ItemSearchService`. Контракт покрыт `tests/phpunit/integration/ItemListServiceTest.php`, а HTTP-render регрессии index/pick-container/search-container добавлены в `tests/phpunit/integration/ItemsControllerTest.php`.
+
 ## Git и локальные файлы
 
 В корневом `.gitignore` намеренно игнорируются:

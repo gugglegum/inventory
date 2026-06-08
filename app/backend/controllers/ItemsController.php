@@ -9,9 +9,9 @@ use backend\services\ItemDeletionService;
 use backend\services\ItemFormAssetService;
 use backend\services\ItemFormService;
 use backend\services\ItemImportService;
+use backend\services\ItemListService;
 use backend\services\ItemSearchService;
 use backend\services\ItemViewDataService;
-use common\models\Item;
 use Yii;
 use yii\base\Exception;
 use yii\filters\AccessControl;
@@ -69,13 +69,7 @@ class ItemsController extends RepoAwareController
     public function actionIndex(int $repoId): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $rootItems = Item::find()
-            ->andWhere([
-                'repoId' => $repo->id,
-                'parentItemId' => null,
-            ])
-            ->orderBy(['priority' => SORT_DESC, 'isContainer' => SORT_DESC, 'id' => SORT_ASC])
-            ->all();
+        $rootItems = (new ItemListService())->findRootItems($repo);
 
         return $this->render('index', [
             'repo' => $repo,
@@ -93,19 +87,12 @@ class ItemsController extends RepoAwareController
     public function actionPickContainer(int $repoId, ?string $itemId = null): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $query = Item::find()
-            ->where(['repoId' => $repo->id])
-            ->andWhere('isContainer != 0')
-            ->orderBy(['priority' => SORT_DESC, 'id' => SORT_ASC]);
-        $parentContainer = $itemId ? (clone $query)->andWhere('itemId = :containerId', ['containerId' => $itemId])->one() : null;
-        $containers = $itemId
-            ? (clone $query)->andWhere('parentItemId = :containerId', ['containerId' => $itemId])->all()
-            : (clone $query)->andWhere('parentItemId IS NULL')->all();
+        $pickerData = (new ItemListService())->prepareContainerPicker($repo, $itemId);
         $this->layout = 'blank';
         return $this->render('pick-container', [
-            'parentContainerItemId' => $itemId,
-            'parentContainer' => $parentContainer,
-            'containers' => $containers,
+            'parentContainerItemId' => $pickerData->parentContainerItemId,
+            'parentContainer' => $pickerData->parentContainer,
+            'containers' => $pickerData->containers,
             'repo' => $repo,
         ]);
     }
@@ -121,7 +108,7 @@ class ItemsController extends RepoAwareController
     {
         $repo = $this->findRepo($repoId);
         $queryString = Yii::$app->request->getQueryParam('q', '');
-        $containers = (new ItemSearchService())->searchContainers($repo, $queryString);
+        $containers = (new ItemListService())->searchContainers($repo, $queryString);
         $this->layout = 'blank';
         return $this->render('search-container', [
             'containers' => $containers,

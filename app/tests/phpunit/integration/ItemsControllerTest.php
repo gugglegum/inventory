@@ -20,6 +20,59 @@ use yii\web\Response;
 final class ItemsControllerTest extends DbTestCase
 {
     /**
+     * GET index рендерит корневой список предметов репозитория.
+     */
+    public function testIndexRendersRootItemList(): void
+    {
+        [$controller, $repo, $rootContainer, $rootItem] = $this->prepareItemListFixture();
+
+        $this->setGetRequest();
+
+        $response = $controller->actionIndex($repo->id);
+
+        self::assertIsString($response);
+        self::assertStringContainsString($repo->name, $response);
+        self::assertStringContainsString($rootContainer->name, $response);
+        self::assertStringContainsString($rootItem->name, $response);
+    }
+
+    /**
+     * GET pick-container рендерит выбранный контейнер и его дочерние контейнеры.
+     */
+    public function testPickContainerRendersSelectedContainerLevel(): void
+    {
+        [$controller, $repo, $rootContainer, , $childContainer] = $this->prepareItemListFixture();
+
+        $this->setGetRequest();
+
+        $response = $controller->actionPickContainer($repo->id, (string) $rootContainer->itemId);
+
+        self::assertIsString($response);
+        self::assertSame('blank', $controller->layout);
+        self::assertStringContainsString($rootContainer->name, $response);
+        self::assertStringContainsString($childContainer->name, $response);
+        self::assertStringContainsString('Выбрать', $response);
+    }
+
+    /**
+     * GET search-container рендерит результаты поиска только среди контейнеров.
+     */
+    public function testSearchContainerRendersOnlyMatchingContainers(): void
+    {
+        [$controller, $repo, , , , $matchingContainer, $nonContainer] = $this->prepareItemListFixture();
+
+        $this->setGetRequest(['q' => 'Кабельный']);
+
+        $response = $controller->actionSearchContainer($repo->id, 'Кабельный');
+
+        self::assertIsString($response);
+        self::assertSame('blank', $controller->layout);
+        self::assertStringContainsString('Всего найдено контейнеров: 1', $response);
+        self::assertStringContainsString($matchingContainer->name, $response);
+        self::assertStringNotContainsString($nonContainer->name, $response);
+    }
+
+    /**
      * Поиск с позитивным и негативным словом редиректит на единственный найденный предмет.
      */
     public function testSearchRedirectsToSingleMatchedItemByPositiveAndNegativeWords(): void
@@ -235,6 +288,49 @@ final class ItemsControllerTest extends DbTestCase
         self::assertSame(302, $response->statusCode);
         self::assertStringContainsString("/repo/{$repo->id}/items", $response->headers->get('Location'));
         self::assertNull(Item::findWithDeleted()->where(['id' => $item->id])->one());
+    }
+
+    /**
+     * Создает предметы для проверки read-side списков ItemsController.
+     *
+     * @return array{0:ItemsController, 1:\common\models\Repo, 2:Item, 3:Item, 4:Item, 5:Item, 6:Item}
+     */
+    private function prepareItemListFixture(): array
+    {
+        $user = $this->createUser([
+            'access' => User::ACCESS_CREATE_REPO,
+        ]);
+        $repo = $this->createRepo($user, [
+            'name' => 'Репозиторий со списком предметов',
+        ]);
+        $this->grantRepoAccess($repo, $user, RepoUser::ACCESS_CREATE_ITEMS | RepoUser::ACCESS_EDIT_ITEMS);
+
+        $rootContainer = $this->createItem($repo, $user, [
+            'name' => 'Корневой контейнер для списка',
+            'isContainer' => true,
+        ]);
+        $rootItem = $this->createItem($repo, $user, [
+            'name' => 'Корневой предмет для списка',
+        ]);
+        $childContainer = $this->createItem($repo, $user, [
+            'name' => 'Вложенный контейнер для выбора',
+            'parentItemId' => $rootContainer->itemId,
+            'isContainer' => true,
+        ]);
+        $matchingContainer = $this->createItem($repo, $user, [
+            'name' => 'Кабельный контейнер для поиска',
+            'parentItemId' => $rootContainer->itemId,
+            'isContainer' => true,
+        ]);
+        $nonContainer = $this->createItem($repo, $user, [
+            'name' => 'Кабельный предмет не контейнер',
+            'parentItemId' => $rootContainer->itemId,
+        ]);
+
+        $controller = new ItemsController('items', Yii::$app);
+        Yii::$app->controller = $controller;
+
+        return [$controller, $repo, $rootContainer, $rootItem, $childContainer, $matchingContainer, $nonContainer];
     }
 
     /**
