@@ -7,7 +7,8 @@ use yii\db\ActiveQuery;
 /**
  * This is the ActiveQuery class for [[ItemPhoto]].
  *
- * @extends ActiveQuery<ItemPhoto>
+ * @template TModel of ItemPhoto
+ * @extends ActiveQuery<TModel>
  * @see ItemPhoto
  */
 class ItemPhotoQuery extends ActiveQuery

@@ -109,11 +109,13 @@ class Photo extends ActiveRecord
 
     /**
      * @inheritdoc
-     * @return PhotoQuery the active query used by this AR class.
+     * @return PhotoQuery<static> the active query used by this AR class.
      */
     public static function find(): PhotoQuery
     {
-        return new PhotoQuery(get_called_class());
+        /** @var PhotoQuery<static> $query */
+        $query = new PhotoQuery(static::class);
+        return $query;
     }
 
     /**

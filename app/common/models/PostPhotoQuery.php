@@ -7,7 +7,8 @@ use yii\db\ActiveQuery;
 /**
  * This is the ActiveQuery class for [[PostPhoto]].
  *
- * @extends ActiveQuery<PostPhoto>
+ * @template TModel of PostPhoto
+ * @extends ActiveQuery<TModel>
  * @see PostPhoto
  */
 class PostPhotoQuery extends ActiveQuery

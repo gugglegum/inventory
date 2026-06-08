@@ -150,10 +150,12 @@ class Repo extends ActiveRecord
 
     /**
      * @inheritdoc
-     * @return RepoQuery the active query used by this AR class.
+     * @return RepoQuery<static> the active query used by this AR class.
      */
     public static function find(): RepoQuery
     {
-        return new RepoQuery(get_called_class());
+        /** @var RepoQuery<static> $query */
+        $query = new RepoQuery(static::class);
+        return $query;
     }
 }

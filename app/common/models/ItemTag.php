@@ -55,11 +55,13 @@ class ItemTag extends ActiveRecord
 
     /**
      * @inheritdoc
-     * @return ItemTagQuery the active query used by this AR class.
+     * @return ItemTagQuery<static> the active query used by this AR class.
      */
     public static function find(): ItemTagQuery
     {
-        return new ItemTagQuery(get_called_class());
+        /** @var ItemTagQuery<static> $query */
+        $query = new ItemTagQuery(static::class);
+        return $query;
     }
 
 }

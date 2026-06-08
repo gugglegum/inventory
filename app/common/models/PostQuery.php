@@ -7,7 +7,8 @@ use yii\db\ActiveQuery;
 /**
  * This is the ActiveQuery class for [[Post]].
  *
- * @extends ActiveQuery<Post>
+ * @template TModel of Post
+ * @extends ActiveQuery<TModel>
  * @see Post
  */
 class PostQuery extends ActiveQuery

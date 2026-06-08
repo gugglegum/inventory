@@ -7,7 +7,8 @@ use yii\db\ActiveQuery;
 /**
  * This is the ActiveQuery class for [[Item]].
  *
- * @extends ActiveQuery<Item>
+ * @template TModel of Item
+ * @extends ActiveQuery<TModel>
  * @see Item
  */
 class ItemQuery extends ActiveQuery

@@ -169,7 +169,7 @@ docker compose exec php composer run quality
 
 - PHPUnit 13.2 - regression/integration/unit тесты из `tests/phpunit/`.
 - PHPStan 2.2 - текущий уровень `level: 3`, конфиг `phpstan.neon`.
-- Psalm 6.16 через `psalm/phar`, текущий `errorLevel="6"`, конфиг `psalm.xml`. PHAR выбран потому, что обычный пакет `vimeo/psalm` в актуальных версиях конфликтует с PHPUnit 13 по `sebastian/diff`, а старые версии Psalm не подходят для текущего PHP 8.4-стека.
+- Psalm 6.16 через `psalm/phar`, текущий `errorLevel="5"`, конфиг `psalm.xml`. PHAR выбран потому, что обычный пакет `vimeo/psalm` в актуальных версиях конфликтует с PHPUnit 13 по `sebastian/diff`, а старые версии Psalm не подходят для текущего PHP 8.4-стека.
 - PHPCS 3.13 - `phpcs.xml` проверяет PSR-12 на активно рефакторимом backend-контуре (`backend/controllers`, `backend/services`, `common/services`, `tests/static-analysis`), а `phpcs-compat.xml` отдельно прогоняет PHPCompatibility по широкому дереву приложения.
 
 Psalm настроен без baseline. В конфиге подавлен типичный шум Yii/PHPUnit: route action методы и тестовые классы как unused, требование `#[Override]`, шаблонные параметры Yii-классов и Yii view-контекст. View-файлы не анализируются Psalm как обычные PHP-классы, потому что в них `$this` и переданные переменные живут в контексте шаблона.
@@ -181,6 +181,8 @@ PHPStan использует bootstrap `tests/static-analysis/bootstrap.php`, к
 View/mail-шаблоны стоит аннотировать через `/** @var Type $variable */`, а не старым Yii-стилем `/* @var $variable Type */`: это помогает и IDE, и PHPStan. Для `$this` в шаблонах тоже работает явная строка `/** @var \yii\web\View $this */`; отдельный `ignoreErrors` для view-шаблонов не нужен.
 
 При переходе PHPStan на `level: 3` query-классы `common/models/*Query.php` приведены к generics Yii 2.0.55 через `@extends ActiveQuery<Model>`. Старые Gii-заглушки `all()` и `one()`, которые просто вызывали parent-методы и мешали выводу типов, удалены. Это не меняет runtime-поведение, потому что методы наследуются от Yii `ActiveQuery`.
+
+При переходе Psalm на `errorLevel="5"` query-классы дополнительно сделаны generic-обертками над `ActiveQuery<TModel>`, а `ActiveRecord::find()` в моделях документирован как `@return SomeQuery<static>`. Это согласует кастомные query-классы с Yii 2.0.55, где базовый `ActiveRecord::find()` возвращает `ActiveQuery<static>`. Также явно обработаны `false|null` от GD/буферных функций в `ImageResize` и от `preg_replace_callback()` в `MarkdownFormatter`.
 
 ## Git и локальные файлы
 

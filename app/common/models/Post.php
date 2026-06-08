@@ -187,10 +187,12 @@ class Post extends ActiveRecord
 
     /**
      * @inheritdoc
-     * @return PostQuery the active query used by this AR class.
+     * @return PostQuery<static> the active query used by this AR class.
      */
     public static function find(): PostQuery
     {
-        return new PostQuery(get_called_class());
+        /** @var PostQuery<static> $query */
+        $query = new PostQuery(static::class);
+        return $query;
     }
 }

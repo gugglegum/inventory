@@ -17,11 +17,14 @@ final class MarkdownFormatter
         $formattedText = Fatdown::render($formattedText);
 
         // Выделяем ссылками упоминания ID предметов вида "#1234"
-        return preg_replace_callback(
+        $result = preg_replace_callback(
             '/(?<=[\s.,;()<>{}\[\]]|^)(#(\d+))(?=[\s.,;()<>{}\[\]]|$)/',
-            function(array $matches) use ($repo) {
+            function (array $matches) use ($repo) {
                 return '<a href="' . Html::encode(Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $matches[2]])) . '">' . $matches[1] . '</a>';
             },
-            $formattedText);
+            $formattedText
+        );
+
+        return $result ?? $formattedText;
     }
 }

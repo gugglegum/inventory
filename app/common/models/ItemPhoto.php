@@ -111,10 +111,12 @@ class ItemPhoto extends ActiveRecord
 
     /**
      * @inheritdoc
-     * @return ItemPhotoQuery the active query used by this AR class.
+     * @return ItemPhotoQuery<static> the active query used by this AR class.
      */
     public static function find(): ItemPhotoQuery
     {
-        return new ItemPhotoQuery(get_called_class());
+        /** @var ItemPhotoQuery<static> $query */
+        $query = new ItemPhotoQuery(static::class);
+        return $query;
     }
 }

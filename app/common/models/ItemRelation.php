@@ -70,10 +70,12 @@ class ItemRelation extends ActiveRecord
 
     /**
      * @inheritdoc
-     * @return ItemRelationQuery the active query used by this AR class.
+     * @return ItemRelationQuery<static> the active query used by this AR class.
      */
     public static function find(): ItemRelationQuery
     {
-        return new ItemRelationQuery(get_called_class());
+        /** @var ItemRelationQuery<static> $query */
+        $query = new ItemRelationQuery(static::class);
+        return $query;
     }
 }

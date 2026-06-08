@@ -84,10 +84,12 @@ class RepoUser extends ActiveRecord
 
     /**
      * @inheritdoc
-     * @return RepoUserQuery the active query used by this AR class.
+     * @return RepoUserQuery<static> the active query used by this AR class.
      */
     public static function find(): RepoUserQuery
     {
-        return new RepoUserQuery(get_called_class());
+        /** @var RepoUserQuery<static> $query */
+        $query = new RepoUserQuery(static::class);
+        return $query;
     }
 }

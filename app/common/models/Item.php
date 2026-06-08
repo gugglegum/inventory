@@ -441,16 +441,23 @@ class Item extends ActiveRecord
 
     /**
      * @inheritdoc
-     * @return ItemQuery the active query used by this AR class.
+     * @return ItemQuery<static> the active query used by this AR class.
      */
     public static function find(): ItemQuery
     {
-        return new ItemQuery(static::class)->notDeleted();
+        /** @var ItemQuery<static> $query */
+        $query = new ItemQuery(static::class);
+        return $query->notDeleted();
     }
 
+    /**
+     * @return ItemQuery<static> the active query without soft-delete scope.
+     */
     public static function findWithDeleted(): ItemQuery
     {
-        return new ItemQuery(static::class);
+        /** @var ItemQuery<static> $query */
+        $query = new ItemQuery(static::class);
+        return $query;
     }
 
     public function getPosts(): ActiveQuery

@@ -10,14 +10,22 @@ abstract class ImageResize
      * @param \GdImage $image
      * @param int $JPEGQuality
      * @return string
+     * @throws Exception
      */
     public static function getImageJPEG(\GdImage $image, int $JPEGQuality = 75): string
     {
         ob_start();
-        imagejpeg($image, null, $JPEGQuality);
-        $image = ob_get_contents();
-        ob_end_clean();
-        return $image;
+        if (!imagejpeg($image, null, $JPEGQuality)) {
+            ob_end_clean();
+            throw new Exception('Unable to render image as JPEG');
+        }
+
+        $contents = ob_get_clean();
+        if ($contents === false) {
+            throw new Exception('Unable to read rendered JPEG from output buffer');
+        }
+
+        return $contents;
     }
 
     /**
@@ -38,10 +46,7 @@ abstract class ImageResize
                     }
                     break;
                 case 2 :
-//                    if (!($image = @imagecreatefromjpeg($imagePath))) {
-                    if (!($image = @self::_imagecreatefromjpegexif($imagePath))) {
-                        throw new Exception('Unable to open image file (JPEG)');
-                    }
+                    $image = self::_imagecreatefromjpegexif($imagePath);
                     break;
                 case 3 :
                     if (!($image = @imagecreatefrompng($imagePath))) {
@@ -65,29 +70,48 @@ abstract class ImageResize
     /**
      * @param string $filename
      * @return \GdImage
+     * @throws Exception
      */
     private static function _imagecreatefromjpegexif(string $filename): \GdImage
     {
-        $img = imagecreatefromjpeg($filename);
-        if ($img) {
-            $exif = exif_read_data($filename);
-            if ($exif && isset($exif['Orientation'])) {
-                $ort = $exif['Orientation'];
-                if ($ort == 6 || $ort == 5) {
-                    $img = imagerotate($img, 270, 0);
-                }
-                if ($ort == 3 || $ort == 4) {
-                    $img = imagerotate($img, 180, 0);
-                }
-                if ($ort == 8 || $ort == 7) {
-                    $img = imagerotate($img, 90, 0);
-                }
-                if ($ort == 5 || $ort == 4 || $ort == 7) {
-                    imageflip($img, IMG_FLIP_HORIZONTAL);
-                }
+        $img = @imagecreatefromjpeg($filename);
+        if (!$img) {
+            throw new Exception('Unable to open image file (JPEG)');
+        }
+
+        $exif = @exif_read_data($filename);
+        if (is_array($exif) && isset($exif['Orientation'])) {
+            $ort = (int) $exif['Orientation'];
+            if ($ort == 6 || $ort == 5) {
+                $img = self::rotateImage($img, 270);
+            }
+            if ($ort == 3 || $ort == 4) {
+                $img = self::rotateImage($img, 180);
+            }
+            if ($ort == 8 || $ort == 7) {
+                $img = self::rotateImage($img, 90);
+            }
+            if (($ort == 5 || $ort == 4 || $ort == 7) && !imageflip($img, IMG_FLIP_HORIZONTAL)) {
+                throw new Exception('Unable to flip JPEG image according to EXIF orientation');
             }
         }
+
         return $img;
+    }
+
+    /**
+     * Rotates an image and converts a GD failure into an exception.
+     *
+     * @throws Exception
+     */
+    private static function rotateImage(\GdImage $image, int $angle): \GdImage
+    {
+        $rotatedImage = imagerotate($image, $angle, 0);
+        if (!$rotatedImage) {
+            throw new Exception('Unable to rotate JPEG image according to EXIF orientation');
+        }
+
+        return $rotatedImage;
     }
 
     /**
@@ -111,11 +135,13 @@ abstract class ImageResize
             $ky = ($height > 0) && ($s_img_y > $height) ? $s_img_y / $height : 1;
         }
         $k = $crop ? min($kx, $ky) : max($kx, $ky);
-        $d_img_x = round($s_img_x / $k);
-        $d_img_y = round($s_img_y / $k);
+        $d_img_x = (int) round($s_img_x / $k);
+        $d_img_y = (int) round($s_img_y / $k);
 
         if ($d_img = imagecreatetruecolor($d_img_x, $d_img_y)) {
-            imagecopyresampled($d_img, $image, 0, 0, 0, 0, $d_img_x, $d_img_y, $s_img_x, $s_img_y);
+            if (!imagecopyresampled($d_img, $image, 0, 0, 0, 0, $d_img_x, $d_img_y, $s_img_x, $s_img_y)) {
+                throw new Exception('Can\'t resample image');
+            }
             imagedestroy($image);
             return $crop ? self::cropImageCenter($d_img, $width, $height) : $d_img;
         } else {
@@ -128,13 +154,21 @@ abstract class ImageResize
      * @param int $width
      * @param int $height
      * @return \GdImage
+     * @throws Exception
      */
     public static function cropImageCenter(\GdImage $srcImage, int $width, int $height): \GdImage
     {
         $dstImage = imagecreatetruecolor($width, $height);
+        if (!$dstImage) {
+            throw new Exception('Can\'t create cropped image with imagecreatetruecolor()');
+        }
+
         $srcWidth = imagesx($srcImage);
         $srcHeight = imagesy($srcImage);
-        imagecopy($dstImage, $srcImage, 0, 0, (int) round(($srcWidth - $width) / 2), (int) round(($srcHeight - $height) / 2), $width, $height);
+        if (!imagecopy($dstImage, $srcImage, 0, 0, (int) round(($srcWidth - $width) / 2), (int) round(($srcHeight - $height) / 2), $width, $height)) {
+            throw new Exception('Can\'t copy cropped image area');
+        }
+
         return $dstImage;
     }
 }

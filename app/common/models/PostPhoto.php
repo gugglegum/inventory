@@ -111,10 +111,12 @@ class PostPhoto extends ActiveRecord
 
     /**
      * @inheritdoc
-     * @return PostPhotoQuery the active query used by this AR class.
+     * @return PostPhotoQuery<static> the active query used by this AR class.
      */
     public static function find(): PostPhotoQuery
     {
-        return new PostPhotoQuery(get_called_class());
+        /** @var PostPhotoQuery<static> $query */
+        $query = new PostPhotoQuery(static::class);
+        return $query;
     }
 }
