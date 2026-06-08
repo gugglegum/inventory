@@ -14,8 +14,8 @@
     },
     "minimum-stability": "stable",
     "require": {
-        "php": ">=8.0.0",
-        "yiisoft/yii2": "^2.0.47",
+        "php": ">=8.4",
+        "yiisoft/yii2": "^2.0.55",
         "yiisoft/yii2-bootstrap": "^2.0.11",
         "yiisoft/yii2-swiftmailer": "^2.1",
         "symfony/polyfill-php70": "^1.1",
@@ -31,7 +31,7 @@
         "yiisoft/yii2-debug": "*",
         "yiisoft/yii2-gii": "*",
         "yiisoft/yii2-faker": "*",
-        "phpunit/phpunit": "^11.5"
+        "phpunit/phpunit": "^13.2"
     },
     "config": {
         "allow-plugins": {
