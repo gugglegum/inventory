@@ -7,6 +7,7 @@ use yii\db\ActiveQuery;
 /**
  * This is the ActiveQuery class for [[User]].
  *
+ * @extends ActiveQuery<User>
  * @see User
  */
 class UserQuery extends ActiveQuery
@@ -17,21 +18,4 @@ class UserQuery extends ActiveQuery
         return $this;
     }
 
-    /**
-     * @inheritdoc
-     * @return User[]|array
-     */
-    public function all($db = null): array
-    {
-        return parent::all($db);
-    }
-
-    /**
-     * @inheritdoc
-     * @return User|array|null
-     */
-    public function one($db = null): User|array|null
-    {
-        return parent::one($db);
-    }
 }

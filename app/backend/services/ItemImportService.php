@@ -208,7 +208,7 @@ final class ItemImportService
                 $itemModel->repoId = $repo->id;
                 $itemModel->name = $item['name'];
                 $itemModel->parentItemId = $parentItem->itemId;
-                $itemModel->isContainer = !empty($item['container']) ? '1' : '0';
+                $itemModel->isContainer = !empty($item['container']) ? 1 : 0;
                 $itemModel->description = $item['description'] ?? '';
                 $itemModel->createdBy = $user->id;
 

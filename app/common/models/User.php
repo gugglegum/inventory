@@ -17,7 +17,7 @@ use yii\web\IdentityInterface;
  * @property string $username
  * @property string $authKey
  * @property string $passwordHash
- * @property string $passwordResetToken
+ * @property ?string $passwordResetToken
  * @property string $email
  * @property int $access Глобальные права доступа (bitmask)
  * @property integer $status
@@ -142,10 +142,10 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * Finds out if password reset token is valid
      *
-     * @param string $token password reset token
-     * @return boolean
+     * @param ?string $token password reset token
+     * @return bool
      */
-    public static function isPasswordResetTokenValid(string $token): bool
+    public static function isPasswordResetTokenValid(?string $token): bool
     {
         if (empty($token)) {
             return false;

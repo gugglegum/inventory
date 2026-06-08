@@ -7,6 +7,7 @@ use yii\db\ActiveQuery;
 /**
  * This is the ActiveQuery class for [[Post]].
  *
+ * @extends ActiveQuery<Post>
  * @see Post
  */
 class PostQuery extends ActiveQuery
@@ -17,21 +18,4 @@ class PostQuery extends ActiveQuery
         return $this;
     }*/
 
-    /**
-     * @inheritdoc
-     * @return Post[]|array
-     */
-    public function all($db = null): array
-    {
-        return parent::all($db);
-    }
-
-    /**
-     * @inheritdoc
-     * @return Post|array|null
-     */
-    public function one($db = null): array|Post|null
-    {
-        return parent::one($db);
-    }
 }

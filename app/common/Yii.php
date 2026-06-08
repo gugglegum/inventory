@@ -10,6 +10,8 @@
 require(__DIR__ . '/../vendor/yiisoft/yii2/BaseYii.php');
 
 /**
+ * @extends \yii\BaseYii<\yii\web\IdentityInterface>
+ *
  * Этот класс нужен исключительно для корректной работы валидатора кода в IDE PhpStorm, чтобы
  * он видел кастомные компоненты, которые адресуются через \Yii::$app->myComponent. Этот класс
  * не используется на самом деле. Для корректной работы, чтобы избежать проблемы "Other
@@ -23,7 +25,7 @@ require(__DIR__ . '/../vendor/yiisoft/yii2/BaseYii.php');
 class Yii extends \yii\BaseYii
 {
 	/**
-	 * @var BaseApplication|WebApplication|ConsoleApplication the application instance
+	 * @var WebApplication|ConsoleApplication|null the application instance
 	 */
 	public static $app;
 }
@@ -44,6 +46,7 @@ abstract class BaseApplication extends yii\base\Application
  * Class WebApplication
  * Include only Web application related components here
  *
+ * @extends yii\web\Application<\yii\web\IdentityInterface>
  */
 class WebApplication extends yii\web\Application
 {

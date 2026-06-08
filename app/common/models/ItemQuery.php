@@ -7,6 +7,7 @@ use yii\db\ActiveQuery;
 /**
  * This is the ActiveQuery class for [[Item]].
  *
+ * @extends ActiveQuery<Item>
  * @see Item
  */
 class ItemQuery extends ActiveQuery
@@ -21,21 +22,4 @@ class ItemQuery extends ActiveQuery
         return $this->andWhere(['not', ['deleted' => null]]);
     }
 
-    /**
-     * @inheritdoc
-     * @return Item[]|array
-     */
-    public function all($db = null): array
-    {
-        return parent::all($db);
-    }
-
-    /**
-     * @inheritdoc
-     * @return Item|array|null
-     */
-    public function one($db = null): array|Item|null
-    {
-        return parent::one($db);
-    }
 }
