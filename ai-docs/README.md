@@ -80,6 +80,27 @@ docker compose exec php ./yii migrate/history 10
 
 В корне и в `app/` есть небольшие shell-скрипты для типовых операций: входа в MariaDB, дампа/импорта базы, установки Composer-зависимостей, запуска миграций и пересоздания миниатюр. Перед изменением таких скриптов учитывай, из какой директории они предполагают запуск.
 
+## Тесты
+
+Для новой разработки добавлена отдельная PHPUnit-инфраструктура в `app/tests/phpunit/`. Она не использует старую Codeception-обвязку из шаблона Yii Advanced.
+
+Тесты запускаются внутри PHP-контейнера и используют отдельную базу `stockhub_test`. Тестовый Yii-конфиг находится в `app/tests/phpunit/config/` и не подключает обычные `main-local.php`, чтобы случайно не работать с локальной рабочей базой `stockhub`.
+
+Подготовка тестовой базы из корня репозитория:
+
+```bash
+docker compose exec db mariadb -uroot -proot -e "DROP DATABASE IF EXISTS stockhub_test; CREATE DATABASE stockhub_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON stockhub_test.* TO 'stockhub'@'%'; FLUSH PRIVILEGES;"
+docker compose exec php php tests/phpunit/bin/yii-test migrate --interactive=0
+```
+
+Запуск PHPUnit из корня репозитория:
+
+```bash
+docker compose exec php ./vendor/bin/phpunit -c phpunit.xml
+```
+
+На момент первичной настройки все миграции успешно проходили с нуля на чистой `stockhub_test`. Первый набор тестов покрывает bootstrap схемы, базовую модель пользователя, создание репозитория и предметов, сохранение тегов и поведение soft delete в `Item::find()`.
+
 ## Git и локальные файлы
 
 В корневом `.gitignore` намеренно игнорируются:
