@@ -12,5 +12,6 @@ require dirname(__DIR__, 2) . '/common/config/bootstrap.php';
 Yii::setAlias('tests', dirname(__DIR__));
 Yii::setAlias('phpunitTests', __DIR__);
 
+require __DIR__ . '/runtime.php';
 require __DIR__ . '/TestCase.php';
 require __DIR__ . '/DbTestCase.php';

@@ -15,7 +15,7 @@ return yii\helpers\ArrayHelper::merge(
     [
         'id' => 'app-backend-test',
         'basePath' => dirname(__DIR__, 3) . '/backend',
-        'runtimePath' => '@phpunitTests/_runtime/backend',
+        'runtimePath' => '@phpunitRuntime/backend',
         'params' => $params,
         'components' => [
             'request' => [
@@ -27,7 +27,7 @@ return yii\helpers\ArrayHelper::merge(
                 'enableAutoLogin' => false,
             ],
             'assetManager' => [
-                'basePath' => '@phpunitTests/_runtime/assets',
+                'basePath' => '@phpunitRuntime/assets',
                 'baseUrl' => '/assets',
             ],
         ],

@@ -87,6 +87,39 @@ final class ItemsControllerTest extends DbTestCase
     }
 
     /**
+     * GET view рендерит страницу предмета через read-side сервис без редиректа.
+     */
+    public function testViewRendersItemPage(): void
+    {
+        [$controller, $repo, $parent, $item] = $this->prepareItemViewFixture();
+
+        $this->setGetRequest(['q' => 'usb']);
+
+        $response = $controller->actionView($repo->id, $item->itemId);
+
+        self::assertIsString($response);
+        self::assertStringContainsString('Просматриваемый предмет', $response);
+        self::assertStringContainsString('usb', $response);
+    }
+
+    /**
+     * JSON-preview возвращает HTML partial с путём предмета.
+     */
+    public function testJsonPreviewReturnsRenderedItemWithPath(): void
+    {
+        [$controller, $repo, $parent, $item] = $this->prepareItemViewFixture();
+
+        $response = $controller->actionJsonPreview($repo->id, $item->itemId);
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(Response::FORMAT_JSON, $response->format);
+        self::assertIsArray($response->data);
+        self::assertArrayHasKey('content', $response->data);
+        self::assertStringContainsString('Просматриваемый предмет', $response->data['content']);
+        self::assertStringContainsString('Контейнер для просмотра', $response->data['content']);
+    }
+
+    /**
      * POST create создает предмет и сохраняет теги через общую обработку формы предмета.
      */
     public function testCreatePostCreatesItemWithTags(): void
@@ -233,6 +266,35 @@ final class ItemsControllerTest extends DbTestCase
         Yii::$app->controller = $controller;
 
         return [$controller, $repo, $dviItem];
+    }
+
+    /**
+     * Создает предмет внутри контейнера для проверки view/json-preview сценариев.
+     *
+     * @return array{0:ItemsController, 1:\common\models\Repo, 2:Item, 3:Item}
+     */
+    private function prepareItemViewFixture(): array
+    {
+        $user = $this->createUser([
+            'access' => User::ACCESS_CREATE_REPO,
+        ]);
+        $repo = $this->createRepo($user);
+        $this->grantRepoAccess($repo, $user, RepoUser::ACCESS_CREATE_ITEMS | RepoUser::ACCESS_EDIT_ITEMS);
+
+        $parent = $this->createItem($repo, $user, [
+            'name' => 'Контейнер для просмотра',
+            'isContainer' => true,
+        ]);
+        $item = $this->createItem($repo, $user, [
+            'name' => 'Просматриваемый предмет',
+            'description' => 'Описание для просмотра',
+            'parentItemId' => $parent->itemId,
+        ]);
+
+        $controller = new ItemsController('items', Yii::$app);
+        Yii::$app->controller = $controller;
+
+        return [$controller, $repo, $parent, $item];
     }
 
     /**

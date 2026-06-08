@@ -12,5 +12,7 @@ require dirname(__DIR__, 3) . '/console/config/bootstrap.php';
 Yii::setAlias('tests', dirname(__DIR__, 2));
 Yii::setAlias('phpunitTests', dirname(__DIR__));
 
+require dirname(__DIR__) . '/runtime.php';
+
 $application = new yii\console\Application(require dirname(__DIR__) . '/config/console.php');
 exit($application->run());

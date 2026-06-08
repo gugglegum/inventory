@@ -19,10 +19,10 @@ return [
     ],
     'params' => [
         'photos' => [
-            'storagePath' => dirname(__DIR__) . '/_runtime/photos',
-            'storageTemp' => dirname(__DIR__) . '/_runtime/photos/temp',
-            'thumbnailPath' => dirname(__DIR__) . '/_runtime/thumbnails',
-            'thumbnailTemp' => dirname(__DIR__) . '/_runtime/thumbnails/temp',
+            'storagePath' => Yii::getAlias('@phpunitRuntime/photos'),
+            'storageTemp' => Yii::getAlias('@phpunitRuntime/photos/temp'),
+            'thumbnailPath' => Yii::getAlias('@phpunitRuntime/thumbnails'),
+            'thumbnailTemp' => Yii::getAlias('@phpunitRuntime/thumbnails/temp'),
             'md5salt' => 'test-salt',
         ],
     ],

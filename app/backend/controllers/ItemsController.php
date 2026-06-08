@@ -9,6 +9,7 @@ use backend\services\ItemFormAssetService;
 use backend\services\ItemFormService;
 use backend\services\ItemImportService;
 use backend\services\ItemSearchService;
+use backend\services\ItemViewDataService;
 use common\components\ItemAccessValidator;
 use common\models\Repo;
 use Yii;
@@ -166,22 +167,6 @@ class ItemsController extends Controller
         ]);
     }
 
-    private function getItemPathForView(Item $item, Repo $repo): array
-    {
-        $path = [];
-        $tmpItem = $item;
-        while ($tmpItem) {
-            $path[] = [
-                'itemId' => $tmpItem->itemId,
-                'repoId' => $tmpItem->repoId,
-                'label' => $tmpItem->name,
-                'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => $tmpItem->itemId],
-            ];
-            $tmpItem = $tmpItem->parentItem;
-        }
-        return $path;
-    }
-
     /**
      * Displays a single Item model.
      * @param int $repoId
@@ -195,17 +180,15 @@ class ItemsController extends Controller
         $repo = $this->findRepo($repoId);
         $model = $this->findModel($repo->id, $itemId);
         $queryString = Yii::$app->request->getQueryParam('q', '');
-
-        $prevItem = Item::find()->where(['repoId' => $repo->id])->andWhere('itemId < :id', ['id' => $itemId])->orderBy('itemId DESC')->limit(1)->one();
-        $nextItem = Item::find()->where(['repoId' => $repo->id])->andWhere('itemId > :id', ['id' => $itemId])->orderBy('itemId ASC')->limit(1)->one();
+        $viewData = (new ItemViewDataService())->prepare($model);
 
         return $this->render('view', [
             'model' => $model,
             'repo' => $repo,
-            'children' => $model->getItems()->orderBy(['priority' => SORT_DESC, 'isContainer' => SORT_DESC, 'id' => SORT_ASC])->all(),
+            'children' => $viewData->children,
             'containerId' => $itemId,
-            'prevItem' => $prevItem,
-            'nextItem' => $nextItem,
+            'prevItem' => $viewData->prevItem,
+            'nextItem' => $viewData->nextItem,
             'query' => $queryString,
         ]);
     }
@@ -388,13 +371,13 @@ class ItemsController extends Controller
     {
         $repo = $this->findRepo($repoId);
         $model = $this->findModel($repo->id, $itemId);
+        $previewData = (new ItemViewDataService())->preparePreview($model);
+
         return $this->asJson([
             'content' => $this->renderPartial('_items', [
                 'items' => [$model],
                 'repo' => $repo,
-                'paths' => [
-                    $model->id => $this->getItemPathForView($model, $repo),
-                ],
+                'paths' => $previewData->paths,
                 'showPath' => true,
                 'showChildren' => false,
                 'containerId' => null,

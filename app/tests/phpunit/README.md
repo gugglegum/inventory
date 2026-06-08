@@ -22,3 +22,5 @@ docker compose exec php ./vendor/bin/phpunit -c phpunit.xml
 ```
 
 Тестовая конфигурация не подключает обычные `main-local.php`: подключение к БД задаётся через `tests/phpunit/config/common.php` и переменные окружения из `phpunit.xml`.
+
+Runtime-файлы тестов, опубликованные assets, фотографии и миниатюры создаются через alias `@phpunitRuntime` в системном `/tmp`, чтобы запуск внутри Docker не зависел от прав на рабочий checkout.
