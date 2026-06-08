@@ -11,6 +11,8 @@ use yii\base\Model;
  */
 class UserForm extends Model
 {
+    public const string SCENARIO_CREATE = 'create';
+
     /**
      * @var User
      */
@@ -29,15 +31,15 @@ class UserForm extends Model
         return [
             ['username', 'filter', 'filter' => 'trim'],
             ['username', 'required'],
-            ['username', 'unique', 'targetClass' => '\common\models\User', 'message' => 'This username has already been taken.', 'on' => 'create'],
+            ['username', 'unique', 'targetClass' => '\common\models\User', 'message' => 'This username has already been taken.', 'on' => self::SCENARIO_CREATE],
             ['username', 'string', 'min' => 2, 'max' => 255],
 
             ['email', 'filter', 'filter' => 'trim'],
             ['email', 'required'],
             ['email', 'email'],
-            ['email', 'unique', 'targetClass' => '\common\models\User', 'message' => 'This email address has already been taken.', 'on' => 'create'],
+            ['email', 'unique', 'targetClass' => '\common\models\User', 'message' => 'This email address has already been taken.', 'on' => self::SCENARIO_CREATE],
 
-            ['password', 'required', 'on' => 'create'],
+            ['password', 'required', 'on' => self::SCENARIO_CREATE],
             ['password', 'string', 'min' => 6],
 
             ['status', 'safe'],

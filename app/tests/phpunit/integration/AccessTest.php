@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace tests\phpunit\integration;
 
 use common\components\ItemAccessValidator;
+use common\components\UserAccess;
 use common\models\RepoUser;
 use common\models\User;
 use tests\phpunit\DbTestCase;
@@ -16,6 +17,28 @@ use tests\phpunit\DbTestCase;
  */
 final class AccessTest extends DbTestCase
 {
+    /**
+     * Глобальные права пользователя читаются как bitmask из User.access.
+     */
+    public function testGlobalUserAccessChecksBitmaskPermissions(): void
+    {
+        $manager = $this->createUser([
+            'access' => User::ACCESS_MANAGE_USERS,
+        ]);
+        $this->login($manager);
+
+        self::assertTrue(UserAccess::canManageUsers());
+        self::assertFalse(UserAccess::canCreateRepo());
+
+        $repoCreator = $this->createUser([
+            'access' => User::ACCESS_CREATE_REPO,
+        ]);
+        $this->login($repoCreator);
+
+        self::assertFalse(UserAccess::canManageUsers());
+        self::assertTrue(UserAccess::canCreateRepo());
+    }
+
     /**
      * Доступ к репозиторию требует явной строки repo_user для текущего пользователя.
      */

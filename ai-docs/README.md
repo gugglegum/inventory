@@ -133,6 +133,8 @@ Read-часть `InventoryController::actionView()` вынесена в `backend
 
 Read-side ветки `ItemsController::actionIndex()`, `ItemsController::actionPickContainer()` и `ItemsController::actionSearchContainer()` вынесены в `backend/services/ItemListService.php`. Сервис возвращает корневые предметы репозитория, готовит данные модального выбора контейнера через DTO `backend/services/ItemContainerPickerData.php` и делегирует поиск контейнеров существующему `ItemSearchService`. Контракт покрыт `tests/phpunit/integration/ItemListServiceTest.php`, а HTTP-render регрессии index/pick-container/search-container добавлены в `tests/phpunit/integration/ItemsControllerTest.php`.
 
+Подготовка и сохранение create/update формы пользователя вынесены из `UsersController` в `backend/services/UserFormService.php`. `backend/models/UserForm.php` теперь использует константу `SCENARIO_CREATE` вместо строкового сценария `create`, а контроллер оставляет за собой redirect/render. Сервис покрыт `tests/phpunit/integration/UserFormServiceTest.php`, HTTP CRUD-сценарии пользователей - `tests/phpunit/integration/UsersControllerTest.php`, login/logout - `tests/phpunit/integration/SiteControllerTest.php`. Глобальные bitmask-права `UserAccess::canManageUsers()` и `UserAccess::canCreateRepo()` дополнительно закреплены в `tests/phpunit/integration/AccessTest.php`.
+
 ## Git и локальные файлы
 
 В корневом `.gitignore` намеренно игнорируются:

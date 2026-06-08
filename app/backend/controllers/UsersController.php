@@ -1,19 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace backend\controllers;
 
+use backend\services\UserFormService;
 use common\components\UserAccess;
-use Yii;
 use common\models\User;
 use common\models\UserSearch;
+use Yii;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
-use backend\models\UserForm;
 use yii\web\Response;
 
 /**
@@ -85,12 +87,11 @@ class UsersController extends Controller
      */
     public function actionCreate(): Response|string
     {
-        $user = new User();
-        $form = new UserForm();
-        $form->scenario = 'create';
-        $form->setUser($user);
-        if ($form->load(Yii::$app->request->post()) && $form->save()) {
-            return $this->redirect(['view', 'id' => $user->id]);
+        $userFormService = new UserFormService();
+        $form = $userFormService->prepareForCreate();
+
+        if ($userFormService->save($form, Yii::$app->request->post())) {
+            return $this->redirect(['view', 'id' => $form->getUser()->id]);
         } else {
             return $this->render('create', [
                 'model' => $form,
@@ -109,12 +110,11 @@ class UsersController extends Controller
      */
     public function actionUpdate(int $id): Response|string
     {
-        $user = $this->findModel($id);
-        $form = new UserForm();
-        $form->setUser($user);
+        $userFormService = new UserFormService();
+        $form = $userFormService->prepareForUpdate($this->findModel($id));
 
-        if ($form->load(Yii::$app->request->post()) && $form->save()) {
-            return $this->redirect(['view', 'id' => $user->id]);
+        if ($userFormService->save($form, Yii::$app->request->post())) {
+            return $this->redirect(['view', 'id' => $form->getUser()->id]);
         } else {
             return $this->render('update', [
                 'model' => $form,
