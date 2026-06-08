@@ -1,0 +1,16 @@
+parameters:
+    level: 0
+    paths:
+        - backend
+        - common
+        - console
+        - frontend
+        - tests/phpunit
+    bootstrapFiles:
+        - tests/static-analysis/bootstrap.php
+    tmpDir: /tmp/stockhub-phpstan
+    excludePaths:
+        analyse:
+            - vendor
+            - environments
+            - tests/codeception

@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="8"
+    resolveFromConfigFile="true"
+    phpVersion="8.4"
+    autoloader="tests/static-analysis/bootstrap.php"
+    cacheDirectory="/tmp/stockhub-psalm"
+>
+    <projectFiles>
+        <directory name="backend/controllers" />
+        <directory name="backend/models" />
+        <directory name="backend/services" />
+        <directory name="common/components" />
+        <directory name="common/helpers" />
+        <directory name="common/models" />
+        <directory name="common/services" />
+        <directory name="common/widgets" />
+        <directory name="console/controllers" />
+        <directory name="console/migrations" />
+        <directory name="console/models" />
+        <directory name="frontend/controllers" />
+        <directory name="frontend/models" />
+        <directory name="tests/phpunit" />
+
+        <ignoreFiles>
+            <directory name="vendor" />
+            <directory name="environments" />
+            <directory name="tests/codeception" />
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+        <MissingOverrideAttribute errorLevel="suppress" />
+        <MissingTemplateParam errorLevel="suppress" />
+        <PossiblyUnusedMethod errorLevel="suppress" />
+        <PossiblyUnusedParam errorLevel="suppress" />
+        <PossiblyUnusedProperty errorLevel="suppress" />
+        <PossiblyUnusedReturnValue errorLevel="suppress" />
+        <UndefinedDocblockClass errorLevel="suppress" />
+        <UnusedClass errorLevel="suppress" />
+        <UnusedVariable errorLevel="suppress" />
+    </issueHandlers>
+</psalm>

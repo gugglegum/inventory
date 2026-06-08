@@ -169,5 +169,4 @@ class RepoController extends RepoAwareController
             ]);
         }
     }
-
 }

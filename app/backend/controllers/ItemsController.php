@@ -368,5 +368,4 @@ class ItemsController extends RepoAwareController
             ]),
         ]);
     }
-
 }

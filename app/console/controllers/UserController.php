@@ -179,11 +179,11 @@ class UserController extends Controller
     /**
      * Запрашивает от пользователя подтверждение какого-либо действия (y/n)
      *
-     * @param string $prompt            Строка вопроса
-     * @param null $default             OPTIONAL Выбор по умолчанию; срабатывает при вводе пустой строки
+     * @param string $prompt Строка вопроса.
+     * @param bool|null $default OPTIONAL Выбор по умолчанию; срабатывает при вводе пустой строки.
      * @return bool
      */
-    private function _confirm($prompt, $default = null)
+    private function _confirm(string $prompt, ?bool $default = null): bool
     {
         do {
             echo "{$prompt} (yes|no)";
@@ -204,6 +204,5 @@ class UserController extends Controller
                 return false;
             }
         } while (true);
-        return false;
     }
 }

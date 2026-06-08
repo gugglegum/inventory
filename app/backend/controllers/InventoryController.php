@@ -109,8 +109,7 @@ class InventoryController extends RepoAwareController
                     }
                     $inventoryItemConfirm->addError('itemId', $confirmResult->errorMessage ?? 'Unknown error');
                 }
-            }
-            elseif ($inventoryItemUnconfirm->load(Yii::$app->request->post())) {
+            } elseif ($inventoryItemUnconfirm->load(Yii::$app->request->post())) {
                 $inventoryItemUnconfirm->repoId = $repo->id;
                 if ($inventoryItemUnconfirm->validate()) {
                     $item = $this->findItem($repo->id, $inventoryItemUnconfirm->itemId);

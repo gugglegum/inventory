@@ -139,14 +139,13 @@ final class ItemImportService
 
                 switch ($str[0]) {
                     case '*':
-                        if (preg_match('/^\*\s*(\w+)\s*:\s*(.*)$/ui', $str, $m)) {
-                            $key = mb_strtolower(trim($m[1]));
-                            $key = self::PROPERTY_ALIASES[$key] ?? $key;
-                            $value = trim($m[2]);
-                            $addProperty($key, $value);
-                        } else {
+                        if (!preg_match('/^\*\s*(\w+)\s*:\s*(.*)$/ui', $str, $m)) {
                             throw new Exception('Invalid property line format');
                         }
+                        $key = mb_strtolower(trim($m[1]));
+                        $key = self::PROPERTY_ALIASES[$key] ?? $key;
+                        $value = trim($m[2]);
+                        $addProperty($key, $value);
                         break;
                     case '!':
                         $addProperty('description', trim(mb_substr($str, 1)));

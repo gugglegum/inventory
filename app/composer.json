@@ -30,7 +30,29 @@
         "yiisoft/yii2-debug": "*",
         "yiisoft/yii2-gii": "*",
         "yiisoft/yii2-faker": "*",
-        "phpunit/phpunit": "^13.2"
+        "phpunit/phpunit": "^13.2",
+        "phpstan/phpstan": "^2.2",
+        "squizlabs/php_codesniffer": "^3.13",
+        "phpcompatibility/php-compatibility": "^9.3",
+        "psalm/phar": "^6.16"
+    },
+    "scripts": {
+        "test": "phpunit -c phpunit.xml",
+        "phpstan": "phpstan analyse -c phpstan.neon",
+        "psalm": "psalm.phar --config=psalm.xml --no-cache",
+        "phpcs": [
+            "@phpcs:style",
+            "@phpcs:compat"
+        ],
+        "phpcs:style": "phpcs --standard=phpcs.xml",
+        "phpcs:compat": "phpcs --standard=phpcs-compat.xml",
+        "quality": [
+            "composer validate --strict",
+            "@test",
+            "@phpstan",
+            "@psalm",
+            "@phpcs"
+        ]
     },
     "config": {
         "allow-plugins": {

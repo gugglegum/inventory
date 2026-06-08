@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<ruleset name="Stockhub">
+    <description>Manual coding style checks for the actively refactored Stockhub code.</description>
+
+    <arg name="colors" />
+    <arg name="extensions" value="php" />
+    <arg name="parallel" value="4" />
+
+    <file>backend/controllers</file>
+    <file>backend/services</file>
+    <file>common/services</file>
+    <file>tests/static-analysis</file>
+
+    <rule ref="PSR12">
+        <exclude name="Generic.Files.LineLength" />
+        <exclude name="PSR1.Files.SideEffects" />
+    </rule>
+</ruleset>

@@ -56,6 +56,10 @@ fastcgi_pass stockhub-php:9000;
 
 Фотографии хранятся в `app/photos/`, миниатюры - в `app/thumbnails/`. Эти каталоги могут быть большими и содержат пользовательские данные, поэтому в Git должны попадать только `.gitignore`-заглушки.
 
+Доменная модель фотографий устроена так: сам файл описывает `common/models/Photo`, а привязка к месту использования хранится в `ItemPhoto` или `PostPhoto`. На уровне текущего поведения связь фактически 1 к 1: одна фотография используется только в одном месте. Исторически файл фотографии жил прямо в `ItemPhoto`; после появления фотографий у заметок общая часть была вынесена в `Photo`, чтобы не дублировать файловую логику.
+
+Миниатюры сейчас работают как кэш: при удалении основной фотографии оригинальный файл удаляется, а уже созданные thumbnails могут оставаться в `app/thumbnails/`. Это ожидаемое текущее поведение. В будущем можно добавить чистку thumbnails при удалении `Photo`, но это отдельное изменение с риском задеть генерацию/кэширование миниатюр.
+
 ## База данных и миграции
 
 Локальная база работает в контейнере MariaDB. В compose используются стандартные локальные параметры:
@@ -136,6 +140,41 @@ Read-side ветки `ItemsController::actionIndex()`, `ItemsController::actionP
 Подготовка и сохранение create/update формы пользователя вынесены из `UsersController` в `backend/services/UserFormService.php`. `backend/models/UserForm.php` теперь использует константу `SCENARIO_CREATE` вместо строкового сценария `create`, а контроллер оставляет за собой redirect/render. Сервис покрыт `tests/phpunit/integration/UserFormServiceTest.php`, HTTP CRUD-сценарии пользователей - `tests/phpunit/integration/UsersControllerTest.php`, login/logout - `tests/phpunit/integration/SiteControllerTest.php`. Глобальные bitmask-права `UserAccess::canManageUsers()` и `UserAccess::canCreateRepo()` дополнительно закреплены в `tests/phpunit/integration/AccessTest.php`.
 
 Каскадная логика удаления из ActiveRecord-моделей вынесена в common-сервисы: `common/services/ItemDeletionCascadeService.php` обслуживает `Item::softDelete()`, `Item::beforeSoftDelete()` и `Item::beforeDelete()`, а `common/services/RepoDeletionCascadeService.php` обслуживает `Repo::beforeDelete()`. Модельные методы и hooks оставлены как публичные точки входа, поэтому существующие вызовы `$item->delete()`, `$item->softDelete()` и `$repo->delete()` сохраняют поведение, но обход дочерних предметов, фотографий, заметок и root items больше не живет прямо в моделях. Поведение закреплено тестами `tests/phpunit/integration/ItemDeletionCascadeServiceTest.php` и `tests/phpunit/integration/RepoDeletionCascadeServiceTest.php`; существующие deletion/controller тесты дополнительно страхуют совместимость.
+
+На 2026-06-08 вручную проверены вход, выход, создание предмета, создание заметки, оба сценария с несколькими картинками, а также жесткое удаление предмета. В этом ручном сценарии физически удалялись оригинальные фотографии и предмета, и связанной заметки; thumbnails оставались, что соответствует текущей кэш-семантике. Сложный сценарий удаления предмета-контейнера с вложенными контейнерами, предметами, заметками и фотографиями пока не проходил ручную проверку целиком.
+
+## Качество кода
+
+Для ручной проверки перед крупными изменениями добавлен общий quality gate. Git hook намеренно не добавлялся: полный прогон занимает заметное время и не должен блокировать каждый коммит.
+
+Запуск из корня репозитория:
+
+```bash
+app/bin/check-quality
+```
+
+Скрипт работает в двух режимах: с хоста вызывает `docker compose exec -T php composer run quality`, а внутри PHP-контейнера запускает `composer run quality` напрямую из `app/`.
+
+Те же проверки можно запускать отдельными Composer-командами внутри PHP-контейнера:
+
+```bash
+docker compose exec php composer run test
+docker compose exec php composer run phpstan
+docker compose exec php composer run psalm
+docker compose exec php composer run phpcs
+docker compose exec php composer run quality
+```
+
+Подключенные инструменты:
+
+- PHPUnit 13.2 - regression/integration/unit тесты из `tests/phpunit/`.
+- PHPStan 2.2 - стартовый уровень `level: 0`, конфиг `phpstan.neon`.
+- Psalm 6.16 через `psalm/phar`, конфиг `psalm.xml`. PHAR выбран потому, что обычный пакет `vimeo/psalm` в актуальных версиях конфликтует с PHPUnit 13 по `sebastian/diff`, а старые версии Psalm не подходят для текущего PHP 8.4-стека.
+- PHPCS 3.13 - `phpcs.xml` проверяет PSR-12 на активно рефакторимом backend-контуре (`backend/controllers`, `backend/services`, `common/services`, `tests/static-analysis`), а `phpcs-compat.xml` отдельно прогоняет PHPCompatibility по широкому дереву приложения.
+
+Psalm настроен без baseline. В конфиге подавлен типичный шум Yii/PHPUnit: route action методы и тестовые классы как unused, требование `#[Override]`, шаблонные параметры Yii-классов и Yii view-контекст. View-файлы не анализируются Psalm как обычные PHP-классы, потому что в них `$this` и переданные переменные живут в контексте шаблона.
+
+PHPStan использует bootstrap `tests/static-analysis/bootstrap.php`, который подключает Yii и выставляет project aliases. Кэши PHPStan/Psalm пишутся в `/tmp` внутри контейнера, чтобы не зависеть от прав на `tests/phpunit/_runtime`.
 
 ## Git и локальные файлы
 

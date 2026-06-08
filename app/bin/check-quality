@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+APP_DIR=$(dirname "$SCRIPT_DIR")
+
+if [ -f /.dockerenv ]; then
+    cd "$APP_DIR"
+    exec composer run quality
+fi
+
+REPO_DIR=$(dirname "$APP_DIR")
+
+cd "$REPO_DIR"
+exec docker compose exec -T php composer run quality

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<ruleset name="Stockhub PHP Compatibility">
+    <description>Manual PHP compatibility checks for Stockhub on the current runtime.</description>
+
+    <arg name="colors" />
+    <arg name="extensions" value="php" />
+    <arg name="parallel" value="4" />
+
+    <config name="installed_paths" value="vendor/phpcompatibility/php-compatibility" />
+    <config name="testVersion" value="8.4-" />
+
+    <file>backend</file>
+    <file>common</file>
+    <file>console</file>
+    <file>frontend</file>
+    <file>tests/phpunit</file>
+
+    <exclude-pattern>*/config/*-local.php</exclude-pattern>
+    <exclude-pattern>*/runtime/*</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/web/assets/*</exclude-pattern>
+    <exclude-pattern>*/tests/phpunit/_runtime/*</exclude-pattern>
+
+    <rule ref="PHPCompatibility" />
+</ruleset>
