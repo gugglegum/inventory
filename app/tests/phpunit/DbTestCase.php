@@ -148,7 +148,7 @@ abstract class DbTestCase extends TestCase
     /**
      * Создает заметку к предмету.
      *
-     * @param array{datetimeText?:string, title?:string, text?:?string} $attributes Переопределяемые поля заметки.
+     * @param array{datetimeText?:string, datetime?:int, title?:string, text?:?string} $attributes Переопределяемые поля заметки.
      */
     protected function createPost(Item $item, User $user, array $attributes = []): Post
     {
@@ -157,7 +157,7 @@ abstract class DbTestCase extends TestCase
         $post = new Post();
         $post->scenario = Post::SCENARIO_CREATE;
         $post->itemId = $item->id;
-        $post->datetimeText = $attributes['datetimeText'] ?? '01.06.2026 12:30';
+        $post->datetime = $attributes['datetime'] ?? $this->timestampFromFormText($attributes['datetimeText'] ?? '01.06.2026 12:30');
         $post->title = $attributes['title'] ?? 'Тестовая заметка';
         $post->text = $attributes['text'] ?? 'Текст тестовой заметки';
         $post->createdBy = $user->id;
@@ -165,6 +165,18 @@ abstract class DbTestCase extends TestCase
         $this->saveModel($post);
 
         return $post;
+    }
+
+    /**
+     * Преобразует дату из формата PostForm в unix timestamp в timezone приложения.
+     */
+    private function timestampFromFormText(string $datetimeText): int
+    {
+        $timezone = new \DateTimeZone(Yii::$app->timeZone ?: 'UTC');
+        $dateTime = \DateTimeImmutable::createFromFormat('d.m.Y H:i', $datetimeText, $timezone);
+        self::assertNotFalse($dateTime);
+
+        return $dateTime->getTimestamp();
     }
 
     /**

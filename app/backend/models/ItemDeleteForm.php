@@ -15,9 +15,9 @@ use yii\base\Model;
 final class ItemDeleteForm extends Model
 {
     /**
-     * Полностью удалить предмет из базы вместо мягкого удаления.
+     * Строковый флаг полного удаления из POST checkbox.
      */
-    public bool $hardDelete = false;
+    public string $hardDelete = '0';
 
     /**
      * Названия полей формы.
@@ -36,7 +36,15 @@ final class ItemDeleteForm extends Model
     {
         return [
             ['hardDelete', 'boolean'],
-            ['hardDelete', 'default', 'value' => false],
+            ['hardDelete', 'default', 'value' => '0'],
         ];
+    }
+
+    /**
+     * Возвращает true, если пользователь выбрал полное удаление.
+     */
+    public function isHardDelete(): bool
+    {
+        return $this->hardDelete !== '' && $this->hardDelete !== '0';
     }
 }

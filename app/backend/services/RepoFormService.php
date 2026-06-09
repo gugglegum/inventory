@@ -38,7 +38,7 @@ final class RepoFormService
         $repoForm->scenario = RepoForm::SCENARIO_UPDATE;
         $repoForm->setRepo($repo);
         $repoForm->setRepoUser($repoUser);
-        $repoForm->load(array_merge($repo->attributes, $repoUser->attributes), '');
+        $repoForm->fillFromModels();
 
         return $repoForm;
     }

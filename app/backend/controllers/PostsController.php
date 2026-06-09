@@ -91,16 +91,17 @@ class PostsController extends RepoAwareController
         $repo = $this->findRepo($repoId);
         $item = $this->findItem($repo->id, $itemId);
         $postFormService = new PostFormService();
-        $post = $postFormService->prepareForCreate($item, $this->getLoggedUser());
+        $postForm = $postFormService->prepareForCreate($item, $this->getLoggedUser());
 
         if (Yii::$app->request->isPost) {
-            if ($postFormService->save($post, PostDataHelper::toArray(Yii::$app->request->post()), $_FILES)) {
+            if ($postFormService->save($postForm, PostDataHelper::toArray(Yii::$app->request->post()), $_FILES)) {
+                $post = $postForm->getPost();
                 return $this->redirect(['posts/view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
             }
         }
 
         return $this->render('create', [
-            'post' => $post,
+            'postForm' => $postForm,
             'item' => $item,
             'repo' => $repo,
         ]);
@@ -121,18 +122,19 @@ class PostsController extends RepoAwareController
         $repo = $this->findRepo($repoId);
         $item = $this->findItem($repo->id, $itemId);
         $postFormService = new PostFormService();
-        $post = $postFormService->prepareForUpdate(
+        $postForm = $postFormService->prepareForUpdate(
             $this->findPost($item->id, $postId),
             $this->getLoggedUser(),
         );
 
         if (Yii::$app->request->isPost) {
-            if ($postFormService->save($post, PostDataHelper::toArray(Yii::$app->request->post()), $_FILES)) {
+            if ($postFormService->save($postForm, PostDataHelper::toArray(Yii::$app->request->post()), $_FILES)) {
+                $post = $postForm->getPost();
                 return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
             }
         }
         return $this->render('update', [
-            'post' => $post,
+            'postForm' => $postForm,
             'item' => $item,
             'repo' => $repo,
         ]);

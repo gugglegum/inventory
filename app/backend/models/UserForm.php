@@ -21,24 +21,24 @@ class UserForm extends Model
     private ?User $_user = null;
 
     /**
-     * @var string|null
+     * Имя пользователя из формы.
      */
-    public $username;
+    public string $username = '';
 
     /**
-     * @var string|null
+     * Email пользователя из формы.
      */
-    public $email;
+    public string $email = '';
 
     /**
-     * @var string|null
+     * Новый пароль пользователя; пустая строка означает не менять пароль.
      */
-    public $password;
+    public string $password = '';
 
     /**
-     * @var int|null
+     * Статус пользователя из формы.
      */
-    public $status;
+    public string $status = '';
 
     /**
      * @inheritdoc
@@ -81,9 +81,10 @@ class UserForm extends Model
     public function setUser(User $user): void
     {
         $this->_user = $user;
-        $this->username = $this->_user->username;
-        $this->email = $this->_user->email;
-        $this->status = $this->_user->status;
+        $this->username = $this->stringify($this->_user->username);
+        $this->email = $this->stringify($this->_user->email);
+        $status = $this->_user->getAttribute('status');
+        $this->status = $status !== null ? (string) $status : (string) User::STATUS_ACTIVE;
     }
 
     /**
@@ -94,10 +95,10 @@ class UserForm extends Model
     {
         if ($this->validate()) {
             $user = $this->getUser();
-            $user->username = (string) $this->username;
-            $user->email = (string) $this->email;
+            $user->username = $this->username;
+            $user->email = $this->email;
             $user->status = (int) $this->status;
-            if ($this->password !== null && $this->password !== '') {
+            if ($this->password !== '') {
                 $user->setPassword($this->password);
                 $user->generateAuthKey();
             }
@@ -115,4 +116,11 @@ class UserForm extends Model
         return $this->getUser()->isNewRecord;
     }
 
+    /**
+     * Приводит значение AR-атрибута к строке формы.
+     */
+    private function stringify(mixed $value): string
+    {
+        return $value === null ? '' : (string) $value;
+    }
 }

@@ -8,8 +8,18 @@ use yii\data\ActiveDataProvider;
 /**
  * UserSearch represents the model behind the search form about `common\models\User`.
  */
-class UserSearch extends User
+class UserSearch extends Model
 {
+    public string $id = '';
+    public string $username = '';
+    public string $authKey = '';
+    public string $passwordHash = '';
+    public string $passwordResetToken = '';
+    public string $email = '';
+    public string $status = '';
+    public string $created = '';
+    public string $updated = '';
+
     /**
      * @inheritdoc
      */
@@ -26,8 +36,15 @@ class UserSearch extends User
      */
     public function scenarios(): array
     {
-        // bypass scenarios() implementation in the parent class
         return Model::scenarios();
+    }
+
+    /**
+     * Подписи полей совпадают с User, чтобы search UI не менялся.
+     */
+    public function attributeLabels(): array
+    {
+        return (new User())->attributeLabels();
     }
 
     /**
@@ -54,10 +71,10 @@ class UserSearch extends User
         }
 
         $query->andFilterWhere([
-            'id' => $this->id,
-            'status' => $this->status,
-            'created' => $this->created,
-            'updated' => $this->updated,
+            'id' => $this->integerOrNull($this->id),
+            'status' => $this->integerOrNull($this->status),
+            'created' => $this->integerOrNull($this->created),
+            'updated' => $this->integerOrNull($this->updated),
         ]);
 
         $query->andFilterWhere(['like', 'username', $this->username])
@@ -67,5 +84,13 @@ class UserSearch extends User
             ->andFilterWhere(['like', 'email', $this->email]);
 
         return $dataProvider;
+    }
+
+    /**
+     * Возвращает int для заполненного числового поля или null для пустого фильтра.
+     */
+    private function integerOrNull(string $value): ?int
+    {
+        return $value !== '' ? (int) $value : null;
     }
 }

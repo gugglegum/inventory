@@ -10,19 +10,19 @@ use yii\base\Model;
 class LoginForm extends Model
 {
     /**
-     * @var string|null
+     * Имя пользователя из формы входа.
      */
-    public $username;
+    public string $username = '';
 
     /**
-     * @var string|null
+     * Пароль из формы входа.
      */
-    public $password;
+    public string $password = '';
 
     /**
-     * @var bool
+     * Строковый флаг запоминания сессии из checkbox.
      */
-    public $rememberMe = true;
+    public string $rememberMe = '1';
 
     private ?User $_user = null;
 
@@ -53,7 +53,7 @@ class LoginForm extends Model
     {
         if (!$this->hasErrors()) {
             $user = $this->getUser();
-            if ($user === null || $this->password === null || !$user->validatePassword($this->password)) {
+            if ($user === null || !$user->validatePassword($this->password)) {
                 $this->addError($attribute, 'Incorrect username or password.');
             }
         }
@@ -69,7 +69,7 @@ class LoginForm extends Model
         if ($this->validate()) {
             $user = $this->getUser();
 
-            return $user !== null && Yii::$app->user->login($user, $this->rememberMe ? 86400 * 30 : 0);
+            return $user !== null && Yii::$app->user->login($user, $this->shouldRememberUser() ? 86400 * 30 : 0);
         } else {
             return false;
         }
@@ -82,10 +82,18 @@ class LoginForm extends Model
      */
     protected function getUser(): ?User
     {
-        if ($this->_user === null && $this->username !== null) {
+        if ($this->_user === null && $this->username !== '') {
             $this->_user = User::findByUsername($this->username);
         }
 
         return $this->_user;
+    }
+
+    /**
+     * Возвращает true, если пользователь выбрал долгую сессию.
+     */
+    private function shouldRememberUser(): bool
+    {
+        return filter_var($this->rememberMe, FILTER_VALIDATE_BOOLEAN);
     }
 }

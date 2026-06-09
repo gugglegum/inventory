@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace backend\services;
 
+use backend\models\PostForm;
 use common\helpers\ValidateErrorsFormatter;
 use common\models\Item;
 use common\models\Photo;
@@ -28,15 +29,14 @@ final class PostFormService
      *
      * @param User<Identity> $user Текущий пользователь, записываемый в createdBy.
      */
-    public function prepareForCreate(Item $item, User $user): Post
+    public function prepareForCreate(Item $item, User $user): PostForm
     {
         $post = new Post();
         $post->scenario = Post::SCENARIO_CREATE;
         $post->itemId = $item->id;
         $post->createdBy = (int) $user->id;
-        $post->datetimeText = new DateTimeImmutable('now', new DateTimeZone('UTC'))->format('d.m.Y H:i');
 
-        return $post;
+        return new PostForm($post, new DateTimeImmutable('now', new DateTimeZone('UTC'))->format('d.m.Y H:i'));
     }
 
     /**
@@ -44,29 +44,30 @@ final class PostFormService
      *
      * @param User<Identity> $user Текущий пользователь, записываемый в updatedBy.
      */
-    public function prepareForUpdate(Post $post, User $user): Post
+    public function prepareForUpdate(Post $post, User $user): PostForm
     {
         $post->scenario = Post::SCENARIO_UPDATE;
         $post->updatedBy = (int) $user->id;
 
-        return $post;
+        return new PostForm($post);
     }
 
     /**
      * Загружает POST-данные, сохраняет заметку и прикрепляет новые фотографии.
      *
-     * @param Post $post Заметка, подготовленная для create или update.
+     * @param PostForm $postForm Форма, подготовленная для create или update.
      * @param array $postData POST-данные текущего запроса.
      * @param array $filesData FILES-данные текущего запроса.
      *
      * @throws Exception
      */
-    public function save(Post $post, array $postData, array $filesData): bool
+    public function save(PostForm $postForm, array $postData, array $filesData): bool
     {
-        if (!$post->load($postData) || !$post->save()) {
+        if (!$postForm->load($postData) || !$postForm->save()) {
             return false;
         }
 
+        $post = $postForm->getPost();
         $this->attachPhotos($post, $filesData['photos']['tmp_name'] ?? []);
 
         return true;

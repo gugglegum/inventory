@@ -195,13 +195,14 @@ class ItemsController extends RepoAwareController
         $repo = $this->findRepo($repoId);
         $itemFormService = new ItemFormService();
         $parent = $parentItemId !== null ? $this->findParentItem($repo->id, $parentItemId) : null;
-        $item = $itemFormService->prepareForCreate(
+        $itemForm = $itemFormService->prepareForCreate(
             $repo,
             $parent,
             $this->getLoggedUser(),
             $this->getItemAccessValidator(),
             (bool) Yii::$app->request->getQueryParam('isContainer'),
         );
+        $item = $itemForm->getItem();
         $tagsForm = $itemFormService->createTagsForm();
 
         $goto = Yii::$app->request->post('goto', Yii::$app->request->getQueryParam('goto', 'view'));
@@ -209,7 +210,7 @@ class ItemsController extends RepoAwareController
         if (Yii::$app->request->isPost) {
             $postData = PostDataHelper::toArray(Yii::$app->request->post());
             /** @noinspection NestedPositiveIfStatementsInspection */
-            if ($itemFormService->save($item, $postData)) {
+            if ($itemFormService->save($itemForm, $postData)) {
                 (new ItemFormAssetService())->save($item, $tagsForm, $postData, $_FILES);
 
                 return $this->redirect($goto === 'create'
@@ -218,7 +219,7 @@ class ItemsController extends RepoAwareController
             }
         }
         return $this->render('create', [
-            'model' => $item,
+            'model' => $itemForm,
             'parent' => $parent,
             'repo' => $repo,
             'tagsForm' => $tagsForm,
@@ -241,24 +242,25 @@ class ItemsController extends RepoAwareController
     {
         $repo = $this->findRepo($repoId);
         $itemFormService = new ItemFormService();
-        $item = $itemFormService->prepareForUpdate(
+        $itemForm = $itemFormService->prepareForUpdate(
             $this->findItem($repoId, $itemId),
             $this->getLoggedUser(),
             $this->getItemAccessValidator(),
         );
+        $item = $itemForm->getItem();
         $tagsForm = $itemFormService->createTagsForm($item);
 
         if (Yii::$app->request->isPost) {
             $postData = PostDataHelper::toArray(Yii::$app->request->post());
             /** @noinspection NestedPositiveIfStatementsInspection */
-            if ($itemFormService->save($item, $postData)) {
+            if ($itemFormService->save($itemForm, $postData)) {
                 (new ItemFormAssetService())->save($item, $tagsForm, $postData, $_FILES);
 
                 return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
             }
         }
         return $this->render('update', [
-            'model' => $item,
+            'model' => $itemForm,
             'repo' => $repo,
             'tagsForm' => $tagsForm,
         ]);
@@ -286,7 +288,7 @@ class ItemsController extends RepoAwareController
             if ($itemDeleteForm->load(PostDataHelper::toArray(Yii::$app->request->post())) && $itemDeleteForm->validate()) {
                 $deletionResult = (new ItemDeletionService())->delete(
                     $item,
-                    $itemDeleteForm->hardDelete,
+                    $itemDeleteForm->isHardDelete(),
                     $this->getLoggedUser(),
                 );
 

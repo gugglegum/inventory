@@ -1,5 +1,6 @@
 <?php
 
+use backend\models\ItemForm;
 use backend\models\ItemTagsForm;
 use common\models\Item;
 use common\models\Repo;
@@ -8,7 +9,7 @@ use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
 /** @var \yii\web\View $this */
-/** @var Item $model */
+/** @var ItemForm $model */
 /** @var Repo $repo */
 /** @var ItemTagsForm $tagsForm */
 /** @var string $goto */
@@ -21,6 +22,7 @@ $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true],
 
 /** @var \yii\widgets\ActiveForm $form */
 $tabIndex = 1;
+$item = $model->getItem();
 ?>
 
 <div class="item-form" style="margin-bottom: 10em;">
@@ -49,7 +51,7 @@ $tabIndex = 1;
         <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
         <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
             $model->isNewRecord
-                ? $model->parentItemId !== null ? ['items/view', 'repoId' => $repo->id, 'itemId' => $model->parentItemId] : ['items/index']
+                ? $model->parentItemId !== '' ? ['items/view', 'repoId' => $repo->id, 'itemId' => $model->parentItemId] : ['items/index']
                 : ['items/view', 'repoId' => $repo->id, 'itemId' => $model->itemId]
         ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$model->isNewRecord) { ?>
@@ -62,7 +64,7 @@ $tabIndex = 1;
 
     <label class="control-label">Фотографии</label>
     <?php
-        $photos = $model->itemPhotos;
+        $photos = $item->itemPhotos;
         if (count($photos) !== 0) {
             echo Html::beginTag('div', ['class' => 'uploaded-photos']);
 
@@ -96,7 +98,7 @@ $tabIndex = 1;
         <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
         <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
             $model->isNewRecord
-                ? $model->parentItemId !== null ? ['items/view', 'repoId' => $repo->id, 'itemId' => $model->parentItemId] : ['items/index']
+                ? $model->parentItemId !== '' ? ['items/view', 'repoId' => $repo->id, 'itemId' => $model->parentItemId] : ['items/index']
                 : ['items/view', 'repoId' => $repo->id, 'itemId' => $model->itemId]
         ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$model->isNewRecord) { ?>

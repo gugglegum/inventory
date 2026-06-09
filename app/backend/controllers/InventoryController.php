@@ -102,9 +102,9 @@ class InventoryController extends RepoAwareController
         if (Yii::$app->request->isPost) {
             $postData = PostDataHelper::toArray(Yii::$app->request->post());
             if ($inventoryItemConfirm->load($postData)) {
-                $inventoryItemConfirm->repoId = $repo->id;
-                if ($inventoryItemConfirm->validate() && $inventoryItemConfirm->itemId !== null) {
-                    $item = $this->findItem($repo->id, $inventoryItemConfirm->itemId);
+                $inventoryItemConfirm->repoId = (string) $repo->id;
+                if ($inventoryItemConfirm->validate()) {
+                    $item = $this->findItem($repo->id, $inventoryItemConfirm->getItemId());
                     $confirmResult = $inventoryItemConfirmationService->confirm($inventory, $item, $this->getLoggedUser());
                     if (!$confirmResult->hasError()) {
                         return $this->redirect(['inventory/view', 'repoId' => $repo->id, 'itemId' => $container->itemId, 'inventoryId' => $inventory->id]);
@@ -112,9 +112,9 @@ class InventoryController extends RepoAwareController
                     $inventoryItemConfirm->addError('itemId', $confirmResult->errorMessage ?? 'Unknown error');
                 }
             } elseif ($inventoryItemUnconfirm->load($postData)) {
-                $inventoryItemUnconfirm->repoId = $repo->id;
-                if ($inventoryItemUnconfirm->validate() && $inventoryItemUnconfirm->itemId !== null) {
-                    $item = $this->findItem($repo->id, $inventoryItemUnconfirm->itemId);
+                $inventoryItemUnconfirm->repoId = (string) $repo->id;
+                if ($inventoryItemUnconfirm->validate()) {
+                    $item = $this->findItem($repo->id, $inventoryItemUnconfirm->getItemId());
                     if ($inventoryItemConfirmationService->unconfirm($inventory, $item)) {
                         return $this->redirect(['inventory/view', 'repoId' => $repo->id, 'itemId' => $container->itemId, 'inventoryId' => $inventory->id]);
                     }

@@ -11,29 +11,29 @@ use yii\base\Model;
 class ContactForm extends Model
 {
     /**
-     * @var string|null
+     * Имя отправителя.
      */
-    public $name;
+    public string $name = '';
 
     /**
-     * @var string|null
+     * Email отправителя.
      */
-    public $email;
+    public string $email = '';
 
     /**
-     * @var string|null
+     * Тема сообщения.
      */
-    public $subject;
+    public string $subject = '';
 
     /**
-     * @var string|null
+     * Текст сообщения.
      */
-    public $body;
+    public string $body = '';
 
     /**
-     * @var string|null
+     * Код captcha из формы.
      */
-    public $verifyCode;
+    public string $verifyCode = '';
 
     /**
      * @inheritdoc
@@ -70,9 +70,9 @@ class ContactForm extends Model
     {
         return Yii::$app->mailer->compose()
             ->setTo($email)
-            ->setFrom([(string) $this->email => (string) $this->name])
-            ->setSubject((string) $this->subject)
-            ->setTextBody((string) $this->body)
+            ->setFrom([$this->email => $this->name])
+            ->setSubject($this->subject)
+            ->setTextBody($this->body)
             ->send();
     }
 }

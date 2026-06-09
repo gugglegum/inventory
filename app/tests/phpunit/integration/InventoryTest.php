@@ -37,13 +37,13 @@ final class InventoryTest extends DbTestCase
         ]);
 
         $confirmForm = new InventoryItemConfirmForm();
-        $confirmForm->repoId = $repo->id;
-        $confirmForm->itemId = $item->itemId;
+        $confirmForm->repoId = (string) $repo->id;
+        $confirmForm->itemId = (string) $item->itemId;
         self::assertTrue($confirmForm->validate());
 
         $unconfirmForm = new InventoryItemUnconfirmForm();
-        $unconfirmForm->repoId = $repo->id;
-        $unconfirmForm->itemId = 999999;
+        $unconfirmForm->repoId = (string) $repo->id;
+        $unconfirmForm->itemId = '999999';
         self::assertFalse($unconfirmForm->validate());
         self::assertArrayHasKey('itemId', $unconfirmForm->getErrors());
     }

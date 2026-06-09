@@ -6,7 +6,6 @@ use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\db\BaseActiveRecord;
-use Yii;
 
 /**
  * Пост к предмету
@@ -32,8 +31,6 @@ class Post extends ActiveRecord
 {
     public const string SCENARIO_CREATE = 'create';
     public const string SCENARIO_UPDATE = 'update';
-
-    public ?string $datetimeText = null; // виртуальное поле даты и времени в текстовом виде
 
     /**
      * @inheritdoc
@@ -68,8 +65,8 @@ class Post extends ActiveRecord
     {
         $scenarios = parent::scenarios();
 
-        $scenarios[self::SCENARIO_CREATE] = ['datetimeText', 'title', 'text'];
-        $scenarios[self::SCENARIO_UPDATE] = ['datetimeText', 'title', 'text'];
+        $scenarios[self::SCENARIO_CREATE] = ['datetime', 'title', 'text'];
+        $scenarios[self::SCENARIO_UPDATE] = ['datetime', 'title', 'text'];
 
         return $scenarios;
     }
@@ -80,15 +77,11 @@ class Post extends ActiveRecord
     public function rules(): array
     {
         return [
-            [['title'], 'required'],
+            [['datetime', 'title'], 'required'],
+            [['datetime'], 'integer'],
             [['title', 'text'], 'string'],
-            [['datetime'], 'string'],
             [['title', 'text'], 'filter', 'filter' => 'trim'],
             [['title'], 'string', 'max' => 200],
-
-            [['datetimeText'], 'required'],
-            [['datetimeText'], 'filter', 'filter' => 'trim'],
-            [['datetimeText'], 'datetime', 'format' => 'php:d.m.Y H:i'],
         ];
     }
 
@@ -101,7 +94,6 @@ class Post extends ActiveRecord
             'id' => 'ID поста',
             'itemId' => 'ID предмета',
             'datetime' => 'Unixtime, к которому относится пост',
-            'datetimeText' => 'Дата и время, к которому относится пост',
             'title' => 'Заголовок поста',
             'text' => 'Текст поста',
             'createdBy' => 'ID создавшего пост пользователя',
@@ -109,34 +101,6 @@ class Post extends ActiveRecord
             'created' => 'Время создания',
             'updated' => 'Время последнего изменения',
         ];
-    }
-
-    public function afterFind(): void
-    {
-        parent::afterFind();
-        $this->datetimeText = $this->datetime ? Yii::$app->formatter->asDatetime($this->datetime, 'php:d.m.Y H:i') : null;
-    }
-
-    public function beforeValidate(): bool
-    {
-        if (!parent::beforeValidate()) {
-            return false;
-        }
-
-        if ($this->datetimeText !== null && $this->datetimeText !== '') {
-            // Пользовательский ввод даты интерпретируется в timezone приложения.
-            $tz = new \DateTimeZone(Yii::$app->timeZone ?: 'UTC');
-
-            $dt = \DateTimeImmutable::createFromFormat('d.m.Y H:i', $this->datetimeText, $tz);
-
-            if ($dt === false) {
-                $this->addError('datetimeText', 'Неверный формат даты/времени.');
-            } else {
-                $this->datetime = $dt->getTimestamp(); // int в БД
-            }
-        }
-
-        return !$this->hasErrors();
     }
 
     /**

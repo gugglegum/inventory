@@ -11,19 +11,19 @@ use Yii;
 class SignupForm extends Model
 {
     /**
-     * @var string|null
+     * Имя нового пользователя.
      */
-    public $username;
+    public string $username = '';
 
     /**
-     * @var string|null
+     * Email нового пользователя.
      */
-    public $email;
+    public string $email = '';
 
     /**
-     * @var string|null
+     * Пароль нового пользователя.
      */
-    public $password;
+    public string $password = '';
 
     /**
      * @inheritdoc
@@ -56,9 +56,9 @@ class SignupForm extends Model
     {
         if ($this->validate()) {
             $user = new User();
-            $user->username = (string) $this->username;
-            $user->email = (string) $this->email;
-            $user->setPassword((string) $this->password);
+            $user->username = $this->username;
+            $user->email = $this->email;
+            $user->setPassword($this->password);
             $user->generateAuthKey();
             if ($user->save()) {
                 return $user;

@@ -10,9 +10,9 @@ use yii\base\Model;
 class PasswordResetRequestForm extends Model
 {
     /**
-     * @var string|null
+     * Email пользователя, запросившего восстановление пароля.
      */
-    public $email;
+    public string $email = '';
 
     /**
      * @inheritdoc
@@ -58,7 +58,7 @@ class PasswordResetRequestForm extends Model
 
                 return \Yii::$app->mailer->compose(['html' => 'passwordResetToken-html', 'text' => 'passwordResetToken-text'], ['user' => $user])
                     ->setFrom([$supportEmail => \Yii::$app->name . ' robot'])
-                    ->setTo((string) $this->email)
+                    ->setTo($this->email)
                     ->setSubject('Password reset for ' . \Yii::$app->name)
                     ->send();
             }

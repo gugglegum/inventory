@@ -9,8 +9,15 @@ use yii\base\Model;
 
 abstract class InventoryItemAbstractForm extends Model
 {
-    public ?int $repoId = null;
-    public ?int $itemId = null;
+    /**
+     * ID репозитория из серверного контекста формы.
+     */
+    public string $repoId = '';
+
+    /**
+     * Введенный пользователем itemId внутри репозитория.
+     */
+    public string $itemId = '';
 
     public function rules(): array
     {
@@ -27,5 +34,13 @@ abstract class InventoryItemAbstractForm extends Model
             'repoId' => 'Repo ID',
             'itemId' => 'Item ID',
         ];
+    }
+
+    /**
+     * Возвращает itemId как число после успешной валидации.
+     */
+    public function getItemId(): int
+    {
+        return (int) $this->itemId;
     }
 }

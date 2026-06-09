@@ -27,15 +27,16 @@ final class ItemFormServiceTest extends DbTestCase
         [$repo, $parent] = $this->prepareFixture();
         $service = new ItemFormService();
 
-        $item = $service->prepareForCreate(
+        $itemForm = $service->prepareForCreate(
             $repo,
             $parent,
             Yii::$app->getUser(),
             new ItemAccessValidator()->setUser(Yii::$app->getUser()),
             true,
         );
+        $item = $itemForm->getItem();
 
-        $result = $service->save($item, [
+        $result = $service->save($itemForm, [
             'Item' => [
                 'name' => 'Созданный сервисом предмет',
                 'description' => 'Описание',
@@ -64,14 +65,15 @@ final class ItemFormServiceTest extends DbTestCase
         $item->saveTagsFromString('старый, тег');
         $service = new ItemFormService();
 
-        $preparedItem = $service->prepareForUpdate(
+        $itemForm = $service->prepareForUpdate(
             $item,
             Yii::$app->getUser(),
             new ItemAccessValidator()->setUser(Yii::$app->getUser()),
         );
+        $preparedItem = $itemForm->getItem();
         $tagsForm = $service->createTagsForm($preparedItem);
 
-        $result = $service->save($preparedItem, [
+        $result = $service->save($itemForm, [
             'Item' => [
                 'name' => 'Обновленный сервисом предмет',
                 'description' => 'Новое описание',

@@ -218,10 +218,7 @@ class Item extends ActiveRecord
             return false;
         }
 
-        // Добавляем проверку на изменение parentItemId
-        $rawParentItemId = $this->getAttribute('parentItemId');
-        $parentItemId = $rawParentItemId !== null && $rawParentItemId !== '' ? (int) $rawParentItemId : null; // Преобразуем в int или null, т.к. после load() данными из POST все значения имеют тип string
-        if ($this->getOldAttribute('parentItemId') !== $parentItemId) {
+        if ($this->getOldAttribute('parentItemId') !== $this->parentItemId) {
             // Если parentItemId изменился, сбрасываем missingSince и missingSinceBy
             $this->missingSince = null;
             $this->missingSinceBy = null;
@@ -231,7 +228,7 @@ class Item extends ActiveRecord
             $this->itemId = $this->getNextAvailableItemId();
         }
 
-        if (trim((string) $this->priority) === '') {
+        if ($this->getAttribute('priority') === null) {
             $this->priority = 0;
         }
         return parent::beforeSave($insert);

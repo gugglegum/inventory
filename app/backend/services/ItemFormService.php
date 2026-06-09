@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace backend\services;
 
+use backend\models\ItemForm;
 use backend\models\ItemTagsForm;
 use common\components\ItemAccessValidator;
 use common\models\Item;
@@ -34,7 +35,7 @@ final class ItemFormService
         User $user,
         ItemAccessValidator $itemAccessValidator,
         bool $isContainer,
-    ): Item {
+    ): ItemForm {
         $item = new Item();
         $item->scenario = Item::SCENARIO_CREATE;
         $item->setItemAccessValidator($itemAccessValidator);
@@ -44,7 +45,7 @@ final class ItemFormService
         $item->parentItemId = $parent?->itemId;
         $item->isContainer = $isContainer ? 1 : 0;
 
-        return $item;
+        return new ItemForm($item);
     }
 
     /**
@@ -52,13 +53,13 @@ final class ItemFormService
      *
      * @param User<Identity> $user Текущий пользователь, записываемый в updatedBy.
      */
-    public function prepareForUpdate(Item $item, User $user, ItemAccessValidator $itemAccessValidator): Item
+    public function prepareForUpdate(Item $item, User $user, ItemAccessValidator $itemAccessValidator): ItemForm
     {
         $item->scenario = Item::SCENARIO_UPDATE;
         $item->setItemAccessValidator($itemAccessValidator);
         $item->updatedBy = (int) $user->id;
 
-        return $item;
+        return new ItemForm($item);
     }
 
     /**
@@ -77,12 +78,12 @@ final class ItemFormService
     }
 
     /**
-     * Загружает POST-данные в Item и сохраняет модель.
+     * Загружает POST-данные в форму предмета и сохраняет связанную модель.
      *
      * @throws \yii\db\Exception
      */
-    public function save(Item $item, array $postData): bool
+    public function save(ItemForm $itemForm, array $postData): bool
     {
-        return $item->load($postData) && $item->save();
+        return $itemForm->load($postData) && $itemForm->save();
     }
 }

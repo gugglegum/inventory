@@ -32,9 +32,10 @@ final class PostFormServiceTest extends DbTestCase
         $uploadedFile = $this->createUploadedJpegFixture();
         $service = new PostFormService();
 
-        $post = $service->prepareForCreate($item, Yii::$app->getUser());
+        $postForm = $service->prepareForCreate($item, Yii::$app->getUser());
+        $post = $postForm->getPost();
         $result = $service->save(
-            $post,
+            $postForm,
             [
                 'Post' => [
                     'datetimeText' => '01.06.2026 12:30',
@@ -81,9 +82,10 @@ final class PostFormServiceTest extends DbTestCase
         ]);
         $service = new PostFormService();
 
-        $preparedPost = $service->prepareForUpdate($post, Yii::$app->getUser());
+        $postForm = $service->prepareForUpdate($post, Yii::$app->getUser());
+        $preparedPost = $postForm->getPost();
         $result = $service->save(
-            $preparedPost,
+            $postForm,
             [
                 'Post' => [
                     'datetimeText' => '02.06.2026 08:15',

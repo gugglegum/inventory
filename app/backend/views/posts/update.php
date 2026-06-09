@@ -1,15 +1,16 @@
 <?php
 
+use backend\models\PostForm;
 use common\models\Repo;
 use common\models\Item;
-use common\models\Post;
 use yii\helpers\Html;
 
 /** @var \yii\web\View $this */
-/** @var Post $post */
+/** @var PostForm $postForm */
 /** @var Item $item */
 /** @var Repo $repo */
 
+$post = $postForm->getPost();
 $this->title = $post->title;
 $this->render('/_breadcrumbs', ['item' => $item, 'repo' => $repo, 'suffix' => [
         ['url' => \yii\helpers\Url::to(['posts/view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]), 'label' => $this->title],
@@ -23,7 +24,7 @@ $this->render('/_breadcrumbs', ['item' => $item, 'repo' => $repo, 'suffix' => [
     <h1><?= Html::encode($this->title) ?></h1>
 
     <?= $this->render('_form', [
-        'post' => $post,
+        'postForm' => $postForm,
         'item' => $item,
         'repo' => $repo,
     ]) ?>

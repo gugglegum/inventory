@@ -7,9 +7,9 @@ use yii\base\Model;
 class ItemTagsForm extends Model
 {
     /**
-     * @var string|null
+     * Строка пользовательских тегов через запятую.
      */
-    public $tags;
+    public string $tags = '';
 
     public function rules(): array
     {

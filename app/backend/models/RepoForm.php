@@ -8,38 +8,44 @@ use common\models\Repo;
 use common\models\RepoUser;
 use yii\base\Model;
 
+/**
+ * Форма создания и редактирования репозитория.
+ *
+ * Хранит пользовательский ввод как строки и переносит его в Repo/RepoUser только после
+ * валидации, чтобы AR-модели не загружали сырые POST-данные.
+ */
 class RepoForm extends Model
 {
     public const string SCENARIO_CREATE = 'create';
     public const string SCENARIO_UPDATE = 'update';
 
     /**
-     * @var string|null
+     * Название репозитория.
      */
-    public $name;
+    public string $name = '';
 
     /**
-     * @var string|null
+     * Описание репозитория.
      */
-    public $description;
+    public string $description = '';
 
     /**
-     * @var string|null
+     * Последний занятый itemId внутри репозитория.
      */
-    public $lastItemId;
+    public string $lastItemId = '0';
 
     /**
-     * @var string
+     * Пользовательский приоритет репозитория в списке.
      */
-    public $priority = '0';
+    public string $priority = '0';
 
     /**
-     * @var Repo
+     * Связанная AR-модель репозитория.
      */
     private Repo $repo;
 
     /**
-     * @var RepoUser
+     * Связанная AR-модель персональных настроек доступа.
      */
     private RepoUser $repoUser;
 
@@ -55,6 +61,20 @@ class RepoForm extends Model
         $scenarios[self::SCENARIO_CREATE] = ['name', 'description', 'priority'];
         $scenarios[self::SCENARIO_UPDATE] = ['name', 'description', 'lastItemId', 'priority'];
         return $scenarios;
+    }
+
+    /**
+     * Правила валидации строковых значений формы.
+     */
+    public function rules(): array
+    {
+        return [
+            [['name', 'description', 'lastItemId', 'priority'], 'filter', 'filter' => 'trim'],
+            [['name', 'priority'], 'required'],
+            [['lastItemId', 'priority'], 'integer'],
+            [['name'], 'string', 'max' => 64],
+            [['description'], 'string'],
+        ];
     }
 
     /**
@@ -82,6 +102,17 @@ class RepoForm extends Model
         $this->repoUser = $repoUser;
     }
 
+    /**
+     * Заполняет форму текущими значениями Repo и RepoUser без Model::load().
+     */
+    public function fillFromModels(): void
+    {
+        $this->name = $this->stringify($this->repo->getAttribute('name'));
+        $this->description = $this->stringify($this->repo->getAttribute('description'));
+        $this->lastItemId = $this->stringify($this->repo->getAttribute('lastItemId'));
+        $this->priority = $this->stringify($this->repoUser->getAttribute('priority'));
+    }
+
     public function load($data, $formName = null): bool
     {
         if ($this->scenario === self::SCENARIO_CREATE) {
@@ -96,7 +127,14 @@ class RepoForm extends Model
      */
     public function save(): bool
     {
-        $this->repo->load($this->attributes, '');
+        if (!$this->validate()) {
+            return false;
+        }
+
+        $this->repo->name = $this->name;
+        $this->repo->description = $this->description;
+        $this->repo->lastItemId = $this->lastItemId !== '' ? (int) $this->lastItemId : 0;
+
         $userId = (int) \Yii::$app->getUser()->getId();
         if ($this->scenario === self::SCENARIO_CREATE) {
             $this->repo->createdBy = $userId;
@@ -104,7 +142,7 @@ class RepoForm extends Model
             $this->repo->updatedBy = $userId;
         }
 
-        $this->repoUser->load($this->attributes, '');
+        $this->repoUser->priority = $this->priority !== '' ? (int) $this->priority : 0;
         $this->repoUser->userId = $this->repo->createdBy;
         $this->repoUser->access = RepoUser::ACCESS_CREATE_ITEMS | RepoUser::ACCESS_EDIT_ITEMS | RepoUser::ACCESS_DELETE_ITEMS | RepoUser::ACCESS_EDIT_REPO | RepoUser::ACCESS_DELETE_REPO;
 
@@ -130,5 +168,13 @@ class RepoForm extends Model
             $transaction->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Приводит значение AR-атрибута к строке формы.
+     */
+    private function stringify(mixed $value): string
+    {
+        return $value === null ? '' : (string) $value;
     }
 }

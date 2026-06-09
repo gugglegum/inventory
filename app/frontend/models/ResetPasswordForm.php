@@ -12,9 +12,9 @@ use Yii;
 class ResetPasswordForm extends Model
 {
     /**
-     * @var string|null
+     * Новый пароль пользователя.
      */
-    public $password;
+    public string $password = '';
 
     /**
      * @var User
@@ -61,7 +61,7 @@ class ResetPasswordForm extends Model
     public function resetPassword(): bool
     {
         $user = $this->_user;
-        $user->setPassword((string) $this->password);
+        $user->setPassword($this->password);
         $user->removePasswordResetToken();
 
         return $user->save(false);

@@ -41,7 +41,7 @@ $unconfirmedBottomCallback = function (Item $item) use ($inventory) {
         ],
     ]);
     $inventoryItem = new InventoryItemConfirmForm();
-    $inventoryItem->itemId = $item->itemId;
+    $inventoryItem->itemId = (string) $item->itemId;
     echo $form->field($inventoryItem, 'itemId')->hiddenInput()->label(false);
     echo Html::submitButton('<i class="glyphicon glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Подтвердить наличие', [
         'class' => 'btn btn-primary',
@@ -59,7 +59,7 @@ $confirmedBottomCallback = function (Item $item) use ($inventory) {
         ],
     ]);
     $inventoryItem = new InventoryItemUnconfirmForm();
-    $inventoryItem->itemId = $item->itemId;
+    $inventoryItem->itemId = (string) $item->itemId;
     echo $form->field($inventoryItem, 'itemId')->hiddenInput()->label(false);
     echo Html::submitButton('<i class="glyphicon glyphicon glyphicon-minus-sign" style="margin-right: 5px;"></i> Снять подтверждение', [
         'class' => 'btn btn-danger',

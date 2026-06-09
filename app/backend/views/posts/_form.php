@@ -1,12 +1,13 @@
 <?php
 
+use backend\models\PostForm;
 use kartik\datetime\DateTimePicker;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
 /** @var \yii\web\View $this */
-/** @var \common\models\Post $post */
+/** @var PostForm $postForm */
 /** @var \common\models\Item $item */
 /** @var \common\models\Repo $repo */
 
@@ -15,6 +16,7 @@ $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true],
 
 /** @var \yii\widgets\ActiveForm $form */
 $tabIndex = 1;
+$post = $postForm->getPost();
 ?>
 
 <div class="item-form" style="margin-bottom: 10em;">
@@ -27,9 +29,9 @@ $tabIndex = 1;
         'id' => 'PostForm',
     ]); ?>
 
-    <?= $form->errorSummary($post) ?>
+    <?= $form->errorSummary($postForm) ?>
 
-    <?= $form->field($post, 'datetimeText')->widget(DateTimePicker::class, [
+    <?= $form->field($postForm, 'datetimeText')->widget(DateTimePicker::class, [
             'options' => [
                 'placeholder' => 'ДД.ММ.ГГГГ ЧЧ:ММ',
                 'style' => 'width: 150px',
@@ -40,8 +42,8 @@ $tabIndex = 1;
             'removeButton' => false,
             'layout' => '{picker}{remove}{input} <span style="position: relative; top: 0.5em; left: 0.5em;">(UTC)</span>',
     ]) ?>
-    <?= $form->field($post, 'title')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
-    <?= $form->field($post, 'text')->textarea(['rows' => 4, 'tabindex' => $tabIndex++]) ?>
+    <?= $form->field($postForm, 'title')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
+    <?= $form->field($postForm, 'text')->textarea(['rows' => 4, 'tabindex' => $tabIndex++]) ?>
 
     <label class="control-label">Фотографии</label>
     <?php

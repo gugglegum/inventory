@@ -44,7 +44,7 @@ final class ItemFormAssetService
     private function saveTags(Item $item, ItemTagsForm $tagsForm, array $postData): void
     {
         if ($tagsForm->load($postData)) {
-            $item->saveTagsFromString((string) $tagsForm->tags);
+            $item->saveTagsFromString($tagsForm->tags);
         }
     }
 
