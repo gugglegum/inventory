@@ -60,7 +60,7 @@ final class RepoAwareControllerTest extends DbTestCase
         ]);
         $controller = new RepoAwareControllerProbe('repo-aware-probe', Yii::$app);
 
-        $resolvedItem = $controller->publicFindItem($repo->id, $item->itemId);
+        $resolvedItem = $controller->publicFindItem($repo->id, (int) $item->itemId);
         $resolvedItem->scenario = Item::SCENARIO_UPDATE;
         $resolvedItem->name = 'Предмет после обновления';
 

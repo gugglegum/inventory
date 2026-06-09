@@ -34,7 +34,7 @@ final class PostsControllerTest extends DbTestCase
 
         $this->setGetRequest();
 
-        $response = $controller->actionView($repo->id, $item->itemId, $post->id);
+        $response = $controller->actionView($repo->id, (int) $item->itemId, $post->id);
 
         self::assertIsString($response);
         self::assertStringContainsString('Просматриваемая заметка', $response);
@@ -57,7 +57,7 @@ final class PostsControllerTest extends DbTestCase
             ],
         ]);
 
-        $response = $controller->actionCreate($repo->id, $item->itemId);
+        $response = $controller->actionCreate($repo->id, (int) $item->itemId);
 
         $post = Post::findOne(['itemId' => $item->id, 'title' => 'Новая заметка']);
 
@@ -92,7 +92,7 @@ final class PostsControllerTest extends DbTestCase
             ],
         ]);
 
-        $response = $controller->actionUpdate($repo->id, $item->itemId, $post->id);
+        $response = $controller->actionUpdate($repo->id, (int) $item->itemId, $post->id);
 
         $post->refresh();
 
@@ -119,7 +119,7 @@ final class PostsControllerTest extends DbTestCase
 
         $this->setPostRequest();
 
-        $response = $controller->actionDelete($repo->id, $item->itemId, $post->id);
+        $response = $controller->actionDelete($repo->id, (int) $item->itemId, $post->id);
 
         self::assertInstanceOf(Response::class, $response);
         self::assertSame(302, $response->statusCode);
@@ -143,7 +143,7 @@ final class PostsControllerTest extends DbTestCase
 
         $this->setGetRequest();
 
-        $response = $controller->actionUpdate($repo->id, $item->itemId, $post->id);
+        $response = $controller->actionUpdate($repo->id, (int) $item->itemId, $post->id);
 
         self::assertIsString($response);
         self::assertStringContainsString('data-id="' . $postPhoto->id . '"', $response);

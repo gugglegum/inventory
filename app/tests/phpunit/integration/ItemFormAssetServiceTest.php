@@ -51,7 +51,6 @@ final class ItemFormAssetServiceTest extends DbTestCase
 
         self::assertEqualsCanonicalizing(['фото', 'проверка'], $item->fetchTags());
         self::assertNotNull($itemPhoto);
-        self::assertNotNull($itemPhoto->photo);
         self::assertFileExists($itemPhoto->photo->getFile());
         self::assertSame(0, (int) $itemPhoto->sortIndex);
     }

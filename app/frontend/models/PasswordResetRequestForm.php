@@ -9,12 +9,15 @@ use yii\base\Model;
  */
 class PasswordResetRequestForm extends Model
 {
+    /**
+     * @var string|null
+     */
     public $email;
 
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             ['email', 'filter', 'filter' => 'trim'],
@@ -33,7 +36,7 @@ class PasswordResetRequestForm extends Model
      *
      * @return boolean whether the email was send
      */
-    public function sendEmail()
+    public function sendEmail(): bool
     {
         /* @var $user User */
         $user = User::findOne([
@@ -55,7 +58,7 @@ class PasswordResetRequestForm extends Model
 
                 return \Yii::$app->mailer->compose(['html' => 'passwordResetToken-html', 'text' => 'passwordResetToken-text'], ['user' => $user])
                     ->setFrom([$supportEmail => \Yii::$app->name . ' robot'])
-                    ->setTo($this->email)
+                    ->setTo((string) $this->email)
                     ->setSubject('Password reset for ' . \Yii::$app->name)
                     ->send();
             }

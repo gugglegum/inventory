@@ -16,7 +16,7 @@ use Yii;
  * Предмет
  *
  * @property int $id ID предмета (глобальный по всем репозиториям)
- * @property int $itemId ID предмета (внутри репозитория)
+ * @property ?int $itemId ID предмета (внутри репозитория)
  * @property ?int $parentItemId ID родительского предмета-контейнера (ссылка на itemId)
  * @property int $repoId ID репозитория
  * @property string $name Наименование
@@ -207,7 +207,7 @@ class Item extends ActiveRecord
 
     /**
      * @inheritdoc
-     * @param $insert
+     * @param bool $insert
      * @return bool
      * @throws Exception
      */
@@ -219,7 +219,8 @@ class Item extends ActiveRecord
         }
 
         // Добавляем проверку на изменение parentItemId
-        $parentItemId = $this->parentItemId !== '' ? (int) $this->parentItemId : null; // Преобразуем в int или null, т.к. после load() данными из POST все значения имеют тип string
+        $rawParentItemId = $this->getAttribute('parentItemId');
+        $parentItemId = $rawParentItemId !== null && $rawParentItemId !== '' ? (int) $rawParentItemId : null; // Преобразуем в int или null, т.к. после load() данными из POST все значения имеют тип string
         if ($this->getOldAttribute('parentItemId') !== $parentItemId) {
             // Если parentItemId изменился, сбрасываем missingSince и missingSinceBy
             $this->missingSince = null;
@@ -270,10 +271,10 @@ class Item extends ActiveRecord
     /**
      * Проверяет новый parentItemId на существование предмета с таким ID
      *
-     * @param $attribute
+     * @param string $attribute
      * @return void
      */
-    public function checkParentExists($attribute): void
+    public function checkParentExists(string $attribute): void
     {
         if ($this->parentItemId != null && $this->parentItem == null) {
             $this->addError($attribute, 'Родительский предмет не существует');
@@ -284,10 +285,10 @@ class Item extends ActiveRecord
      * Проверяет новый parentItemId на отсутствие петли в цепочке родительских предметов, т.е. когда мы делаем parentItemId равным itemId
      * или равным itemId какого-то из дочерних предметов.
      *
-     * @param $attribute
+     * @param string $attribute
      * @return void
      */
-    public function checkParentIsNotLooped($attribute): void
+    public function checkParentIsNotLooped(string $attribute): void
     {
         $parentItem = $this->parentItem;
         while ($parentItem != null) {

@@ -8,14 +8,15 @@ use Yii;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\console\Controller;
+use yii\console\ExitCode;
 
 class UserController extends Controller
 {
-    const EXIT_CODE_USER_EXISTS = 2;
-    const EXIT_CODE_EMAIL_EXISTS = 3;
-    const EXIT_CODE_PASSWORD_TOO_SHORT = 4;
-    const EXIT_CODE_DB_ERROR = 5;
-    const EXIT_CODE_USER_NOT_FOUND = 6;
+    public const int EXIT_CODE_USER_EXISTS = 2;
+    public const int EXIT_CODE_EMAIL_EXISTS = 3;
+    public const int EXIT_CODE_PASSWORD_TOO_SHORT = 4;
+    public const int EXIT_CODE_DB_ERROR = 5;
+    public const int EXIT_CODE_USER_NOT_FOUND = 6;
 
     /**
      * Create new user
@@ -26,15 +27,15 @@ class UserController extends Controller
      * @throws Exception on failure
      * @throws InvalidConfigException
      */
-    public function actionCreate($username, $email)
+    public function actionCreate(string $username, string $email): int
     {
         if (User::find()->where(['username' => $username])->exists()) {
             echo "User with name '{$username}' already exists\n";
-            return self::EXIT_CODE_ERROR;
+            return ExitCode::UNSPECIFIED_ERROR;
         }
         if (User::find()->where(['email' => $email])->exists()) {
             echo "User with e-mail '{$email}' already exists\n";
-            return self::EXIT_CODE_ERROR;
+            return ExitCode::UNSPECIFIED_ERROR;
         }
 
         $user = new User();
@@ -57,14 +58,14 @@ class UserController extends Controller
                 echo "New user '{$username}' successfully created\n";
             } else {
                 echo 'Validation error: ' . ValidateErrorsFormatter::firstError($user, '%ERROR%') . "\n";
-                return self::EXIT_CODE_ERROR;
+                return ExitCode::UNSPECIFIED_ERROR;
             }
         } catch (\yii\db\Exception $e) {
             echo "DB error occurred while creating new user '{$username}':\n" . $e->getMessage() . "\n";
             return self::EXIT_CODE_DB_ERROR;
         }
 
-        return self::EXIT_CODE_NORMAL;
+        return ExitCode::OK;
     }
 
     /**
@@ -75,7 +76,7 @@ class UserController extends Controller
      * @throws Exception on failure
      * @throws InvalidConfigException
      */
-    public function actionChangePassword($username)
+    public function actionChangePassword(string $username): int
     {
         $user = User::find()->where(['username' => $username])->one();
 
@@ -99,24 +100,24 @@ class UserController extends Controller
                 echo "Password for user '{$username}' successfully changed\n";
             } else {
                 echo 'Validation error: ' . ValidateErrorsFormatter::firstError($user, '%ERROR%') . "\n";
-                return self::EXIT_CODE_ERROR;
+                return ExitCode::UNSPECIFIED_ERROR;
             }
         } catch (\yii\db\Exception $e) {
             echo "DB error occurred while updating user '{$username}'':\n" . $e->getMessage() . "\n";
             return self::EXIT_CODE_DB_ERROR;
         }
 
-        return self::EXIT_CODE_NORMAL;
+        return ExitCode::OK;
     }
 
     /**
      * Delete user
      *
-     * @param $username
+     * @param string $username
      * @return int
      * @throws \Exception in case delete failed.
      */
-    public function actionDelete($username)
+    public function actionDelete(string $username): int
     {
         $user = User::find()->where(['username' => $username])->one();
 
@@ -129,10 +130,10 @@ class UserController extends Controller
             try {
                 if ($user->delete() === false) {
                     echo "Some error occurred while deleting user '{$username}'\n";
-                    return self::EXIT_CODE_ERROR;
+                    return ExitCode::UNSPECIFIED_ERROR;
                 } else {
                     echo "User '{$username} successfully deleted\n";
-                    return self::EXIT_CODE_NORMAL;
+                    return ExitCode::OK;
                 }
             } catch (\yii\db\Exception $e) {
                 echo "DB error occurred while deleting user '{$username}'':\n" . $e->getMessage() . "\n";
@@ -140,7 +141,7 @@ class UserController extends Controller
             }
         }
 
-        return self::EXIT_CODE_NORMAL;
+        return ExitCode::OK;
     }
 
     /**
@@ -150,7 +151,7 @@ class UserController extends Controller
      * @return string
      * @psalm-suppress ForbiddenCode Shell commands are used intentionally to request a hidden console password.
      */
-    private function _promptPassword($prompt = 'Enter new password: ')
+    private function _promptPassword(string $prompt = 'Enter new password: '): string
     {
         if (stripos(PHP_OS, 'win') === 0) {
             $vbScript = sys_get_temp_dir() . 'prompt_password.vbs';

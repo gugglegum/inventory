@@ -4,8 +4,8 @@ use yii\db\Migration;
 
 class m260101_174848_fix_charsets extends Migration
 {
-    private const CHARSET = 'utf8mb4';
-    private const COLLATE = 'utf8mb4_unicode_ci';
+    private const string CHARSET = 'utf8mb4';
+    private const string COLLATE = 'utf8mb4_unicode_ci';
 
     /**
      * {@inheritdoc}

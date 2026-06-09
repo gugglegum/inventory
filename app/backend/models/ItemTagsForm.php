@@ -6,6 +6,9 @@ use yii\base\Model;
 
 class ItemTagsForm extends Model
 {
+    /**
+     * @var string|null
+     */
     public $tags;
 
     public function rules(): array

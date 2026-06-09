@@ -83,10 +83,10 @@ final class InventoryViewDataService
         $tmpItem = $item;
         while ($tmpItem) {
             $path[] = [
-                'itemId' => $tmpItem->itemId,
+                'itemId' => (int) $tmpItem->itemId,
                 'repoId' => $tmpItem->repoId,
                 'label' => $tmpItem->name,
-                'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => $tmpItem->itemId],
+                'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => (int) $tmpItem->itemId],
             ];
             $tmpItem = $tmpItem->parentItem;
         }

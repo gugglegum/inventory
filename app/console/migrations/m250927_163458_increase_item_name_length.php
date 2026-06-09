@@ -4,7 +4,7 @@ use yii\db\Migration;
 
 class m250927_163458_increase_item_name_length extends Migration
 {
-    private const TABLE = 'items';
+    private const string TABLE = 'items';
 
     public function safeUp()
     {

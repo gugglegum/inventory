@@ -10,14 +10,25 @@ use Yii;
  */
 class SignupForm extends Model
 {
+    /**
+     * @var string|null
+     */
     public $username;
+
+    /**
+     * @var string|null
+     */
     public $email;
+
+    /**
+     * @var string|null
+     */
     public $password;
 
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             ['username', 'filter', 'filter' => 'trim'],
@@ -41,13 +52,13 @@ class SignupForm extends Model
      *
      * @return User|null the saved model or null if saving fails
      */
-    public function signup()
+    public function signup(): ?User
     {
         if ($this->validate()) {
             $user = new User();
-            $user->username = $this->username;
-            $user->email = $this->email;
-            $user->setPassword($this->password);
+            $user->username = (string) $this->username;
+            $user->email = (string) $this->email;
+            $user->setPassword((string) $this->password);
             $user->generateAuthKey();
             if ($user->save()) {
                 return $user;

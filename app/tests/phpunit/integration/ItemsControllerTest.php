@@ -121,7 +121,7 @@ final class ItemsControllerTest extends DbTestCase
             'confirm' => '1',
         ]);
 
-        $response = $controller->actionImport($repo->id, $parent->itemId);
+        $response = $controller->actionImport($repo->id, (int) $parent->itemId);
 
         self::assertInstanceOf(Response::class, $response);
         self::assertSame(302, $response->statusCode);
@@ -148,7 +148,7 @@ final class ItemsControllerTest extends DbTestCase
 
         $this->setGetRequest(['q' => 'usb']);
 
-        $response = $controller->actionView($repo->id, $item->itemId);
+        $response = $controller->actionView($repo->id, (int) $item->itemId);
 
         self::assertIsString($response);
         self::assertStringContainsString('Просматриваемый предмет', $response);
@@ -162,7 +162,7 @@ final class ItemsControllerTest extends DbTestCase
     {
         [$controller, $repo, $parent, $item] = $this->prepareItemViewFixture();
 
-        $response = $controller->actionJsonPreview($repo->id, $item->itemId);
+        $response = $controller->actionJsonPreview($repo->id, (int) $item->itemId);
 
         self::assertInstanceOf(Response::class, $response);
         self::assertSame(Response::FORMAT_JSON, $response->format);
@@ -228,7 +228,7 @@ final class ItemsControllerTest extends DbTestCase
             ],
         ]);
 
-        $response = $controller->actionUpdate($repo->id, $item->itemId);
+        $response = $controller->actionUpdate($repo->id, (int) $item->itemId);
 
         $item->refresh();
 
@@ -253,7 +253,7 @@ final class ItemsControllerTest extends DbTestCase
             ],
         ]);
 
-        $response = $controller->actionDelete($repo->id, $item->itemId);
+        $response = $controller->actionDelete($repo->id, (int) $item->itemId);
 
         self::assertInstanceOf(Response::class, $response);
         self::assertSame(302, $response->statusCode);
@@ -282,7 +282,7 @@ final class ItemsControllerTest extends DbTestCase
             ],
         ]);
 
-        $response = $controller->actionDelete($repo->id, $item->itemId);
+        $response = $controller->actionDelete($repo->id, (int) $item->itemId);
 
         self::assertInstanceOf(Response::class, $response);
         self::assertSame(302, $response->statusCode);

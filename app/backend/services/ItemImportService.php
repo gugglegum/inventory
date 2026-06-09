@@ -209,7 +209,7 @@ final class ItemImportService
                 $itemModel->repoId = $repo->id;
                 $itemModel->name = $item['name'];
                 $itemModel->parentItemId = $parentItem->itemId;
-                $itemModel->isContainer = !empty($item['container']) ? 1 : 0;
+                $itemModel->isContainer = ($item['container'] ?? '') !== '' ? 1 : 0;
                 $itemModel->description = $item['description'] ?? '';
                 $itemModel->createdBy = (int) $user->id;
 
@@ -222,7 +222,7 @@ final class ItemImportService
                 }
 
                 if ($firstItemAnchor === null) {
-                    $firstItemAnchor = 'item' . $itemModel->repoId . '-' . $itemModel->itemId;
+                    $firstItemAnchor = 'item' . $itemModel->repoId . '-' . (int) $itemModel->itemId;
                 }
             }
 

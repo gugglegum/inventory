@@ -2,7 +2,7 @@
 namespace frontend\models;
 
 use common\models\User;
-use yii\base\InvalidParamException;
+use yii\base\InvalidArgumentException;
 use yii\base\Model;
 use Yii;
 
@@ -11,29 +11,32 @@ use Yii;
  */
 class ResetPasswordForm extends Model
 {
+    /**
+     * @var string|null
+     */
     public $password;
 
     /**
-     * @var \common\models\User
+     * @var User
      */
-    private $_user;
+    private User $_user;
 
 
     /**
      * Creates a form model given a token.
      *
-     * @param  mixed                           $token
-     * @param  array                           $config name-value pairs that will be used to initialize the object properties
-     * @throws \yii\base\InvalidParamException if token is empty or not valid
+     * @param mixed $token
+     * @param array $config name-value pairs that will be used to initialize the object properties
+     * @throws InvalidArgumentException if token is empty or not valid
      */
-    public function __construct($token, $config = [])
+    public function __construct(mixed $token, array $config = [])
     {
         if (empty($token) || !is_string($token)) {
-            throw new InvalidParamException('Password reset token cannot be blank.');
+            throw new InvalidArgumentException('Password reset token cannot be blank.');
         }
         $user = User::findByPasswordResetToken($token);
         if (!$user) {
-            throw new InvalidParamException('Wrong password reset token.');
+            throw new InvalidArgumentException('Wrong password reset token.');
         }
         $this->_user = $user;
         parent::__construct($config);
@@ -42,7 +45,7 @@ class ResetPasswordForm extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             ['password', 'required'],
@@ -55,10 +58,10 @@ class ResetPasswordForm extends Model
      *
      * @return boolean if password was reset.
      */
-    public function resetPassword()
+    public function resetPassword(): bool
     {
         $user = $this->_user;
-        $user->setPassword($this->password);
+        $user->setPassword((string) $this->password);
         $user->removePasswordResetToken();
 
         return $user->save(false);

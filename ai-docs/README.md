@@ -169,7 +169,7 @@ docker compose exec php composer run quality
 
 - PHPUnit 13.2 - regression/integration/unit тесты из `tests/phpunit/`.
 - PHPStan 2.2 - текущий уровень `level: 3`, конфиг `phpstan.neon`.
-- Psalm 6.16 через `psalm/phar`, текущий `errorLevel="3"`, конфиг `psalm.xml`. PHAR выбран потому, что обычный пакет `vimeo/psalm` в актуальных версиях конфликтует с PHPUnit 13 по `sebastian/diff`, а старые версии Psalm не подходят для текущего PHP 8.4-стека.
+- Psalm 6.16 через `psalm/phar`, текущий `errorLevel="2"`, конфиг `psalm.xml`. PHAR выбран потому, что обычный пакет `vimeo/psalm` в актуальных версиях конфликтует с PHPUnit 13 по `sebastian/diff`, а старые версии Psalm не подходят для текущего PHP 8.4-стека.
 - PHPCS 3.13 - `phpcs.xml` проверяет PSR-12 на активно рефакторимом backend-контуре (`backend/controllers`, `backend/services`, `common/services`, `tests/static-analysis`), а `phpcs-compat.xml` отдельно прогоняет PHPCompatibility по широкому дереву приложения.
 
 Psalm настроен без baseline. В конфиге подавлен типичный шум Yii/PHPUnit: route action методы и тестовые классы как unused, требование `#[Override]`, шаблонные параметры Yii-классов и Yii view-контекст. View-файлы не анализируются Psalm как обычные PHP-классы, потому что в них `$this` и переданные переменные живут в контексте шаблона.
@@ -191,6 +191,8 @@ View/mail-шаблоны стоит аннотировать через `/** @va
 В `RepoAwareController::getLoggedUser()` оставлена локальная `@phpstan-var` вместе с `@psalm-suppress UnnecessaryVarAnnotation`: Psalm получает generic-тип пользователя из своего Yii stub, а PHPStan на текущей конфигурации не выводит `yii\web\User<common\models\User>` из `Yii::$app->getUser()` без этой подсказки.
 
 Relations в `common/models` типизированы через `@return ActiveQuery<Model>`, а Psalm stub для `ActiveRecord::hasOne()`/`hasMany()` дополнительно связывает `class-string<TModel>` с `ActiveQuery<TModel>`. Это позволяет Psalm/PHPStan выводить типы после `one()` и `all()` без локальных `/** @var Model|null $model */` и `/** @var Model[] $models */`. Когда добавляются новые relation generics, лишние локальные подсказки удобно выявлять обычным `composer run psalm`: Psalm поднимает их как `UnnecessaryVarAnnotation`.
+
+При переходе Psalm на `errorLevel="2"` в конфиге оставлены suppress для `ClassMustBeFinal`, `PropertyNotSetInConstructor` и `RedundantCastGivenDocblockType`. Для Yii-приложения эти категории дают много низкополезного шума: контроллеры/модели остаются потенциальными framework extension points, ActiveQuery/миграции получают часть состояния от Yii, а защитные casts в тестах и AR-коде часто нужны из-за runtime-гидрации, несмотря на docblock-типы. Остальные level 2 замечания были исправлены кодом: добавлены PHPDoc-типы public form properties, явные strict comparisons, return/param/class-const types в console-коде, замена deprecated `InvalidParamException` и `Controller::EXIT_CODE_*`, а nullable `Item::itemId` теперь явно приводится к int при построении URL/path DTO и в тестовых вызовах action-методов.
 
 ## Git и локальные файлы
 

@@ -16,7 +16,7 @@ class ThumbnailsController extends Controller
      * @param int $quality
      * @throws \yii\base\Exception
      */
-    public function actionCreate(int $width, int $height, bool $upscale, bool $crop, int $quality)
+    public function actionCreate(int $width, int $height, bool $upscale, bool $crop, int $quality): void
     {
         $counter = 0;
         $photos = Photo::find()->all();

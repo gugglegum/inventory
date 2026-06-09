@@ -80,7 +80,7 @@ class InventoryController extends RepoAwareController
     }
 
     /**
-     * Displays a single Item model.
+     * Displays a single Inventory model.
      * @param int $repoId
      * @param int $itemId
      * @param int $inventoryId
@@ -138,7 +138,7 @@ class InventoryController extends RepoAwareController
     }
 
     /**
-     * Creates a new Item model.
+     * Creates a new Inventory model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @param int $repoId
      * @param int $itemId

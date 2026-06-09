@@ -194,7 +194,7 @@ class ItemsController extends RepoAwareController
     {
         $repo = $this->findRepo($repoId);
         $itemFormService = new ItemFormService();
-        $parent = $parentItemId ? $this->findParentItem($repo->id, $parentItemId) : null;
+        $parent = $parentItemId !== null ? $this->findParentItem($repo->id, $parentItemId) : null;
         $item = $itemFormService->prepareForCreate(
             $repo,
             $parent,
@@ -294,7 +294,7 @@ class ItemsController extends RepoAwareController
                     $itemDeleteForm->addError('', $deletionResult->errorMessage ?? 'Unknown error');
                 } else {
                     return $this->redirect(
-                        $parentItemId
+                        $parentItemId !== null
                             ? ['items/view', 'repoId' => $repo->id, 'itemId' => $parentItemId]
                             : ['items/index', 'repoId' => $repo->id]
                     );

@@ -125,7 +125,7 @@ class Photo extends ActiveRecord
     {
         $isSuccess = parent::beforeSave($insert);
         if ($isSuccess && $insert) {
-            if (! $this->assignedFile) {
+            if ($this->assignedFile === null || $this->assignedFile === '') {
                 throw new Exception('File must be assigned before save');
             }
         }

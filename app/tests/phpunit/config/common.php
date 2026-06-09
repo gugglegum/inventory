@@ -2,13 +2,17 @@
 
 declare(strict_types=1);
 
+$dbDsn = getenv('STOCKHUB_TEST_DB_DSN');
+$dbUsername = getenv('STOCKHUB_TEST_DB_USERNAME');
+$dbPassword = getenv('STOCKHUB_TEST_DB_PASSWORD');
+
 return [
     'components' => [
         'db' => [
             'class' => yii\db\Connection::class,
-            'dsn' => getenv('STOCKHUB_TEST_DB_DSN') ?: 'mysql:host=db;dbname=stockhub_test',
-            'username' => getenv('STOCKHUB_TEST_DB_USERNAME') ?: 'stockhub',
-            'password' => getenv('STOCKHUB_TEST_DB_PASSWORD') ?: 'stockhub',
+            'dsn' => $dbDsn !== false && $dbDsn !== '' ? $dbDsn : 'mysql:host=db;dbname=stockhub_test',
+            'username' => $dbUsername !== false && $dbUsername !== '' ? $dbUsername : 'stockhub',
+            'password' => $dbPassword !== false && $dbPassword !== '' ? $dbPassword : 'stockhub',
             'charset' => 'utf8mb4',
         ],
         'mailer' => [

@@ -57,7 +57,7 @@ final class InventoryTest extends DbTestCase
 
         $this->setPostRequest();
 
-        $response = $controller->actionCreate($repo->id, $container->itemId);
+        $response = $controller->actionCreate($repo->id, (int) $container->itemId);
 
         $inventory = Inventory::findOne(['containerId' => $container->id]);
 
@@ -81,7 +81,7 @@ final class InventoryTest extends DbTestCase
 
         $this->setPostRequest();
 
-        $response = $controller->actionDelete($repo->id, $container->itemId, $inventory->id);
+        $response = $controller->actionDelete($repo->id, (int) $container->itemId, $inventory->id);
 
         self::assertInstanceOf(Response::class, $response);
         self::assertSame(302, $response->statusCode);
@@ -105,7 +105,7 @@ final class InventoryTest extends DbTestCase
             ],
         ]);
 
-        $response = $controller->actionView($repo->id, $container->itemId, $inventory->id);
+        $response = $controller->actionView($repo->id, (int) $container->itemId, $inventory->id);
 
         self::assertInstanceOf(Response::class, $response);
         self::assertSame(302, $response->statusCode);
@@ -136,7 +136,7 @@ final class InventoryTest extends DbTestCase
             ],
         ]);
 
-        $response = $controller->actionView($repo->id, $container->itemId, $inventory->id);
+        $response = $controller->actionView($repo->id, (int) $container->itemId, $inventory->id);
 
         self::assertInstanceOf(Response::class, $response);
         self::assertSame(302, $response->statusCode);
@@ -183,7 +183,7 @@ final class InventoryTest extends DbTestCase
 
         $this->setPostRequest();
 
-        $response = $controller->actionClose($repo->id, $container->itemId, $inventory->id);
+        $response = $controller->actionClose($repo->id, (int) $container->itemId, $inventory->id);
 
         self::assertInstanceOf(Response::class, $response);
         self::assertSame(302, $response->statusCode);

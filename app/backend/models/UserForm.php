@@ -18,11 +18,26 @@ class UserForm extends Model
     /**
      * @var User
      */
-    private $_user;
+    private ?User $_user = null;
 
+    /**
+     * @var string|null
+     */
     public $username;
+
+    /**
+     * @var string|null
+     */
     public $email;
+
+    /**
+     * @var string|null
+     */
     public $password;
+
+    /**
+     * @var int|null
+     */
     public $status;
 
     /**
@@ -79,10 +94,10 @@ class UserForm extends Model
     {
         if ($this->validate()) {
             $user = $this->getUser();
-            $user->username = $this->username;
-            $user->email = $this->email;
-            $user->status = $this->status;
-            if ($this->password != '') {
+            $user->username = (string) $this->username;
+            $user->email = (string) $this->email;
+            $user->status = (int) $this->status;
+            if ($this->password !== null && $this->password !== '') {
                 $user->setPassword($this->password);
                 $user->generateAuthKey();
             }

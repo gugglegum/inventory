@@ -65,7 +65,6 @@ final class PostFormServiceTest extends DbTestCase
         self::assertSame('Текст новой заметки', $post->text);
         self::assertSame($this->timestamp('01.06.2026 12:30'), (int) $post->datetime);
         self::assertNotNull($postPhoto);
-        self::assertNotNull($postPhoto->photo);
         self::assertFileExists($postPhoto->photo->getFile());
         self::assertSame(0, (int) $postPhoto->sortIndex);
     }

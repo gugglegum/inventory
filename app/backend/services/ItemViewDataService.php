@@ -80,10 +80,10 @@ final class ItemViewDataService
         $tmpItem = $item;
         while ($tmpItem) {
             $path[] = [
-                'itemId' => $tmpItem->itemId,
+                'itemId' => (int) $tmpItem->itemId,
                 'repoId' => $tmpItem->repoId,
                 'label' => $tmpItem->name,
-                'url' => ['items/view', 'repoId' => $item->repoId, 'itemId' => $tmpItem->itemId],
+                'url' => ['items/view', 'repoId' => $item->repoId, 'itemId' => (int) $tmpItem->itemId],
             ];
             $tmpItem = $tmpItem->parentItem;
         }

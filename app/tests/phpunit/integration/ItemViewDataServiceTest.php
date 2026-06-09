@@ -55,8 +55,8 @@ final class ItemViewDataServiceTest extends DbTestCase
         );
         self::assertSame('Второй предмет', $path[0]['label']);
         self::assertSame('Контейнер', $path[1]['label']);
-        self::assertSame(['items/view', 'repoId' => $repo->id, 'itemId' => $secondChild->itemId], $path[0]['url']);
-        self::assertSame(['items/view', 'repoId' => $repo->id, 'itemId' => $container->itemId], $path[1]['url']);
+        self::assertSame(['items/view', 'repoId' => $repo->id, 'itemId' => (int) $secondChild->itemId], $path[0]['url']);
+        self::assertSame(['items/view', 'repoId' => $repo->id, 'itemId' => (int) $container->itemId], $path[1]['url']);
     }
 
     /**

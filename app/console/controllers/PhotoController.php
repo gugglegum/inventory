@@ -15,7 +15,7 @@ use yii\console\Controller;
  */
 class PhotoController extends Controller
 {
-    private static function getOldFileRelativePath(int $id)
+    private static function getOldFileRelativePath(int $id): string
     {
         $crc32 = crc32((string) $id);
         // backward compatibility trick for int64 systems (e.g. php7 for win64)
@@ -29,7 +29,7 @@ class PhotoController extends Controller
         return implode('/', $path) . '/' . $id . '.jpg';
     }
 
-    public static function getNewFileRelativePath(int $id)
+    public static function getNewFileRelativePath(int $id): string
     {
         $hash = md5(Yii::$app->params['photos']['md5salt'] . $id);
         $hash = substr_replace($hash, '/', 2, 0);
@@ -37,7 +37,7 @@ class PhotoController extends Controller
         return $hash . '.jpg';
     }
 
-    public function actionRelocate()
+    public function actionRelocate(): void
     {
         $counter = 0;
         $photos = Photo::find()->all();

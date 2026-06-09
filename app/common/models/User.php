@@ -147,7 +147,7 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function isPasswordResetTokenValid(?string $token): bool
     {
-        if (empty($token)) {
+        if ($token === null || $token === '') {
             return false;
         }
         $expire = Yii::$app->params['user.passwordResetTokenExpire'];

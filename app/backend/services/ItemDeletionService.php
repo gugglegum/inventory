@@ -55,6 +55,6 @@ final class ItemDeletionService
     {
         $message = $item->getFirstError('');
 
-        return $message ? ': ' . $message : '';
+        return $message !== null && $message !== '' ? ': ' . $message : '';
     }
 }

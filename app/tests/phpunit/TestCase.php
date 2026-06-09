@@ -60,6 +60,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function destroyApplication(): void
     {
+        /** @psalm-suppress RedundantConditionGivenDocblockType Yii::$app is intentionally reset between tests. */
         if (Yii::$app !== null) {
             Yii::$app->errorHandler->unregister();
             Yii::$app->db->close();

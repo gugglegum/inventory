@@ -67,7 +67,7 @@ final class ItemSearchService
 
                 $doSkipItem = $containerId !== null;
                 $path = $this->getItemPathForView($item, $repo);
-                if ($containerId) {
+                if ($containerId !== null) {
                     foreach ($path as $pathItem) {
                         if ($pathItem['itemId'] == $containerId) {
                             $doSkipItem = false;
@@ -171,10 +171,10 @@ final class ItemSearchService
         $tmpItem = $item;
         while ($tmpItem) {
             $path[] = [
-                'itemId' => $tmpItem->itemId,
+                'itemId' => (int) $tmpItem->itemId,
                 'repoId' => $tmpItem->repoId,
                 'label' => $tmpItem->name,
-                'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => $tmpItem->itemId],
+                'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => (int) $tmpItem->itemId],
             ];
             $tmpItem = $tmpItem->parentItem;
         }

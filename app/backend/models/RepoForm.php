@@ -13,10 +13,24 @@ class RepoForm extends Model
     public const string SCENARIO_CREATE = 'create';
     public const string SCENARIO_UPDATE = 'update';
 
+    /**
+     * @var string|null
+     */
     public $name;
+
+    /**
+     * @var string|null
+     */
     public $description;
+
+    /**
+     * @var string|null
+     */
     public $lastItemId;
 
+    /**
+     * @var string
+     */
     public $priority = '0';
 
     /**
@@ -29,7 +43,7 @@ class RepoForm extends Model
      */
     private RepoUser $repoUser;
 
-    public function __construct($config = [])
+    public function __construct(array $config = [])
     {
         parent::__construct($config);
         $this->repo = new Repo();

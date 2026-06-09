@@ -296,9 +296,10 @@ abstract class DbTestCase extends TestCase
      */
     protected function saveModel(ActiveRecord $model): void
     {
+        $errorsJson = json_encode($model->getErrors(), JSON_UNESCAPED_UNICODE);
         self::assertTrue(
             $model->save(),
-            get_class($model) . ' save failed: ' . (json_encode($model->getErrors(), JSON_UNESCAPED_UNICODE) ?: '')
+            get_class($model) . ' save failed: ' . ($errorsJson !== false ? $errorsJson : '')
         );
     }
 }

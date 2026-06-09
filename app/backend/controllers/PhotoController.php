@@ -65,9 +65,8 @@ class PhotoController extends Controller
      */
     public function actionThumbnail(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality): Response
     {
-        /** @var Photo $photo */
         $photo = Photo::findOne($id);
-        if (! $photo) {
+        if ($photo === null) {
             throw new HttpException(404, 'Photo #' . $id . ' is not found');
         }
 

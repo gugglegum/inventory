@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <psalm
-    errorLevel="3"
+    errorLevel="2"
     resolveFromConfigFile="true"
     phpVersion="8.4"
     autoloader="tests/static-analysis/bootstrap.php"
@@ -36,10 +36,13 @@
     <issueHandlers>
         <MissingOverrideAttribute errorLevel="suppress" />
         <MissingTemplateParam errorLevel="suppress" />
+        <ClassMustBeFinal errorLevel="suppress" />
+        <PropertyNotSetInConstructor errorLevel="suppress" />
         <PossiblyUnusedMethod errorLevel="suppress" />
         <PossiblyUnusedParam errorLevel="suppress" />
         <PossiblyUnusedProperty errorLevel="suppress" />
         <PossiblyUnusedReturnValue errorLevel="suppress" />
+        <RedundantCastGivenDocblockType errorLevel="suppress" />
         <UndefinedDocblockClass errorLevel="suppress" />
         <UnusedClass errorLevel="suppress" />
         <UnusedVariable errorLevel="suppress" />
