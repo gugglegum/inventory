@@ -22,6 +22,20 @@ return [
         ],
     ],
     'params' => [
+        'auth' => [
+            'passwordLoginEnabled' => true,
+            'ssoLoginEnabled' => false,
+            'canonicalOrigin' => 'https://stockhub.example.test',
+        ],
+        'oidc' => [
+            'issuer' => 'https://sso.example.test',
+            'clientId' => 'stockhub-test-client',
+            'clientSecret' => 'stockhub-test-secret',
+            'redirectUri' => 'https://stockhub.example.test/auth/sso/callback',
+            'scopes' => ['openid', 'profile', 'email'],
+            'httpTimeout' => 5,
+            'clockSkewSeconds' => 60,
+        ],
         'photos' => [
             'storagePath' => Yii::getAlias('@phpunitRuntime/photos'),
             'storageTemp' => Yii::getAlias('@phpunitRuntime/photos/temp'),

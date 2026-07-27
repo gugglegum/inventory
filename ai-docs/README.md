@@ -103,7 +103,12 @@ docker compose exec php ./yii migrate/history 10
 
 Для новой разработки добавлена отдельная PHPUnit-инфраструктура в `app/tests/phpunit/`. Она не использует старую Codeception-обвязку из шаблона Yii Advanced. Тесты ориентированы на PHPUnit 13 и PHP 8.4.
 
-Тесты запускаются внутри PHP-контейнера и используют отдельную базу `stockhub_test`. Тестовый Yii-конфиг находится в `app/tests/phpunit/config/` и не подключает обычные `main-local.php`, чтобы случайно не работать с локальной рабочей базой `stockhub`.
+Тесты запускаются внутри PHP-контейнера и используют отдельную базу `stockhub_test`.
+Тестовый Yii-конфиг находится в `app/tests/phpunit/config/`; его финальный
+`params` хранится в переменной `$testParams`, чтобы подключаемый
+`backend/config/main.php` не затёр тестовые параметры своей переменной `$params`.
+В частности, фотографии и assets тестов реально направлены в отдельный
+`@phpunitRuntime` под `/tmp`, а не в рабочие `app/photos` и `backend/web/assets`.
 
 Подготовка тестовой базы из корня репозитория:
 
@@ -229,3 +234,93 @@ Relations в `common/models` типизированы через `@return Active
 После переноса корня репозитория приложение успешно запускалось из корня проекта через Docker Compose. Контейнеры `stockhub-db`, `stockhub-nginx` и `stockhub-php` поднимались, `stockhub.lc` отвечал редиректом на страницу входа, Yii видел историю миграций, а новых миграций к применению не было.
 
 `composer validate` проходит без ошибок. Ранее предупреждения о незафиксированных версиях (`*`) у `yiisoft/yii2-swiftmailer` и `kartik-v/yii2-widget-datetimepicker` были закрыты явными ограничениями. Yii обновлен до ветки `2.0.55`, PHPUnit - до `13.2`. `requirements.php` не находил критических ошибок, но предупреждал об отсутствующих/необязательных компонентах вроде `intl/ICU`, `pcntl`, `memcache/APC` и `ImageMagick`; `expose_php` был отключен отдельно.
+
+## Авторизация через Pyrda SSO
+
+Приложение поддерживает два независимых способа входа.
+`STOCKHUB_PASSWORD_LOGIN_ENABLED=1` включает форму и обработку входа по паролю,
+а `STOCKHUB_SSO_LOGIN_ENABLED=1` — кнопку, redirect и callback Pyrda SSO. Можно
+включить любой один способ, оба сразу или ни одного. По умолчанию парольный вход
+включён, а SSO выключен, поэтому установка без OIDC-конфигурации продолжает
+работать. Если оба флага равны `0`, страница входа не предлагает ни одного способа
+авторизации.
+
+Выключение парольного входа также отключает обработку remember-me identity
+cookies. Уже открытые серверные сессии при SSO-only переключении нужно отозвать
+отдельной операционной процедурой. Явный logout всегда истекает identity cookie,
+даже когда auto-login уже выключен. Перед таким переключением нужно также массово
+ротировать `User.authKey`: это отзовет cookies пользователей, которые не выполняли
+logout, и не позволит им снова активироваться при возврате парольного входа.
+Такая массовая ротация пока намеренно не реализована.
+
+Backend web bootstrap читает `YII_ENV` и `YII_DEBUG` непосредственно из
+environment, по умолчанию использует `prod`/`0` и отказывается запускать
+сочетание `prod`/`1`. Yii Debug и Gii подключаются только при явных
+`YII_ENV=dev` и `YII_DEBUG=1`.
+PHP-FPM сохраняет исторический UID/GID `33`: существующие каталоги фотографий
+уже принадлежат этому пользователю, и массово менять владельца нескольких
+гигабайт пользовательских файлов нельзя ради логов. Вместо этого
+`backend/runtime` вынесен в Docker volume `backend_runtime`, который
+инициализируется из образа с владельцем `www-data` и режимом `0775`. Реальный
+FileTarget после recreate проверен записью в `backend/runtime/logs/app.log`.
+
+OIDC-конфигурация читается в `common/config/params.php` из переменных
+`OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REDIRECT_URI`,
+`OIDC_SCOPES`, `OIDC_HTTP_TIMEOUT`, `OIDC_CLOCK_SKEW_SECONDS` и
+`STOCKHUB_CANONICAL_ORIGIN`. Эти параметры требуются только при включённом
+`STOCKHUB_SSO_LOGIN_ENABLED`. Canonical origin по умолчанию выводится из
+`OIDC_REDIRECT_URI`; если задан отдельно, его origin обязан точно совпадать с
+callback. В tracked `params.php` нет значений URL по умолчанию: issuer и callback
+обязаны приходить из окружения. Локальные адреса задаются только в Docker Compose
+окружении разработки. Scopes по умолчанию — `openid profile email`, HTTP timeout
+— 10 секунд, допустимое расхождение часов — 60 секунд. У client ID и client secret
+также нет значений по умолчанию: их нужно заполнить после регистрации отдельного
+клиента Stockhub в SSO.
+
+Один deployment публикует только один canonical hostname. Compose использует
+`STOCKHUB_VIRTUAL_HOST` с default `stockhub.lc`; прежние `p.stockhub.ru` и
+`k.stockhub.ru` больше не публикуются автоматически. Bootstrap-компонент
+`CanonicalHostRedirect` при включённом SSO дополнительно возвращает `308` на
+фиксированный canonical origin до инициализации `user` или `session`, если alias
+всё-таки маршрутизирован в приложение. При выключенном SSO этот bootstrap-компонент
+не запускается. Общая cookie с `Domain=.stockhub.ru` намеренно не используется.
+
+Для локальной разработки PHP-контейнер получает
+`sso.pyrda.lc:host-gateway` через `extra_hosts`. Поэтому server-to-server OIDC
+запросы идут на reverse proxy хоста, а браузер продолжает открывать тот же issuer
+по локальному домену.
+
+Реализация использует Authorization Code Flow с `state`, `nonce` и PKCE S256.
+Подпись `id_token` проверяется по JWKS; разрешен только RS256, дополнительно
+проверяются issuer, audience/authorized party и временные claims. Первый
+вход разрешен только для уже существующего активного пользователя Stockhub,
+которого администратор заранее связал с точной парой `(issuer, sub)` командой
+`./yii user/link-sso <username-or-email> <subject>`. Автоматическая привязка по
+email запрещена: текущий Pyrda SSO позволяет владельцу профиля менять email,
+поэтому такой email не является безопасным основанием для передачи локальных
+прав. Claims `email` и `email_verified` не обязательны: `openid`-only token
+достаточен, потому что email не участвует в поиске или привязке. `ssoIssuer` и
+`ssoSubject` хранятся как `VARBINARY(255)`, сравниваются побайтно (включая регистр
+и завершающие пробелы) и защищены составным unique-index и CHECK-инвариантом.
+В текущей реализации Pyrda SSO значение `subject` равно строковому ID
+пользователя из `php artisan sso:user:list`. Новые локальные пользователи не
+создаются, а существующие пароль, auth key и права доступа не изменяются.
+
+Локальный confidential-клиент `StockHub` зарегистрирован в Pyrda SSO с callback
+`http://stockhub.lc/auth/sso/callback`; его credentials находятся только в
+игнорируемом `docker-compose.yml`, а текущий локальный пользователь уже
+административно связан со своим SSO subject. Profile/access webhooks для клиента
+намеренно не настроены: их реализация отложена на отдельный этап. До этого отзыв
+доступа в SSO не завершает уже открытую локальную сессию Stockhub; новый
+OIDC-вход при отозванном доступе SSO уже не разрешит.
+
+FileTarget backend-приложения не пишет request/session/server globals и не
+включает session ID в prefix. Это обязательная часть OIDC-конфигурации: иначе
+PHP-FPM environment с `OIDC_CLIENT_SECRET`, callback code и cookies попадали бы
+в лог при штатной ошибке авторизации. Внутренний nginx Stockhub также использует
+access-log format без query string и Referer. В соседнем proxy-проекте добавлены
+tracked map-конфигурация `config/nginx/00-stockhub-log-map.conf` и безопасный
+`LOG_FORMAT`: для Stockhub общий `jwilder/nginx-proxy` пишет только method/URI
+path/protocol и `Referer "-"`, а для остальных vhost сохраняет старый формат.
+Smoke-проверка с отдельными query/Referer markers подтвердила отсутствие обоих
+маркеров в Stockhub-строках и наличие control marker у другого vhost.

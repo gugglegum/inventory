@@ -15,6 +15,20 @@ use Yii;
 final class SchemaTest extends TestCase
 {
     /**
+     * Файловые операции тестов не должны попадать в рабочие photos/assets.
+     */
+    public function testFileStorageUsesPhpunitRuntime(): void
+    {
+        $runtime = Yii::getAlias('@phpunitRuntime');
+
+        self::assertSame($runtime . '/photos', Yii::$app->params['photos']['storagePath']);
+        self::assertSame($runtime . '/photos/temp', Yii::$app->params['photos']['storageTemp']);
+        self::assertSame($runtime . '/thumbnails', Yii::$app->params['photos']['thumbnailPath']);
+        self::assertSame($runtime . '/thumbnails/temp', Yii::$app->params['photos']['thumbnailTemp']);
+        self::assertSame($runtime . '/assets', Yii::$app->assetManager->basePath);
+    }
+
+    /**
      * Основные таблицы проекта присутствуют в схеме тестовой БД.
      */
     public function testCoreTablesExistInTestDatabase(): void

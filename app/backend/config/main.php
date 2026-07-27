@@ -11,16 +11,25 @@ return [
     'id' => 'app-backend',
     'basePath' => dirname(__DIR__),
     'controllerNamespace' => 'backend\controllers',
-    'bootstrap' => ['log'],
+    'bootstrap' => (bool) ($params['auth']['ssoLoginEnabled'] ?? false)
+        ? ['log', 'canonicalHost']
+        : ['log'],
     'modules' => [],
     'defaultRoute' => 'repo/index',
     'components' => [
+        'canonicalHost' => [
+            'class' => common\components\CanonicalHostRedirect::class,
+            'canonicalOrigin' => $params['auth']['canonicalOrigin'] ?? '',
+            'oidcRedirectUri' => $params['oidc']['redirectUri'] ?? '',
+        ],
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'enableStrictParsing' => false,
             'rules' => [
                 '' => 'repo/index',
+                'auth/sso/redirect' => 'site/sso-login',
+                'auth/sso/callback' => 'site/sso-callback',
                 'repo/<repoId:\d+>/items' => 'items/index',
                 'repo/<repoId:\d+>/items/<itemId:\d+>' => 'items/view',
                 'repo/<repoId:\d+>/items/<itemId:\d+>/json-preview' => 'items/json-preview',
@@ -47,8 +56,9 @@ return [
             ],
         ],
         'user' => [
+            'class' => common\components\WebUser::class,
             'identityClass' => 'common\models\User',
-            'enableAutoLogin' => true,
+            'enableAutoLogin' => (bool) ($params['auth']['passwordLoginEnabled'] ?? true),
         ],
         'log' => [
             'traceLevel' => (defined('YII_DEBUG') && (bool) constant('YII_DEBUG')) ? 3 : 0,
@@ -56,6 +66,22 @@ return [
                 [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
+                    // Не добавляем request/session/server globals к ошибкам:
+                    // в них находятся authorization code, cookies и OIDC client secret.
+                    'logVars' => [],
+                    'maskVars' => [
+                        '_GET.code',
+                        '_GET.state',
+                        '_COOKIE',
+                        '_SESSION',
+                        '_SERVER.HTTP_AUTHORIZATION',
+                        '_SERVER.PHP_AUTH_USER',
+                        '_SERVER.PHP_AUTH_PW',
+                        '_SERVER.*SECRET*',
+                        '_ENV.*SECRET*',
+                    ],
+                    // Стандартный prefix Yii содержит session ID.
+                    'prefix' => static fn (array $_message): string => '',
                 ],
             ],
         ],

@@ -5,8 +5,24 @@ services:
     build:
       context: .
       dockerfile: ./docker/php/Dockerfile
+    environment:
+      YII_ENV: "${YII_ENV:-prod}"
+      YII_DEBUG: "${YII_DEBUG:-0}"
+      STOCKHUB_CANONICAL_ORIGIN: "${STOCKHUB_CANONICAL_ORIGIN:-}"
+      STOCKHUB_PASSWORD_LOGIN_ENABLED: "${STOCKHUB_PASSWORD_LOGIN_ENABLED:-1}"
+      STOCKHUB_SSO_LOGIN_ENABLED: "${STOCKHUB_SSO_LOGIN_ENABLED:-0}"
+      OIDC_ISSUER: "${OIDC_ISSUER:-http://sso.pyrda.lc}"
+      OIDC_CLIENT_ID: "${OIDC_CLIENT_ID:-}"
+      OIDC_CLIENT_SECRET: "${OIDC_CLIENT_SECRET:-}"
+      OIDC_REDIRECT_URI: "${OIDC_REDIRECT_URI:-http://stockhub.lc/auth/sso/callback}"
+      OIDC_SCOPES: "${OIDC_SCOPES:-openid profile email}"
+      OIDC_HTTP_TIMEOUT: "${OIDC_HTTP_TIMEOUT:-10}"
+      OIDC_CLOCK_SKEW_SECONDS: "${OIDC_CLOCK_SKEW_SECONDS:-60}"
+    extra_hosts:
+      - "sso.pyrda.lc:host-gateway"
     volumes:
       - ./app:/var/www/html
+      - backend_runtime:/var/www/html/backend/runtime
       - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./app/tmp:/tmp
     working_dir: /var/www/html
@@ -23,10 +39,10 @@ services:
       context: .
       dockerfile: ./docker/nginx/Dockerfile
     environment:
-      - VIRTUAL_HOST=stockhub.ru,p.stockhub.ru,k.stockhub.ru,stockhub.lc
-      - VIRTUAL_PORT=80
-      - VIRTUAL_NETWORK=proxy
-      - LETSENCRYPT_HOST=
+      VIRTUAL_HOST: "${STOCKHUB_VIRTUAL_HOST:-stockhub.lc}"
+      VIRTUAL_PORT: 80
+      VIRTUAL_NETWORK: proxy
+      LETSENCRYPT_HOST: ""
     volumes:
       - ./app:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
@@ -61,3 +77,4 @@ networks:
     external: true
 volumes:
   db_data:
+  backend_runtime:

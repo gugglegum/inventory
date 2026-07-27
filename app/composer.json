@@ -18,9 +18,11 @@
         "yiisoft/yii2": "^2.0.55",
         "yiisoft/yii2-bootstrap": "^2.0.11",
         "yiisoft/yii2-swiftmailer": "^2.1",
+        "ext-curl": "*",
         "ext-gd": "*",
         "ext-exif": "*",
         "ext-mbstring": "*",
+        "ext-openssl": "*",
         "ext-pdo_mysql": "*",
         "s9e/text-formatter": "^2.13",
         "kartik-v/yii2-widget-datetimepicker": "^1.5"

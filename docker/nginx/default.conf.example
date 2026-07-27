@@ -1,4 +1,7 @@
-access_log /var/log/nginx/access.log;
+log_format stockhub_sanitized '$remote_addr - $remote_user [$time_local] '
+                              '"$request_method $uri $server_protocol" '
+                              '$status $body_bytes_sent '
+                              '"$http_user_agent" "$http_x_forwarded_for"';
 error_log /var/log/nginx/error.log;
 
 client_max_body_size 512M;
@@ -30,6 +33,7 @@ server {
 #    listen 443 ssl;
     listen 80;
     server_name stockhub.lc stockhub.ru;
+    access_log /var/log/nginx/access.log stockhub_sanitized;
 
 #    include /etc/nginx/blacklist.conf;
 

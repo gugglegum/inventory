@@ -4,6 +4,8 @@ namespace console\controllers;
 
 use common\helpers\ValidateErrorsFormatter;
 use common\models\User;
+use common\services\SsoUserLinkException;
+use common\services\SsoUserLinker;
 use Yii;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
@@ -106,6 +108,31 @@ class UserController extends Controller
             echo "DB error occurred while updating user '{$username}'':\n" . $e->getMessage() . "\n";
             return self::EXIT_CODE_DB_ERROR;
         }
+
+        return ExitCode::OK;
+    }
+
+    /**
+     * Явно связывает существующего активного пользователя с доверенным OIDC subject.
+     */
+    public function actionLinkSso(string $identifier, string $subject): int
+    {
+        $issuer = Yii::$app->params['oidc']['issuer'] ?? null;
+        if (!is_string($issuer) || $issuer === '') {
+            echo "Не удалось привязать пользователя к SSO: OIDC issuer не настроен.\n";
+
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        try {
+            $user = (new SsoUserLinker())->prelink($identifier, $issuer, $subject);
+        } catch (SsoUserLinkException $exception) {
+            echo 'Не удалось привязать пользователя к SSO: ' . $exception->getMessage() . "\n";
+
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        echo "Пользователь '{$user->username}' успешно привязан к Pyrda SSO ({$issuer}).\n";
 
         return ExitCode::OK;
     }

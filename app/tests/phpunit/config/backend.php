@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-$params = yii\helpers\ArrayHelper::merge(
+$testParams = yii\helpers\ArrayHelper::merge(
     require dirname(__DIR__, 3) . '/common/config/params.php',
     require dirname(__DIR__, 3) . '/backend/config/params.php',
     (require __DIR__ . '/common.php')['params']
 );
 
-return yii\helpers\ArrayHelper::merge(
+$testConfig = yii\helpers\ArrayHelper::merge(
     require dirname(__DIR__, 3) . '/common/config/main.php',
     require __DIR__ . '/common.php',
     require dirname(__DIR__, 3) . '/backend/config/main.php',
@@ -16,7 +16,10 @@ return yii\helpers\ArrayHelper::merge(
         'id' => 'app-backend-test',
         'basePath' => dirname(__DIR__, 3) . '/backend',
         'runtimePath' => '@phpunitRuntime/backend',
-        'params' => $params,
+        'bootstrap' => ['log'],
+        // backend/config/main.php assigns its own local $params while required
+        // in this scope, so the test value must use a distinct variable name.
+        'params' => $testParams,
         'components' => [
             'request' => [
                 'cookieValidationKey' => 'phpunit-test-cookie-key',
@@ -33,3 +36,9 @@ return yii\helpers\ArrayHelper::merge(
         ],
     ]
 );
+
+// Numeric arrays are appended by ArrayHelper::merge(), so replace bootstrap
+// explicitly to keep tests independent from runtime auth feature flags.
+$testConfig['bootstrap'] = ['log'];
+
+return $testConfig;

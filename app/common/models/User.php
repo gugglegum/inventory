@@ -20,6 +20,10 @@ use yii\web\IdentityInterface;
  * @property ?string $passwordResetToken
  * @property string $email
  * @property int $access Глобальные права доступа (bitmask)
+ * @property ?string $ssoIssuer Точный OIDC issuer привязанного пользователя
+ * @property ?string $ssoSubject Стабильный OIDC subject пользователя Pyrda SSO
+ * @property ?string $ssoClaims JSON-снимок claims последнего успешного SSO-входа
+ * @property ?int $lastSsoLoginAt Время последнего успешного SSO-входа
  * @property integer $status
  * @property integer $created
  * @property integer $updated
@@ -66,10 +70,11 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             [['username', 'authKey', 'passwordHash', 'email'], 'required'],
-            [['status'], 'integer'],
+            [['status', 'lastSsoLoginAt'], 'integer'],
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
-            [['username', 'passwordHash', 'passwordResetToken', 'email'], 'string', 'max' => 255],
+            [['username', 'passwordHash', 'passwordResetToken', 'email', 'ssoIssuer', 'ssoSubject'], 'string', 'max' => 255],
+            ['ssoClaims', 'string'],
             ['email', 'email'],
             [['authKey'], 'string', 'max' => 32]
         ];

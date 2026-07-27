@@ -1,34 +1,56 @@
 <?php
 
 /** @var yii\web\View $this */
-/** @var yii\bootstrap\ActiveForm $form */
 /** @var \common\models\LoginForm $model */
 
 use yii\helpers\Html;
 use yii\bootstrap\ActiveForm;
 
-$this->title = 'Login';
+$this->title = 'Вход';
+$passwordLoginEnabled = (bool) (Yii::$app->params['auth']['passwordLoginEnabled'] ?? true);
+$ssoLoginEnabled = (bool) (Yii::$app->params['auth']['ssoLoginEnabled'] ?? false);
 ?>
 <div class="site-login">
     <h1><?= Html::encode($this->title) ?></h1>
 
-    <p>Please fill out the following fields to login:</p>
+    <?php if ($ssoLoginEnabled): ?>
+        <p>Используйте для входа учётную запись pyrda.ru.</p>
 
-    <div class="row">
-        <div class="col-lg-5">
-            <?php $form = ActiveForm::begin(['id' => 'login-form']); ?>
+        <p>
+            <?= Html::a(
+                'Войти через Pyrda SSO',
+                ['/site/sso-login'],
+                ['class' => 'btn btn-primary btn-lg']
+            ) ?>
+        </p>
+    <?php endif; ?>
 
-                <?= $form->field($model, 'username') ?>
+    <?php if ($passwordLoginEnabled): ?>
+        <?php if ($ssoLoginEnabled): ?>
+            <hr>
+        <?php endif; ?>
 
-                <?= $form->field($model, 'password')->passwordInput() ?>
+        <h2>Вход по паролю</h2>
 
-                <?= $form->field($model, 'rememberMe')->checkbox() ?>
+        <div class="row">
+            <div class="col-lg-5">
+                <?php $form = ActiveForm::begin(['id' => 'login-form']); ?>
 
-                <div class="form-group">
-                    <?= Html::submitButton('Login', ['class' => 'btn btn-primary', 'name' => 'login-button']) ?>
-                </div>
+                    <?= $form->field($model, 'username') ?>
 
-            <?php ActiveForm::end(); ?>
+                    <?= $form->field($model, 'password')->passwordInput() ?>
+
+                    <?= $form->field($model, 'rememberMe')->checkbox() ?>
+
+                    <div class="form-group">
+                        <?= Html::submitButton(
+                            'Войти по паролю',
+                            ['class' => 'btn btn-default', 'name' => 'login-button']
+                        ) ?>
+                    </div>
+
+                <?php ActiveForm::end(); ?>
+            </div>
         </div>
-    </div>
+    <?php endif; ?>
 </div>
