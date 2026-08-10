@@ -398,15 +398,32 @@ vendor и служебные каталоги.
 автоматически: перед deploy нужно сравнить его с текущим конфигом и проверить
 пути сертификата, ACME webroot и доступность upstream `stockhub-nginx`.
 
-На 2026-07-28 production ещё работает с `master` без этой SSO-ветки:
-`YII_ENV`, `YII_DEBUG`, `TRUSTED_PROXIES`, auth-флаги и несекретные OIDC URL
-в контейнере `stockhub-php` не заданы, а внешний HTTP vhost всё ещё проксирует
-запросы к Basic Auth и не выдаёт HSTS. Это зафиксированный deployment drift,
-а не состояние, закрытое локальными изменениями. Перед приложенческим deploy
-в production compose нужно явно задать как минимум `YII_ENV=prod`,
-`YII_DEBUG=0`, canonical origin `https://stockhub.ru`, выбранные auth-флаги,
-`OIDC_ISSUER=https://sso.pyrda.ru`, HTTPS callback и credentials отдельного
-production-клиента.
+На 2026-08-11 SSO rollout применён на production. Stockhub работает на
+`master`/`b4d362f`, а Pyrda SSO — на `master`/`88fa7fb`. Production-клиент
+`StockHub` зарегистрирован как confidential с callback
+`https://stockhub.ru/auth/sso/callback`, homepage `https://stockhub.ru` и portal
+order `60`; profile/access webhooks намеренно выключены. Credentials хранятся
+вне репозитория в `/home/gugglegum/.config/stockhub/production.env` с режимом
+`0600`. Включены оба независимых способа входа: пароль и SSO. Локальный
+пользователь `gugglegum` явно связан с `(https://sso.pyrda.ru, 1)`; остальные
+пользователи автоматически по email не связывались.
+
+Production compose задаёт `YII_ENV=prod`, `YII_DEBUG=0`,
+`TRUSTED_PROXIES=172.18.0.0/16`, canonical origin `https://stockhub.ru`, HTTPS
+issuer/callback и отдельные `backend_runtime`/`console_runtime` volumes. Оба
+runtime доступны `www-data`, secret не найден в runtime-логах. Миграция
+`m260727_034500_add_sso_fields_to_user` применена. Реальные inner/edge Nginx
+конфиги синхронизированы с tracked templates; HTTP возвращает `308` до
+приложения, HTTPS выдаёт HSTS, Basic Auth удалён, а `p.stockhub.ru`
+канонизируется на `https://stockhub.ru`. Alias `k.stockhub.ru` намеренно не
+входит в текущий рабочий контур и указывает на другой IP.
+
+Во время rollout принудительная callback-ошибка `413` проверена отдельно на
+внешнем и внутреннем Nginx. Уникальные dummy `code`/`state`/Referer markers не
+попали в их access/error logs, а безопасные access rows содержали только path.
+Внешний `/auth/sso/redirect` вернул `302` на production Pyrda SSO с PKCE,
+callback без pending state — ожидаемый Yii `419`. Полный вход с паролем и TOTP
+требует завершающего ручного browser smoke владельцем учётной записи.
 
 Текущий `nginx-proxy` подключён к `proxy-network` с динамическим адресом
 (при проверке был `172.18.0.8`). Нельзя навсегда записывать этот адрес в
