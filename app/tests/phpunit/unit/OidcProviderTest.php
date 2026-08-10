@@ -7,6 +7,7 @@ namespace tests\phpunit\unit;
 use common\services\CurlOidcHttpTransport;
 use common\services\OidcException;
 use common\services\OidcProvider;
+use PHPUnit\Framework\Attributes\DataProvider;
 use tests\phpunit\TestCase;
 use Yii;
 
@@ -106,6 +107,75 @@ final class OidcProviderTest extends TestCase
         $provider = new OidcProvider($config, $transport);
 
         self::assertSame(self::AUTHORIZATION_ENDPOINT, $provider->authorizationEndpoint());
+    }
+
+    /**
+     * Завершающий slash конфигурации issuer удаляется до discovery и проверки claims.
+     */
+    public function testConfigurationCanonicalizesIssuerTrailingSlash(): void
+    {
+        $config = $this->config();
+        $config['issuer'] = self::ISSUER . '/';
+        $transport = new FakeOidcHttpTransport();
+        $transport->respondToGet(self::DISCOVERY_URL, $this->discovery());
+
+        $provider = new OidcProvider($config, $transport);
+
+        self::assertSame(self::AUTHORIZATION_ENDPOINT, $provider->authorizationEndpoint());
+        self::assertSame([['url' => self::DISCOVERY_URL, 'timeout' => 7]], $transport->getRequests);
+    }
+
+    /**
+     * Конфигурация с внешними пробелами отклоняется целиком, поэтому authorize
+     * и token exchange не могут получить разные варианты одного значения.
+     */
+    #[DataProvider('configurationWithSurroundingWhitespaceProvider')]
+    public function testConfigurationRejectsSurroundingWhitespace(
+        string $field,
+        mixed $value,
+        string $expectedMessage,
+    ): void {
+        $config = $this->config();
+        $config[$field] = $value;
+
+        try {
+            new OidcProvider($config, new FakeOidcHttpTransport());
+            self::fail("OIDC configuration accepted surrounding whitespace in {$field}.");
+        } catch (OidcException $exception) {
+            self::assertSame($expectedMessage, $exception->getMessage());
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string, mixed, string}>
+     */
+    public static function configurationWithSurroundingWhitespaceProvider(): iterable
+    {
+        yield 'issuer' => [
+            'issuer',
+            ' ' . self::ISSUER,
+            'OIDC configuration field issuer must not contain surrounding whitespace.',
+        ];
+        yield 'client id' => [
+            'clientId',
+            'stockhub-client ',
+            'OIDC configuration field clientId must not contain surrounding whitespace.',
+        ];
+        yield 'client secret' => [
+            'clientSecret',
+            "\tclient-secret",
+            'OIDC configuration field clientSecret must not contain surrounding whitespace.',
+        ];
+        yield 'redirect URI' => [
+            'redirectUri',
+            'https://stockhub.example.test/auth/sso/callback ',
+            'OIDC configuration field redirectUri must not contain surrounding whitespace.',
+        ];
+        yield 'scope' => [
+            'scopes',
+            ['openid', ' profile'],
+            'OIDC configuration field scopes must not contain surrounding whitespace.',
+        ];
     }
 
     /**

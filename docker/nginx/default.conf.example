@@ -52,6 +52,19 @@ server {
     root /var/www/html/backend/web;
     index index.php;
 
+    # Keep OIDC credentials out of error logs as well as the sanitized access log.
+    # Handle the callback here so it cannot be internally redirected to the generic
+    # PHP location, which inherits the regular server error log.
+    location = /auth/sso/callback {
+        error_log /dev/null crit;
+        client_max_body_size 1k;
+
+        include fastcgi_params;
+        fastcgi_pass stockhub-php:9000;
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+    }
+
     location / {
         try_files $uri $uri/ /index.php?$args;
         expires         3d;

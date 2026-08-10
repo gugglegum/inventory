@@ -4,6 +4,7 @@ namespace backend\controllers;
 
 use common\helpers\PostDataHelper;
 use common\models\LoginForm;
+use common\services\OidcFlowRateLimiter;
 use common\services\OidcProvider;
 use common\services\OidcTokenVerifier;
 use common\services\SsoUserLinker;
@@ -18,6 +19,7 @@ use yii\web\HttpException;
 use yii\web\MethodNotAllowedHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\web\TooManyRequestsHttpException;
 
 /**
  * Site controller
@@ -26,7 +28,9 @@ class SiteController extends Controller
 {
     private const string OIDC_SESSION_KEY = 'stockhub.oidc.pending';
 
-    private const int OIDC_PENDING_LIFETIME = 600;
+    private const int OIDC_PENDING_LIFETIME = 1200;
+
+    private const int OIDC_PENDING_MAX_FLOWS = 5;
 
     /**
      * @inheritdoc
@@ -108,35 +112,32 @@ class SiteController extends Controller
             return $this->goHome();
         }
 
+        $this->consumeOidcAuthorizationStartQuota();
+
         try {
             $provider = $this->createOidcProvider();
+            $authorizationEndpoint = $provider->authorizationEndpoint();
             $state = Yii::$app->security->generateRandomString(64);
             $nonce = Yii::$app->security->generateRandomString(64);
             $codeVerifier = $this->base64UrlEncode(random_bytes(64));
             $codeChallenge = $this->base64UrlEncode(hash('sha256', $codeVerifier, true));
 
-            Yii::$app->session->set(self::OIDC_SESSION_KEY, [
-                'state' => $state,
-                'nonce' => $nonce,
-                'codeVerifier' => $codeVerifier,
-                'createdAt' => time(),
-            ]);
-
             $query = http_build_query([
-                'client_id' => $this->oidcRequiredString('clientId'),
-                'redirect_uri' => $this->oidcRequiredString('redirectUri'),
+                'client_id' => $provider->clientId(),
+                'redirect_uri' => $provider->redirectUri(),
                 'response_type' => 'code',
-                'scope' => implode(' ', $this->oidcScopes()),
+                'scope' => implode(' ', $provider->scopes()),
                 'state' => $state,
                 'nonce' => $nonce,
                 'code_challenge' => $codeChallenge,
                 'code_challenge_method' => 'S256',
             ], '', '&', PHP_QUERY_RFC3986);
 
-            return $this->redirect($provider->authorizationEndpoint() . '?' . $query);
+            $this->storePendingOidcFlow($state, $nonce, $codeVerifier);
+
+            return $this->redirect($authorizationEndpoint . '?' . $query);
         } catch (Throwable $exception) {
             $this->logSsoFailure('Unable to start OIDC authorization.', $exception);
-            Yii::$app->session->remove(self::OIDC_SESSION_KEY);
             Yii::$app->session->setFlash('error', 'Не удалось начать вход через Pyrda SSO.');
 
             return $this->redirect(['site/login']);
@@ -158,10 +159,14 @@ class SiteController extends Controller
             return $this->goHome();
         }
 
-        $pending = Yii::$app->session->remove(self::OIDC_SESSION_KEY);
         $state = Yii::$app->request->getQueryParam('state');
 
-        if (!$this->isValidOidcState($pending, $state)) {
+        if (!is_string($state) || $state === '') {
+            throw new HttpException(419, 'Invalid OIDC state.');
+        }
+
+        $pending = $this->takePendingOidcFlow($state);
+        if ($pending === null) {
             throw new HttpException(419, 'Invalid OIDC state.');
         }
 
@@ -179,9 +184,13 @@ class SiteController extends Controller
             return $this->redirect(['site/login']);
         }
 
+        // Резервируем квоту до discovery: накопленные state не должны позволять
+        // burst-ом занять PHP-FPM workers исходящими запросами к недоступному SSO.
+        $this->consumeOidcTokenExchangeQuota();
+
         try {
-            /** @var array{nonce:string,codeVerifier:string} $pending */
             $provider = $this->createOidcProvider();
+            $provider->discovery();
             $tokens = $provider->exchangeCode($code, $pending['codeVerifier']);
             $idToken = $tokens['id_token'] ?? null;
 
@@ -198,13 +207,7 @@ class SiteController extends Controller
 
             return $this->goBack();
         } catch (Throwable $exception) {
-            $this->logSsoFailure('OIDC callback failed.', $exception);
-            Yii::$app->session->setFlash(
-                'error',
-                'Не удалось войти через Pyrda SSO. Проверьте, что учётная запись связана со Stockhub.'
-            );
-
-            return $this->redirect(['site/login']);
+            return $this->ssoCallbackFailureResponse($exception);
         }
     }
 
@@ -231,6 +234,19 @@ class SiteController extends Controller
         return $provider;
     }
 
+    /**
+     * Создает общий для deployment limiter через DI-контейнер.
+     */
+    protected function createOidcFlowRateLimiter(): OidcFlowRateLimiter
+    {
+        $limiter = Yii::$container->get(OidcFlowRateLimiter::class);
+        if (!$limiter instanceof OidcFlowRateLimiter) {
+            throw new RuntimeException('OIDC flow rate limiter is not configured.');
+        }
+
+        return $limiter;
+    }
+
     private function isPasswordLoginEnabled(): bool
     {
         return (bool) (Yii::$app->params['auth']['passwordLoginEnabled'] ?? true);
@@ -241,65 +257,187 @@ class SiteController extends Controller
         return (bool) (Yii::$app->params['auth']['ssoLoginEnabled'] ?? false);
     }
 
-    /**
-     * @return list<string>
-     */
-    private function oidcScopes(): array
-    {
-        $scopes = Yii::$app->params['oidc']['scopes'] ?? [];
-        if (!is_array($scopes)) {
-            throw new RuntimeException('OIDC scopes are not configured.');
-        }
-
-        $result = [];
-        foreach ($scopes as $scope) {
-            if (is_string($scope) && $scope !== '') {
-                $result[] = $scope;
-            }
-        }
-
-        if (!in_array('openid', $result, true)) {
-            throw new RuntimeException('OIDC openid scope is required.');
-        }
-
-        return $result;
-    }
-
-    private function oidcRequiredString(string $key): string
-    {
-        $value = Yii::$app->params['oidc'][$key] ?? null;
-        if (!is_string($value) || $value === '') {
-            throw new RuntimeException("OIDC configuration value {$key} is missing.");
-        }
-
-        return $value;
-    }
-
     private function base64UrlEncode(string $value): string
     {
         return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
     }
 
-    private function isValidOidcState(mixed $pending, mixed $state): bool
-    {
-        if (!is_array($pending) || !is_string($state)) {
-            return false;
+    private function storePendingOidcFlow(
+        string $state,
+        string $nonce,
+        string $codeVerifier,
+    ): void {
+        $pendingFlows = $this->validPendingOidcFlows(
+            Yii::$app->session->get(self::OIDC_SESSION_KEY),
+        );
+
+        while (count($pendingFlows) >= self::OIDC_PENDING_MAX_FLOWS) {
+            array_shift($pendingFlows);
         }
 
-        $expectedState = $pending['state'] ?? null;
-        $nonce = $pending['nonce'] ?? null;
-        $codeVerifier = $pending['codeVerifier'] ?? null;
-        $createdAt = $pending['createdAt'] ?? null;
+        $pendingFlows[$state] = [
+            'nonce' => $nonce,
+            'codeVerifier' => $codeVerifier,
+            'createdAt' => time(),
+        ];
+        Yii::$app->session->set(self::OIDC_SESSION_KEY, $pendingFlows);
+    }
 
-        return is_string($expectedState)
-            && is_string($nonce)
-            && $nonce !== ''
-            && is_string($codeVerifier)
-            && $codeVerifier !== ''
-            && is_int($createdAt)
-            && $createdAt >= time() - self::OIDC_PENDING_LIFETIME
-            && $createdAt <= time() + 60
-            && hash_equals($expectedState, $state);
+    /**
+     * @return array{nonce:string,codeVerifier:string,createdAt:int}|null
+     */
+    private function takePendingOidcFlow(string $state): ?array
+    {
+        $pendingFlows = $this->validPendingOidcFlows(
+            Yii::$app->session->get(self::OIDC_SESSION_KEY),
+        );
+        $pending = $pendingFlows[$state] ?? null;
+
+        if ($pending === null) {
+            $this->savePendingOidcFlows($pendingFlows);
+
+            return null;
+        }
+
+        unset($pendingFlows[$state]);
+        $this->savePendingOidcFlows($pendingFlows);
+
+        return $pending;
+    }
+
+    /**
+     * @return array<string, array{nonce:string,codeVerifier:string,createdAt:int}>
+     */
+    private function validPendingOidcFlows(mixed $pendingFlows): array
+    {
+        if (!is_array($pendingFlows)) {
+            return [];
+        }
+
+        $now = time();
+        $validFlows = [];
+
+        foreach ($pendingFlows as $state => $pending) {
+            if (!is_string($state) || !is_array($pending)) {
+                continue;
+            }
+
+            $nonce = $pending['nonce'] ?? null;
+            $codeVerifier = $pending['codeVerifier'] ?? null;
+            $createdAt = $pending['createdAt'] ?? null;
+
+            if (
+                is_string($nonce)
+                && $nonce !== ''
+                && is_string($codeVerifier)
+                && $codeVerifier !== ''
+                && is_int($createdAt)
+                && $createdAt >= $now - self::OIDC_PENDING_LIFETIME
+                && $createdAt <= $now + 60
+            ) {
+                $validFlows[$state] = [
+                    'nonce' => $nonce,
+                    'codeVerifier' => $codeVerifier,
+                    'createdAt' => $createdAt,
+                ];
+            }
+        }
+
+        return $validFlows;
+    }
+
+    /**
+     * @param array<string, array{nonce:string,codeVerifier:string,createdAt:int}> $pendingFlows
+     */
+    private function savePendingOidcFlows(array $pendingFlows): void
+    {
+        if ($pendingFlows === []) {
+            Yii::$app->session->remove(self::OIDC_SESSION_KEY);
+
+            return;
+        }
+
+        Yii::$app->session->set(self::OIDC_SESSION_KEY, $pendingFlows);
+    }
+
+    /**
+     * Ограничивает discovery-запросы до обращения к OIDC provider.
+     */
+    private function consumeOidcAuthorizationStartQuota(): void
+    {
+        try {
+            $allowed = $this->createOidcFlowRateLimiter()->consumeAuthorizationStart(
+                $this->oidcClientIp(),
+            );
+        } catch (Throwable $exception) {
+            $this->throwOidcRateLimitUnavailable($exception);
+        }
+
+        if (!$allowed) {
+            throw new TooManyRequestsHttpException('Too many SSO authorization attempts.');
+        }
+    }
+
+    /**
+     * Резервирует локальную квоту до callback discovery и последующего /oauth/token.
+     */
+    private function consumeOidcTokenExchangeQuota(): void
+    {
+        try {
+            $allowed = $this->createOidcFlowRateLimiter()->consumeTokenExchange(
+                $this->oidcClientIp(),
+                $this->oidcHttpTimeout(),
+            );
+        } catch (Throwable $exception) {
+            $this->throwOidcRateLimitUnavailable($exception);
+        }
+
+        if (!$allowed) {
+            throw new TooManyRequestsHttpException('Too many SSO login attempts.');
+        }
+    }
+
+    private function oidcClientIp(): string
+    {
+        $clientIp = Yii::$app->request->getUserIP();
+        if (!is_string($clientIp) || @inet_pton($clientIp) === false) {
+            throw new RuntimeException('OIDC client IP address is unavailable.');
+        }
+
+        return $clientIp;
+    }
+
+    private function oidcHttpTimeout(): int
+    {
+        $httpTimeout = Yii::$app->params['oidc']['httpTimeout'] ?? null;
+        if (!is_int($httpTimeout) || $httpTimeout < 1) {
+            throw new RuntimeException('OIDC HTTP timeout is not configured.');
+        }
+
+        return $httpTimeout;
+    }
+
+    private function throwOidcRateLimitUnavailable(Throwable $exception): never
+    {
+        $this->logSsoFailure('OIDC rate limiter failed.', $exception);
+
+        throw new HttpException(
+            503,
+            'SSO login is temporarily unavailable.',
+            0,
+            $exception,
+        );
+    }
+
+    private function ssoCallbackFailureResponse(Throwable $exception): Response
+    {
+        $this->logSsoFailure('OIDC callback failed.', $exception);
+        Yii::$app->session->setFlash(
+            'error',
+            'Не удалось войти через Pyrda SSO. Проверьте, что учётная запись связана со Stockhub.'
+        );
+
+        return $this->redirect(['site/login']);
     }
 
     private function logSsoFailure(string $message, Throwable $exception): void

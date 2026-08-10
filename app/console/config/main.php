@@ -18,6 +18,17 @@ return [
                 [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
+                    // Console processes inherit environment variables,
+                    // including OIDC_CLIENT_SECRET. Do not append globals.
+                    'logVars' => [],
+                    'maskVars' => [
+                        '_SERVER.HTTP_AUTHORIZATION',
+                        '_SERVER.PHP_AUTH_USER',
+                        '_SERVER.PHP_AUTH_PW',
+                        '_SERVER.*SECRET*',
+                        '_ENV.*SECRET*',
+                    ],
+                    'prefix' => static fn (array $_message): string => '',
                 ],
             ],
         ],

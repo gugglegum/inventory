@@ -9,6 +9,7 @@ $oidcRedirectUri = getenv('OIDC_REDIRECT_URI');
 $scopeString = getenv('OIDC_SCOPES');
 $httpTimeout = getenv('OIDC_HTTP_TIMEOUT');
 $clockSkewSeconds = getenv('OIDC_CLOCK_SKEW_SECONDS');
+$trustedProxiesString = getenv('TRUSTED_PROXIES');
 
 $oidcRedirectUri = $oidcRedirectUri === false ? '' : $oidcRedirectUri;
 $scopeString = $scopeString === false ? 'openid profile email' : $scopeString;
@@ -26,11 +27,15 @@ $canonicalOrigin = getenv('STOCKHUB_CANONICAL_ORIGIN');
 $canonicalOrigin = $canonicalOrigin === false || $canonicalOrigin === ''
     ? $redirectOrigin
     : $canonicalOrigin;
+$trustedProxies = $trustedProxiesString === false
+    ? []
+    : preg_split('/\s*,\s*/', trim($trustedProxiesString), -1, PREG_SPLIT_NO_EMPTY);
 
 return [
     'adminEmail' => 'admin@example.com',
     'supportEmail' => 'support@example.com',
     'user.passwordResetTokenExpire' => 3600,
+    'trustedProxies' => $trustedProxies === false ? [] : $trustedProxies,
     'auth' => [
         'passwordLoginEnabled' => $passwordLoginEnabled === false
             ? true

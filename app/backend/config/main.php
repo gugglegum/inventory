@@ -6,6 +6,7 @@ $params = yii\helpers\ArrayHelper::merge(
     require(__DIR__ . '/params.php'),
     require(__DIR__ . '/params-local.php')
 );
+$secureCookies = defined('YII_ENV_PROD') && YII_ENV_PROD;
 
 return [
     'id' => 'app-backend',
@@ -17,6 +18,26 @@ return [
     'modules' => [],
     'defaultRoute' => 'repo/index',
     'components' => [
+        'request' => [
+            // Forwarded origin/client-IP headers are accepted only when the
+            // immediate reverse proxy belongs to an explicitly trusted CIDR.
+            'trustedHosts' => array_fill_keys(
+                $params['trustedProxies'] ?? [],
+                [
+                    'X-Forwarded-For',
+                    'X-Forwarded-Host',
+                    'X-Forwarded-Proto',
+                    'X-Forwarded-Port',
+                ]
+            ),
+        ],
+        'session' => [
+            'cookieParams' => [
+                'httpOnly' => true,
+                'secure' => $secureCookies,
+                'sameSite' => yii\web\Cookie::SAME_SITE_LAX,
+            ],
+        ],
         'canonicalHost' => [
             'class' => common\components\CanonicalHostRedirect::class,
             'canonicalOrigin' => $params['auth']['canonicalOrigin'] ?? '',
@@ -59,6 +80,12 @@ return [
             'class' => common\components\WebUser::class,
             'identityClass' => 'common\models\User',
             'enableAutoLogin' => (bool) ($params['auth']['passwordLoginEnabled'] ?? true),
+            'identityCookie' => [
+                'name' => '_identity',
+                'httpOnly' => true,
+                'secure' => $secureCookies,
+                'sameSite' => yii\web\Cookie::SAME_SITE_LAX,
+            ],
         ],
         'log' => [
             'traceLevel' => (defined('YII_DEBUG') && (bool) constant('YII_DEBUG')) ? 3 : 0,

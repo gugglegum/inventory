@@ -1,0 +1,101 @@
+# Production edge-proxy example for Stockhub.
+#
+# Install a reviewed copy as:
+#   /home/gugglegum/nginx-proxy/conf.d/stockhub.ru.conf
+#
+# This file is included from nginx's http context. Adjust the certificate and
+# ACME webroot paths to the host before deployment. The certificate must cover
+# stockhub.ru, p.stockhub.ru and k.stockhub.ru while the aliases are published.
+
+log_format stockhub_sanitized '$remote_addr [$time_local] '
+                              '"$request_method $uri $server_protocol" '
+                              '$status $body_bytes_sent';
+
+# Plain HTTP is used only for ACME. Every application request is redirected at
+# the edge, before it can reach the Basic Auth challenge in stockhub-nginx.
+server {
+    listen 80;
+    server_name stockhub.ru p.stockhub.ru k.stockhub.ru;
+
+    access_log /var/log/nginx/stockhub-access.log stockhub_sanitized;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    location / {
+        return 308 https://stockhub.ru$request_uri;
+    }
+}
+
+# Legacy aliases are canonicalized at the edge before any application session
+# is created. Keep this server only while the aliases and their certificates
+# are intentionally supported.
+server {
+    listen 443 ssl;
+    server_name p.stockhub.ru k.stockhub.ru;
+
+    ssl_certificate /etc/letsencrypt/live/stockhub.ru/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/stockhub.ru/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    access_log /var/log/nginx/stockhub-access.log stockhub_sanitized;
+
+    return 308 https://stockhub.ru$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name stockhub.ru;
+
+    ssl_certificate /etc/letsencrypt/live/stockhub.ru/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/stockhub.ru/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    access_log /var/log/nginx/stockhub-access.log stockhub_sanitized;
+
+    client_max_body_size 512M;
+
+    # Nginx error messages can include the complete request URI. Keep callback
+    # errors out of every file-backed error log so OIDC code/state values are
+    # not persisted when nginx itself rejects or cannot proxy the request.
+    location = /auth/sso/callback {
+        error_log /dev/null crit;
+        # Stockhub uses OIDC response_mode=query, so the callback has no body.
+        client_max_body_size 1k;
+
+        set $stockhub_backend http://stockhub-nginx:80;
+        proxy_pass $stockhub_backend;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host stockhub.ru;
+        proxy_set_header X-Forwarded-Host stockhub.ru;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Port 443;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location / {
+        # The production proxy defines Docker's DNS resolver globally. Keeping
+        # the upstream in a variable lets nginx re-resolve it after the
+        # Stockhub container is recreated with a different address.
+        set $stockhub_backend http://stockhub-nginx:80;
+        proxy_pass $stockhub_backend;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host stockhub.ru;
+        proxy_set_header X-Forwarded-Host stockhub.ru;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Port 443;
+
+        # This is the public edge, so discard any client-supplied
+        # X-Forwarded-For value instead of extending an untrusted chain.
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}

@@ -132,7 +132,7 @@ class UserController extends Controller
             return ExitCode::UNSPECIFIED_ERROR;
         }
 
-        echo "Пользователь '{$user->username}' успешно привязан к Pyrda SSO ({$issuer}).\n";
+        echo "Пользователь '{$user->username}' успешно привязан к Pyrda SSO ({$user->ssoIssuer}).\n";
 
         return ExitCode::OK;
     }

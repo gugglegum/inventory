@@ -10,12 +10,9 @@ $config = [
 ];
 
 if (YII_ENV_DEV && YII_DEBUG) {
-    // configuration adjustments for 'dev' environment
-    $config['bootstrap'][] = 'debug';
-    $config['modules']['debug'] = [
-        'class' => 'yii\debug\Module',
-    ];
-
+    // Yii Debug intentionally stays disabled: its stored request snapshots may
+    // contain cookies, session data, OIDC callback parameters and environment
+    // secrets. Gii does not collect per-request diagnostic data.
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',

@@ -7,9 +7,11 @@ namespace tests\phpunit\integration;
 use common\models\User;
 use common\services\SsoUserLinkException;
 use common\services\SsoUserLinker;
+use console\controllers\UserController;
 use PHPUnit\Framework\Attributes\DataProvider;
 use tests\phpunit\DbTestCase;
 use Yii;
+use yii\console\ExitCode;
 
 /**
  * Integration-тесты безопасной привязки существующих пользователей к Pyrda SSO.
@@ -268,6 +270,53 @@ final class SsoUserLinkerTest extends DbTestCase
 
         $user->refresh();
         self::assertSame('stable-subject', $user->ssoSubject);
+    }
+
+    /**
+     * Административная привязка хранит тот же canonical issuer, который проверяет web-runtime.
+     */
+    public function testPrelinkCanonicalizesIssuerTrailingSlash(): void
+    {
+        $user = $this->createUser(['username' => 'canonical-issuer']);
+        $service = new SsoUserLinker();
+
+        $linkedUser = $service->prelink(
+            'canonical-issuer',
+            self::ISSUER . '/',
+            'canonical-subject'
+        );
+
+        self::assertSame(self::ISSUER, $linkedUser->ssoIssuer);
+        self::assertSame(
+            $user->id,
+            $service->link([
+                'iss' => self::ISSUER,
+                'sub' => 'canonical-subject',
+            ])->id
+        );
+    }
+
+    /**
+     * CLI-команда сообщает и сохраняет canonical issuer, а не исходное значение из params.
+     */
+    public function testLinkSsoCommandCanonicalizesConfiguredIssuer(): void
+    {
+        $user = $this->createUser(['username' => 'cli-canonical-issuer']);
+        Yii::$app->params['oidc']['issuer'] = self::ISSUER . '/';
+        $controller = new UserController('user', Yii::$app);
+
+        ob_start();
+        try {
+            $exitCode = $controller->actionLinkSso('cli-canonical-issuer', 'cli-subject');
+        } finally {
+            $output = (string) ob_get_clean();
+        }
+
+        $user->refresh();
+        self::assertSame(ExitCode::OK, $exitCode);
+        self::assertSame(self::ISSUER, $user->ssoIssuer);
+        self::assertStringContainsString('(' . self::ISSUER . ').', $output);
+        self::assertStringNotContainsString(self::ISSUER . '/', $output);
     }
 
     /**

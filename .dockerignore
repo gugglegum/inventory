@@ -1,0 +1,50 @@
+# Version control, editors and local agent state
+.git
+.git/**
+.idea
+.idea/**
+.vscode
+.vscode/**
+.zed
+.zed/**
+.agents
+.agents/**
+.codex
+.codex/**
+
+# Local environment and secrets
+.env
+.env.*
+docker-compose.yml
+**/config/main-local.php
+**/config/params-local.php
+docker/nginx/.htpasswd
+docker/nginx/default.conf
+docker/nginx/blacklist.conf
+docker/php/custom.ini
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
+
+# Databases, logs and generated runtime data
+db_data
+db_data/**
+logs
+logs/**
+**/runtime
+**/runtime/**
+app/tmp
+app/tmp/**
+app/photos
+app/photos/**
+app/thumbnails
+app/thumbnails/**
+**/web/assets
+**/web/assets/**
+
+# Installed dependencies and test output are not used by either image build
+app/vendor
+app/vendor/**
+app/tests/phpunit/_runtime
+app/tests/phpunit/_runtime/**

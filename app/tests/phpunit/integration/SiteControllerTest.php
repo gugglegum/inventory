@@ -216,6 +216,9 @@ final class SiteControllerTest extends DbTestCase
         self::assertInstanceOf(Cookie::class, $cookie);
         self::assertSame('', $cookie->value);
         self::assertSame(1, $cookie->expire);
+        self::assertSame(Yii::$app->user->identityCookie['secure'], $cookie->secure);
+        self::assertTrue($cookie->httpOnly);
+        self::assertSame(Cookie::SAME_SITE_LAX, $cookie->sameSite);
     }
 
     /**

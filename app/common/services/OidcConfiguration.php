@@ -44,7 +44,7 @@ final readonly class OidcConfiguration
             }
         }
 
-        $issuer = self::requiredString($config, 'issuer');
+        $issuer = self::canonicalizeIssuer(self::requiredString($config, 'issuer'));
         $clientId = self::requiredString($config, 'clientId');
         $clientSecret = self::requiredString($config, 'clientSecret');
         $redirectUri = self::requiredString($config, 'redirectUri');
@@ -52,8 +52,6 @@ final readonly class OidcConfiguration
         $httpTimeout = self::nonNegativeInt($config, 'httpTimeout', 1);
         $clockSkewSeconds = self::nonNegativeInt($config, 'clockSkewSeconds', 0);
 
-        $issuer = rtrim($issuer, '/');
-        self::validateUrl($issuer, 'issuer', false);
         self::validateUrl($redirectUri, 'redirectUri', true);
 
         return new self(
@@ -65,6 +63,24 @@ final readonly class OidcConfiguration
             $httpTimeout,
             $clockSkewSeconds,
         );
+    }
+
+    /**
+     * Возвращает единственное представление issuer, используемое web-runtime
+     * и административной привязкой пользователя.
+     */
+    public static function canonicalizeIssuer(string $issuer): string
+    {
+        if (trim($issuer) !== $issuer) {
+            throw new OidcException(
+                'OIDC configuration field issuer must not contain surrounding whitespace.'
+            );
+        }
+
+        $issuer = rtrim($issuer, '/');
+        self::validateUrl($issuer, 'issuer', false);
+
+        return $issuer;
     }
 
     /**
@@ -95,7 +111,13 @@ final readonly class OidcConfiguration
             throw new OidcException("OIDC configuration field {$key} must be a non-empty string.");
         }
 
-        return trim($value);
+        if (trim($value) !== $value) {
+            throw new OidcException(
+                "OIDC configuration field {$key} must not contain surrounding whitespace."
+            );
+        }
+
+        return $value;
     }
 
     /**
@@ -126,7 +148,13 @@ final readonly class OidcConfiguration
                 throw new OidcException('OIDC configuration field scopes must be a non-empty string list.');
             }
 
-            $scopes[] = trim($scope);
+            if (trim($scope) !== $scope) {
+                throw new OidcException(
+                    'OIDC configuration field scopes must not contain surrounding whitespace.'
+                );
+            }
+
+            $scopes[] = $scope;
         }
 
         $scopes = array_values(array_unique($scopes));

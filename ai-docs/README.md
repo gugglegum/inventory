@@ -15,6 +15,7 @@ Stockhub - это PHP/Yii 2 приложение для домашнего ск�
 - `docker/` - Dockerfile и конфиги для PHP-FPM и nginx.
 - `docker-compose.yml.example` - отслеживаемый пример compose-файла.
 - `docker-compose.yml` - локальный compose-файл, находится в корне проекта и игнорируется Git.
+- `deploy/nginx-proxy/stockhub.ru.conf.example` - tracked шаблон внешнего nginx для домашнего production.
 - `db_data/` - локальные данные MariaDB, игнорируются Git.
 - `logs/` - локальные логи контейнеров/nginx, игнорируются Git.
 - `ai-docs/` - проектная память для будущих AI-агентов.
@@ -32,6 +33,8 @@ Stockhub - это PHP/Yii 2 приложение для домашнего ск�
 Приложение монтируется в PHP и nginx как `/var/www/html`, а рабочая директория PHP-контейнера - `/var/www/html`. Поэтому команды Yii и Composer обычно выполняются внутри контейнера из корня `app/`.
 
 Локальный запуск использует общий reverse proxy из `/home/paul/PhpstormProjects/proxy`. Контейнер `stockhub-nginx` подключается одновременно к внутренней сети приложения и к внешней Docker-сети `proxy`. Сейчас локальный compose публикует приложение через `VIRTUAL_HOST=stockhub.lc`.
+Этот checkout обслуживает только локальное окружение и не описывает proxy,
+через который Stockhub публикуется на домашнем production-сервере.
 
 Важно: когда nginx подключен и к сети приложения, и к общей сети `proxy`, нельзя использовать `fastcgi_pass php:9000`. На общей сети другой проект может иметь DNS-алиас `php`, и запросы уйдут не в тот контейнер. В nginx-конфиге нужно использовать уникальное имя контейнера:
 
@@ -225,7 +228,11 @@ Relations в `common/models` типизированы через `@return Active
 - локальный PHP-конфиг `docker/php/custom.ini`
 - служебные каталоги `.agents/` и `.codex`
 
-`docker-compose.yml.example`, `docker/php/custom.ini.example` и `docker/nginx/default.conf.example` являются переносимыми примерами и должны оставаться в Git.
+`docker-compose.yml.example`, `docker/php/custom.ini.example` и
+`docker/nginx/default.conf.example` являются переносимыми примерами и должны
+оставаться в Git. Реальный игнорируемый `docker/nginx/default.conf` нужно
+синхронизировать с example при deploy; в частности, нельзя потерять отдельный
+exact location с безопасной политикой error log для OIDC callback.
 
 Если после перестройки структуры в индексе снова появится старый `app/docker-compose.yml`, это, скорее всего, след от прежней структуры проекта. Его не нужно коммитить; compose-файл проекта теперь находится в корне.
 
@@ -255,27 +262,56 @@ logout, и не позволит им снова активироваться п
 
 Backend web bootstrap читает `YII_ENV` и `YII_DEBUG` непосредственно из
 environment, по умолчанию использует `prod`/`0` и отказывается запускать
-сочетание `prod`/`1`. Yii Debug и Gii подключаются только при явных
-`YII_ENV=dev` и `YII_DEBUG=1`.
+сочетание `prod`/`1`. Yii Debug намеренно не подключается даже в dev-профиле:
+его request snapshots сохраняют cookies, callback-параметры и environment
+процесса. При явных `YII_ENV=dev` и `YII_DEBUG=1` доступен только Gii.
 PHP-FPM сохраняет исторический UID/GID `33`: существующие каталоги фотографий
 уже принадлежат этому пользователю, и массово менять владельца нескольких
 гигабайт пользовательских файлов нельзя ради логов. Вместо этого
 `backend/runtime` вынесен в Docker volume `backend_runtime`, который
 инициализируется из образа с владельцем `www-data` и режимом `0775`. Реальный
 FileTarget после recreate проверен записью в `backend/runtime/logs/app.log`.
+Для console-приложения используется отдельный volume `console_runtime`;
+его FileTarget не добавляет globals и prefix, поэтому унаследованный
+`OIDC_CLIENT_SECRET` не попадает в console-лог.
+В production (`YII_ENV=prod`) session cookie `PHPSESSID` и remember-me cookie
+`_identity` всегда имеют `Secure`, `HttpOnly` и `SameSite=Lax`. В dev `Secure`
+намеренно выключен, чтобы локальный HTTP-контур оставался рабочим. Флаг
+определяется непосредственно стандартной константой Yii `YII_ENV_PROD`;
+отдельного env-нормализатора для этого нет. Поскольку tracked compose сохраняет
+безопасный default `YII_ENV=prod`, для локальной работы через
+`http://stockhub.lc` в игнорируемом compose нужно явно задать `YII_ENV=dev`.
 
 OIDC-конфигурация читается в `common/config/params.php` из переменных
 `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REDIRECT_URI`,
 `OIDC_SCOPES`, `OIDC_HTTP_TIMEOUT`, `OIDC_CLOCK_SKEW_SECONDS` и
-`STOCKHUB_CANONICAL_ORIGIN`. Эти параметры требуются только при включённом
-`STOCKHUB_SSO_LOGIN_ENABLED`. Canonical origin по умолчанию выводится из
-`OIDC_REDIRECT_URI`; если задан отдельно, его origin обязан точно совпадать с
-callback. В tracked `params.php` нет значений URL по умолчанию: issuer и callback
-обязаны приходить из окружения. Локальные адреса задаются только в Docker Compose
-окружении разработки. Scopes по умолчанию — `openid profile email`, HTTP timeout
-— 10 секунд, допустимое расхождение часов — 60 секунд. У client ID и client secret
-также нет значений по умолчанию: их нужно заполнить после регистрации отдельного
-клиента Stockhub в SSO.
+`STOCKHUB_CANONICAL_ORIGIN`. `TRUSTED_PROXIES` задаёт comma-separated список
+IP/CIDR непосредственного reverse proxy. Эти параметры требуются только при
+включённом `STOCKHUB_SSO_LOGIN_ENABLED`. Canonical origin по умолчанию выводится
+из `OIDC_REDIRECT_URI`; если задан отдельно, его полный origin (scheme, hostname
+и port) обязан точно совпадать с callback. В tracked `params.php` нет значений
+URL по умолчанию: issuer и callback обязаны приходить из окружения. Локальные
+адреса задаются только в Docker Compose окружении разработки. Scopes по
+умолчанию — `openid profile email`, HTTP timeout — 10 секунд, допустимое
+расхождение часов — 60 секунд. У client ID и client secret также нет значений
+по умолчанию: их нужно заполнить после регистрации отдельного клиента Stockhub
+в SSO. Строковые значения OIDC-конфигурации с внешними пробелами считаются
+ошибкой и не нормализуются молча. Authorization request и token exchange берут
+client ID, redirect URI и scopes из одного проверенного snapshot
+`OidcConfiguration`; исходные Yii params контроллер повторно не читает.
+
+За TLS-terminating proxy нужно задать `TRUSTED_PROXIES` точным адресом или CIDR
+сети этого proxy. Только для этих адресов Yii учитывает `X-Forwarded-For`,
+`X-Forwarded-Host`, `X-Forwarded-Proto` и `X-Forwarded-Port`. Последний
+дополнительно валидируется приложением как decimal port `1..65535`, потому что
+Yii не добавляет его к `hostInfo`, когда уже присутствует Host. Пустое значение
+fail-closed и не позволяет клиенту подделать origin, но при canonical HTTPS за
+proxy приведёт к циклу HTTPS-redirect, а все клиенты будут делить IP-лимит
+самого proxy. Нельзя использовать всеобщие диапазоны вроде `0.0.0.0/0`.
+Статический IP proxy безопаснее CIDR общей Docker-сети; если используется CIDR,
+нужно учитывать, что доверие получают все подключённые к ней контейнеры.
+Внешний proxy обязан формировать корректную цепочку `X-Forwarded-For`, добавляя
+реальный адрес HTTP-клиента, а не пропускать присланный клиентом заголовок как есть.
 
 Один deployment публикует только один canonical hostname. Compose использует
 `STOCKHUB_VIRTUAL_HOST` с default `stockhub.lc`; прежние `p.stockhub.ru` и
@@ -292,19 +328,42 @@ callback. В tracked `params.php` нет значений URL по умолча�
 
 Реализация использует Authorization Code Flow с `state`, `nonce` и PKCE S256.
 Подпись `id_token` проверяется по JWKS; разрешен только RS256, дополнительно
-проверяются issuer, audience/authorized party и временные claims. Первый
-вход разрешен только для уже существующего активного пользователя Stockhub,
-которого администратор заранее связал с точной парой `(issuer, sub)` командой
-`./yii user/link-sso <username-or-email> <subject>`. Автоматическая привязка по
-email запрещена: текущий Pyrda SSO позволяет владельцу профиля менять email,
-поэтому такой email не является безопасным основанием для передачи локальных
-прав. Claims `email` и `email_verified` не обязательны: `openid`-only token
-достаточен, потому что email не участвует в поиске или привязке. `ssoIssuer` и
-`ssoSubject` хранятся как `VARBINARY(255)`, сравниваются побайтно (включая регистр
-и завершающие пробелы) и защищены составным unique-index и CHECK-инвариантом.
-В текущей реализации Pyrda SSO значение `subject` равно строковому ID
-пользователя из `php artisan sso:user:list`. Новые локальные пользователи не
-создаются, а существующие пароль, auth key и права доступа не изменяются.
+проверяются issuer, audience/authorized party и временные claims. До пяти
+параллельных browser flows хранятся отдельно по `state` в течение двадцати минут;
+неизвестный callback не уничтожает flows других вкладок. Запуск authorization
+flow, включая исходящий discovery, защищён fail-closed limiter: не более десяти
+запусков за 60 секунд на доверенно определённый client IP и не более сорока на
+deployment. Callback discovery возможен только для одноразового pending state,
+созданного таким запуском. После проверки одноразового state и наличия code,
+но до первого callback discovery, атомарно резервируется более строгая callback
+quota: два callback на client IP и восемь на deployment. Поэтому заранее
+накопленные state не позволяют burst-ом занять PHP-FPM workers discovery-
+запросами, а смена PHP session cookie не сбрасывает IP-квоту. Один reservation
+покрывает последовательные discovery и `/oauth/token` и живёт
+`60 + 2 * OIDC_HTTP_TIMEOUT` секунд, поэтому локальное окно не освобождается
+раньше upstream-лимита Pyrda 10/min даже при двух задержанных соединениях.
+
+Состояние limiter хранится в versioned JSON под `backend_runtime`: постоянный
+lock-файл синхронизирует FPM workers, а новый state записывается во временный
+файл с `fflush`/`fsync` и заменяется атомарным rename. Пустой или повреждённый
+существующий state даёт 503 вместо сброса квоты. Такая реализация рассчитана на
+один PHP deployment с общим `backend_runtime`; при горизонтальном запуске с
+независимыми volumes нужен общий atomic limiter в Redis или БД.
+
+Первый вход разрешен только для уже существующего активного пользователя
+Stockhub, которого администратор заранее связал с точной парой `(issuer, sub)`
+командой `./yii user/link-sso <username-or-email> <subject>`. Issuer перед
+сохранением и в web-runtime приводится к одному виду без завершающего `/`.
+Автоматическая привязка по email запрещена: текущий Pyrda SSO позволяет владельцу
+профиля менять email, поэтому такой email не является безопасным основанием для
+передачи локальных прав. Claims `email` и `email_verified` не обязательны:
+`openid`-only token достаточен, потому что email не участвует в поиске или
+привязке. `ssoIssuer` и `ssoSubject` хранятся как `VARBINARY(255)`, сравниваются
+побайтно (включая регистр и завершающие пробелы) и защищены составным unique-index
+и CHECK-инвариантом. В текущей реализации Pyrda SSO значение `subject` равно
+строковому ID пользователя из `php artisan sso:user:list`. Новые локальные
+пользователи не создаются, а существующие пароль, auth key и права доступа не
+изменяются.
 
 Локальный confidential-клиент `StockHub` зарегистрирован в Pyrda SSO с callback
 `http://stockhub.lc/auth/sso/callback`; его credentials находятся только в
@@ -318,9 +377,79 @@ FileTarget backend-приложения не пишет request/session/server g
 включает session ID в prefix. Это обязательная часть OIDC-конфигурации: иначе
 PHP-FPM environment с `OIDC_CLIENT_SECRET`, callback code и cookies попадали бы
 в лог при штатной ошибке авторизации. Внутренний nginx Stockhub также использует
-access-log format без query string и Referer. В соседнем proxy-проекте добавлены
-tracked map-конфигурация `config/nginx/00-stockhub-log-map.conf` и безопасный
-`LOG_FORMAT`: для Stockhub общий `jwilder/nginx-proxy` пишет только method/URI
-path/protocol и `Referer "-"`, а для остальных vhost сохраняет старый формат.
-Smoke-проверка с отдельными query/Referer markers подтвердила отсутствие обоих
-маркеров в Stockhub-строках и наличие control marker у другого vhost.
+access-log format без query string и Referer. Стандартный Nginx error log
+санитизировать по полям нельзя: ошибки 413, timeout или недоступный upstream
+включают полный request URI. Поэтому оба proxy-слоя имеют отдельный exact
+`location = /auth/sso/callback` с `error_log /dev/null crit` и лимитом тела
+`1k` (OIDC использует `response_mode=query`, тело не требуется). Внутренний
+location вызывает `index.php` напрямую через FastCGI, иначе `try_files` сделал
+бы internal redirect в generic PHP location с обычным error log. Для остальных
+маршрутов штатная Nginx-диагностика сохранена; callback status и path остаются
+видны в безопасном access log, а ошибки приложения — в очищенном Yii FileTarget.
+Корневой `.dockerignore` исключает из build context локальный compose и конфиги,
+credentials/certificates, БД, логи/runtime, фотографии, thumbnails, assets,
+vendor и служебные каталоги.
+
+Соседний локальный checkout общего proxy не является частью Stockhub и не
+является source of truth для домашнего production deployment. Tracked шаблон
+домашнего внешнего nginx находится в
+`deploy/nginx-proxy/stockhub.ru.conf.example`; фактический production-файл —
+`/home/gugglegum/nginx-proxy/conf.d/stockhub.ru.conf`. Шаблон не применяется
+автоматически: перед deploy нужно сравнить его с текущим конфигом и проверить
+пути сертификата, ACME webroot и доступность upstream `stockhub-nginx`.
+
+На 2026-07-28 production ещё работает с `master` без этой SSO-ветки:
+`YII_ENV`, `YII_DEBUG`, `TRUSTED_PROXIES`, auth-флаги и несекретные OIDC URL
+в контейнере `stockhub-php` не заданы, а внешний HTTP vhost всё ещё проксирует
+запросы к Basic Auth и не выдаёт HSTS. Это зафиксированный deployment drift,
+а не состояние, закрытое локальными изменениями. Перед приложенческим deploy
+в production compose нужно явно задать как минимум `YII_ENV=prod`,
+`YII_DEBUG=0`, canonical origin `https://stockhub.ru`, выбранные auth-флаги,
+`OIDC_ISSUER=https://sso.pyrda.ru`, HTTPS callback и credentials отдельного
+production-клиента.
+
+Текущий `nginx-proxy` подключён к `proxy-network` с динамическим адресом
+(при проверке был `172.18.0.8`). Нельзя навсегда записывать этот адрес в
+`TRUSTED_PROXIES` без статического IPAM: после recreate он может измениться.
+Предпочтительный rollout — сначала закрепить адрес proxy и доверять только ему;
+альтернатива `172.18.0.0/16` проще, но осознанно доверяет forwarded-заголовки
+всех контейнеров общей сети.
+
+Deployment checklist внешнего proxy:
+
+1. HTTP location `/.well-known/acme-challenge/` должен остаться доступным, а
+   любой другой HTTP-запрос к canonical host или alias должен получить `308` на
+   `https://stockhub.ru` без `WWW-Authenticate`. Так Basic Auth никогда не
+   запрашивает credentials по открытому HTTP.
+2. HTTPS-ответы canonical host, включая `401`, должны содержать
+   `Strict-Transport-Security: max-age=31536000`; `p.stockhub.ru` и
+   `k.stockhub.ru` должны отвечать `308` на canonical HTTPS host.
+3. Canonical proxy обязан задавать фиксированные `Host`/`X-Forwarded-Host`,
+   `X-Forwarded-Proto=https`, `X-Forwarded-Port=443` и формировать
+   `X-Forwarded-For` из реального адреса клиента. Значение `TRUSTED_PROXIES`
+   приложения должно точно доверять адресу или сети этого proxy.
+4. Stockhub access-log должен использовать sanitized format с method, URI path
+   и protocol, без `$request`, `$args`, `$query_string` и Referer. Exact callback
+   location на внешнем и внутреннем слоях должен иметь локальный
+   `error_log /dev/null crit`; обычные маршруты продолжают наследовать штатный
+   file-backed error log.
+5. После `nginx -t` и graceful reload нужно принудительно получить Nginx-ошибку,
+   а не только штатный Yii 419. Отправить callback с телом больше `1k`,
+   уникальными marker в `code`/`state` и отдельным marker в `Referer`: внешний
+   запрос должен вернуть 413. Затем повторить запрос напрямую к
+   `stockhub-nginx`, чтобы отдельно проверить внутренний слой. Marker не должны
+   находиться ни в access-, ни в error-логах; строка безопасного access log
+   должна содержать path `/auth/sso/callback` без query и Referer наряду с
+   настроенными несекретными полями вроде method, protocol, status, time и
+   размера ответа.
+6. В изолированном pre-deploy smoke нужно также направить callback в недоступный
+   proxy/FastCGI upstream и проверить 502/timeout. Контрольный non-callback 502
+   обязан остаться в обычном error log — это подтверждает, что диагностика не
+   отключена для всего vhost. Только после этих проверок защиту callback можно
+   считать применённой на production.
+
+2026-07-28 оба tracked-конфига проверены именно таким изолированным smoke:
+callback 413 и 502 не сохранили уникальные `code`, `state` и Referer markers
+ни на одном слое; контрольный non-callback 502 остался в обычном error log.
+Дополнительно внутренний direct FastCGI с реальным `stockhub-php` вернул
+ожидаемый Yii 419 `Invalid OIDC state`, то есть exact location не сломал routing.

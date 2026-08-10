@@ -66,6 +66,27 @@ final class OidcProvider
     }
 
     /**
+     * Возвращает проверенные несекретные параметры OIDC-клиента для authorize request.
+     */
+    public function clientId(): string
+    {
+        return $this->configuration->clientId;
+    }
+
+    public function redirectUri(): string
+    {
+        return $this->configuration->redirectUri;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function scopes(): array
+    {
+        return $this->configuration->scopes;
+    }
+
+    /**
      * Обменивает authorization code с PKCE verifier на token response.
      *
      * @return array<string, mixed>

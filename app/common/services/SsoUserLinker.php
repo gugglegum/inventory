@@ -140,7 +140,14 @@ SQL,
         if ($identifier === '') {
             throw new SsoUserLinkException('Нужно указать username или email пользователя Stockhub.');
         }
-        if (trim($issuer) === '' || strlen($issuer) > 255) {
+
+        try {
+            $issuer = OidcConfiguration::canonicalizeIssuer($issuer);
+        } catch (OidcException) {
+            throw new SsoUserLinkException('OIDC issuer должен быть корректным HTTP(S) URL.');
+        }
+
+        if (strlen($issuer) > 255) {
             throw new SsoUserLinkException('OIDC issuer должен содержать от 1 до 255 байт.');
         }
         if ($subject === '' || strlen($subject) > 255) {

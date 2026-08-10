@@ -8,6 +8,7 @@ services:
     environment:
       YII_ENV: "${YII_ENV:-prod}"
       YII_DEBUG: "${YII_DEBUG:-0}"
+      TRUSTED_PROXIES: "${TRUSTED_PROXIES:-}"
       STOCKHUB_CANONICAL_ORIGIN: "${STOCKHUB_CANONICAL_ORIGIN:-}"
       STOCKHUB_PASSWORD_LOGIN_ENABLED: "${STOCKHUB_PASSWORD_LOGIN_ENABLED:-1}"
       STOCKHUB_SSO_LOGIN_ENABLED: "${STOCKHUB_SSO_LOGIN_ENABLED:-0}"
@@ -23,6 +24,7 @@ services:
     volumes:
       - ./app:/var/www/html
       - backend_runtime:/var/www/html/backend/runtime
+      - console_runtime:/var/www/html/console/runtime
       - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./app/tmp:/tmp
     working_dir: /var/www/html
@@ -78,3 +80,4 @@ networks:
 volumes:
   db_data:
   backend_runtime:
+  console_runtime:
