@@ -17,6 +17,7 @@ use yii\filters\VerbFilter;
 use yii\helpers\Url;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\web\UnauthorizedHttpException;
 use yii\web\UnprocessableEntityHttpException;
 use yii\web\UploadedFile;
 
@@ -31,6 +32,14 @@ final class PhotoUploadController extends RepoAwareController
             'access' => [
                 'class' => AccessControl::class,
                 'rules' => [
+                    [
+                        'actions' => ['view', 'thumbnail'],
+                        'allow' => false,
+                        'roles' => ['?'],
+                        'denyCallback' => static function (): never {
+                            throw new UnauthorizedHttpException('Для просмотра фотографии требуется авторизация.');
+                        },
+                    ],
                     [
                         'allow' => true,
                         'roles' => ['@'],

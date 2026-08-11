@@ -13,6 +13,7 @@ use common\models\User;
 use tests\phpunit\DbTestCase;
 use Yii;
 use yii\web\ForbiddenHttpException;
+use yii\web\UnauthorizedHttpException;
 
 /**
  * Integration-тесты HTTP-сценариев PhotoController.
@@ -21,6 +22,21 @@ use yii\web\ForbiddenHttpException;
  */
 final class PhotoControllerTest extends DbTestCase
 {
+    /**
+     * Гостевой запрос изображения получает 401 вместо редиректа на страницу входа.
+     */
+    public function testViewRejectsGuestWithUnauthorizedResponse(): void
+    {
+        [$controller, $item] = $this->prepareFixture();
+        $itemPhoto = $this->createItemPhoto($item);
+        Yii::$app->user->logout(false);
+        $this->setGetRequest([], '/photo/' . $itemPhoto->photoId . '.jpg');
+
+        $this->expectException(UnauthorizedHttpException::class);
+
+        $controller->runAction('view', ['id' => (int) $itemPhoto->photoId]);
+    }
+
     /**
      * Оригинал доступной фотографии передается nginx через внутренний URI.
      */

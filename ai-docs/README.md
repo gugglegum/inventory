@@ -78,6 +78,11 @@ fastcgi_pass stockhub-php:9000;
 из `/_protected-photos/` или `/_protected-thumbnails/`; оба location имеют
 директиву `internal`, поэтому прямой внешний запрос получает 404.
 
+Гостевой запрос постоянного оригинала/thumbnail и временного preview получает
+`401 Unauthorized` без redirect на HTML-страницу входа. Для обычных страниц
+сайта стандартный redirect на login сохраняется. Авторизованный пользователь
+без доступа к репозиторию по-прежнему получает отказ согласно проверке прав.
+
 При deployment защищенной отдачи нужно синхронизировать tracked
 `docker/nginx/default.conf.example` с фактическим игнорируемым
 `docker/nginx/default.conf`, выполнить `nginx -t` и graceful reload. Обновление

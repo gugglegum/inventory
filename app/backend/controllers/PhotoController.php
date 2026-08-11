@@ -13,6 +13,7 @@ use yii\web\ForbiddenHttpException;
 use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use yii\web\UnauthorizedHttpException;
 
 /**
  * Управление фотографиями товаров
@@ -30,6 +31,13 @@ class PhotoController extends Controller
             'access' => [
                 'class' => AccessControl::class,
                 'rules' => [
+                    [
+                        'allow' => false,
+                        'roles' => ['?'],
+                        'denyCallback' => static function (): never {
+                            throw new UnauthorizedHttpException('Для просмотра фотографии требуется авторизация.');
+                        },
+                    ],
                     [
                         'allow' => true,
                         'roles' => ['@'],

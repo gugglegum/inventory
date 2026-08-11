@@ -15,6 +15,7 @@ use tests\phpunit\DbTestCase;
 use Yii;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
+use yii\web\UnauthorizedHttpException;
 use yii\web\UploadedFile;
 
 /**
@@ -22,6 +23,26 @@ use yii\web\UploadedFile;
  */
 final class PhotoUploadControllerTest extends DbTestCase
 {
+    /**
+     * Временные preview также не перенаправляют гостя на HTML-страницу входа.
+     */
+    public function testTemporaryPreviewRejectsGuestWithUnauthorizedResponse(): void
+    {
+        [$controller, $repo, $owner] = $this->prepareFixture();
+        [$session, $file] = $this->uploadTemporary($repo, $owner);
+        Yii::$app->user->logout(false);
+        $this->setGetRequest([], '/photo-upload/view');
+
+        $this->expectException(UnauthorizedHttpException::class);
+
+        $controller->runAction('view', [
+            'token' => (string) $session->token,
+            'repoId' => (int) $repo->id,
+            'context' => PhotoUploadSession::CONTEXT_ITEM_CREATE,
+            'id' => (int) $file->id,
+        ]);
+    }
+
     public function testCreateReturnsOpaqueSessionAndScopedUrls(): void
     {
         [$controller, $repo] = $this->prepareFixture();
