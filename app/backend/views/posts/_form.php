@@ -1,6 +1,8 @@
 <?php
 
 use backend\models\PostForm;
+use backend\models\PhotoEditorForm;
+use common\models\PhotoUploadSession;
 use kartik\datetime\DateTimePicker;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -10,9 +12,9 @@ use yii\widgets\ActiveForm;
 /** @var PostForm $postForm */
 /** @var \common\models\Item $item */
 /** @var \common\models\Repo $repo */
+/** @var PhotoEditorForm $photoEditorForm */
+/** @var array $photoEntries */
 
-$this->registerJsFile('@web/js/upload_photo.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]], 'upload_photo');
-$this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 
 /** @var \yii\widgets\ActiveForm $form */
 $tabIndex = 1;
@@ -46,36 +48,20 @@ $post = $postForm->getPost();
     <?= $form->field($postForm, 'text')->textarea(['rows' => 4, 'tabindex' => $tabIndex++]) ?>
 
     <label class="control-label">Фотографии</label>
-    <?php
-        $photos = $post->postPhotos;
-        if (count($photos) !== 0) {
-            echo Html::beginTag('div', ['class' => 'uploaded-photos']);
-
-            foreach ($photos as $postPhoto) {
-                /** @var \common\models\PostPhoto $postPhoto */
-                echo Html::beginTag('div', ['class' => 'photo-wrapper']);
-                echo Html::beginTag('div', ['class' => 'photo-frame']);
-                echo '<button type="button" class="btn btn-mini btn-delete" data-action="' . Html::encode(Url::to(['photo/delete'])) . '" data-id="' . $postPhoto->id . '" data-photo-type="post"><i class="glyphicon glyphicon-trash"></i></button>';
-                echo '<button type="button" class="btn btn-mini btn-sort-up" data-action="' . Html::encode(Url::to(['photo/sort-up'])) . '" data-id="' . $postPhoto->id . '" data-photo-type="post"><i class="glyphicon glyphicon-arrow-up"></i></button>';
-                echo '<button type="button" class="btn btn-mini btn-sort-down" data-action="' . Html::encode(Url::to(['photo/sort-down'])) . '" data-id="' . $postPhoto->id . '" data-photo-type="post"><i class="glyphicon glyphicon-arrow-down"></i></button>';
-                echo Html::beginTag('a', ['href' => $postPhoto->photo->getUrl(), 'rel' => 'post-photos', 'class' => 'fancybox']);
-                echo Html::img($postPhoto->photo->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
-                echo Html::endTag('a');
-                echo Html::endTag('div');
-                echo Html::endTag('div');
-            }
-
-            echo '<div class="clearfix"></div>';
-            echo Html::endTag('div');
-        }
-    ?>
-
-    <label class="control-label">Добавить фотографии</label>
-    <ol class="form-group" id="PhotosContainer">
-        <li class="field-item-photos">
-            <input class="custom-file-input" type="file" name="photos[]" tabindex="<?= $tabIndex++ ?>" />
-        </li>
-    </ol>
+    <?= $this->render('//_photo-editor', [
+        'photoEditorForm' => $photoEditorForm,
+        'photoEntries' => $photoEntries,
+        'createSessionUrl' => Url::to(['photo-upload/create']),
+        'repoId' => (int) $repo->id,
+        'uploadContext' => PhotoUploadSession::CONTEXT_POST,
+        'uploadUrl' => $photoEditorForm->sessionToken === '' ? '' : Url::to([
+            'photo-upload/upload',
+            'token' => $photoEditorForm->sessionToken,
+            'repoId' => (int) $repo->id,
+            'context' => PhotoUploadSession::CONTEXT_POST,
+        ]),
+        'maxUploadBytes' => (int) (Yii::$app->params['photos']['maxUploadBytes'] ?? 0),
+    ]) ?>
 
     <div class="form-group">
         <?= Html::submitButton($post->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $post->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>

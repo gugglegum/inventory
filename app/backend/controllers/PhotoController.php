@@ -3,14 +3,11 @@
 namespace backend\controllers;
 
 use backend\services\PhotoAccessService;
-use backend\services\PhotoAttachmentService;
 use backend\services\PhotoDeliveryService;
 use common\models\Photo;
-use InvalidArgumentException;
 use Yii;
 use yii\base\Exception;
 use yii\filters\AccessControl;
-use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\ForbiddenHttpException;
 use yii\web\HttpException;
@@ -37,14 +34,6 @@ class PhotoController extends Controller
                         'allow' => true,
                         'roles' => ['@'],
                     ],
-                ],
-            ],
-            'verbs' => [
-                'class' => VerbFilter::class,
-                'actions' => [
-                    'delete' => ['post'],
-                    'sort-up' => ['post'],
-                    'sort-down' => ['post'],
                 ],
             ],
         ];
@@ -91,80 +80,6 @@ class PhotoController extends Controller
         }
 
         return (new PhotoDeliveryService())->thumbnail($photo, $width, $height, $upscale, $crop, $quality);
-    }
-
-    /**
-     * Перемещает фотографию предмета в списке фотографий на одну позицию вверх
-     *
-     * @throws HttpException
-     * @throws \yii\db\Exception
-     */
-    public function actionSortUp(): void
-    {
-        $this->runPhotoOperation(
-            fn(PhotoAttachmentService $service, int $id, string $type): bool => $service->sortUp($id, $type)
-        );
-    }
-
-    /**
-     * Перемещает фотографию предмета в списке фотографий на одну позицию внизу
-     *
-     * @throws HttpException
-     * @throws \yii\db\Exception
-     */
-    public function actionSortDown(): void
-    {
-        $this->runPhotoOperation(
-            fn(PhotoAttachmentService $service, int $id, string $type): bool => $service->sortDown($id, $type)
-        );
-    }
-
-    /**
-     * Удаляет фотографию
-     *
-     * @return void
-     * @throws HttpException
-     * @throws \Throwable
-     * @throws \yii\db\StaleObjectException
-     */
-    public function actionDelete(): void
-    {
-        $this->runPhotoOperation(
-            fn(PhotoAttachmentService $service, int $id, string $type): bool => $service->delete($id, $type)
-        );
-    }
-
-    /**
-     * Выполняет POST-операцию над связью фотографии.
-     *
-     * @param callable(PhotoAttachmentService, int, string): bool $operation
-     * @throws HttpException
-     * @throws \Throwable
-     */
-    private function runPhotoOperation(callable $operation): void
-    {
-        $id = (int) Yii::$app->request->post('id');
-        if (!$id) {
-            throw new HttpException(400, 'Missing required parameter "id"');
-        }
-
-        try {
-            $isFound = $operation(new PhotoAttachmentService(), $id, $this->getPhotoType());
-        } catch (InvalidArgumentException $exception) {
-            throw new HttpException(400, $exception->getMessage(), 0, $exception);
-        }
-
-        if (!$isFound) {
-            throw new HttpException(404, 'Photo attachment #' . $id . ' is not found');
-        }
-    }
-
-    /**
-     * Возвращает тип связи фотографии из POST.
-     */
-    private function getPhotoType(): string
-    {
-        return (string) Yii::$app->request->post('photoType', PhotoAttachmentService::TYPE_ITEM);
     }
 
     /**

@@ -6,7 +6,6 @@ namespace tests\phpunit\integration;
 
 use backend\models\ItemTagsForm;
 use backend\services\ItemFormAssetService;
-use common\models\ItemPhoto;
 use common\models\RepoUser;
 use common\models\User;
 use tests\phpunit\DbTestCase;
@@ -14,16 +13,15 @@ use tests\phpunit\DbTestCase;
 /**
  * Integration-тесты сервиса обработки связанных данных формы предмета.
  *
- * Проверяют сохранение тегов и прикрепление новых фотографий без HTTP-обвязки ItemsController.
+ * Проверяют сохранение тегов без HTTP-обвязки ItemsController.
  */
 final class ItemFormAssetServiceTest extends DbTestCase
 {
     /**
-     * save() сохраняет теги и прикрепляет загруженный JPEG к предмету.
+     * save() сохраняет теги предмета.
      */
-    public function testSaveStoresTagsAndAttachesUploadedPhoto(): void
+    public function testSaveStoresTags(): void
     {
-        $uploadedFile = $this->createUploadedJpegFixture();
         $item = $this->prepareItemFixture();
         $tagsForm = new ItemTagsForm();
 
@@ -35,24 +33,9 @@ final class ItemFormAssetServiceTest extends DbTestCase
                     'tags' => 'фото, проверка',
                 ],
             ],
-            [
-                'photos' => [
-                    'tmp_name' => [
-                        $uploadedFile,
-                        '',
-                    ],
-                ],
-            ],
         );
 
-        @unlink($uploadedFile);
-
-        $itemPhoto = $item->getItemPhotos()->one();
-
         self::assertEqualsCanonicalizing(['фото', 'проверка'], $item->fetchTags());
-        self::assertNotNull($itemPhoto);
-        self::assertFileExists($itemPhoto->photo->getFile());
-        self::assertSame(0, (int) $itemPhoto->sortIndex);
     }
 
     /**

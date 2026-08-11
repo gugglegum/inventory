@@ -2,6 +2,7 @@
 
 use backend\models\ItemForm;
 use backend\models\ItemTagsForm;
+use backend\models\PhotoEditorForm;
 use common\models\Item;
 use common\models\Repo;
 use yii\helpers\Html;
@@ -12,6 +13,8 @@ use yii\helpers\Html;
 /** @var Repo $repo */
 /** @var ItemTagsForm $tagsForm */
 /** @var string $goto */
+/** @var PhotoEditorForm $photoEditorForm */
+/** @var array $photoEntries */
 
 $this->title = 'Создание ' . ($model->isContainer === '1' ? 'контейнера' : 'предмета');
 $this->render('/_breadcrumbs', ['item' => $parent, 'repo' => $repo, 'suffix' => [$this->title]]);
@@ -27,6 +30,8 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
         'repo' => $repo,
         'tagsForm' => $tagsForm,
         'goto' => $goto,
+        'photoEditorForm' => $photoEditorForm,
+        'photoEntries' => $photoEntries,
     ]) ?>
 
 </div>

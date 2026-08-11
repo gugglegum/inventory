@@ -7,7 +7,6 @@ namespace tests\phpunit\integration;
 use backend\services\PostFormService;
 use common\models\Item;
 use common\models\Post;
-use common\models\PostPhoto;
 use common\models\Repo;
 use common\models\RepoUser;
 use common\models\User;
@@ -19,17 +18,16 @@ use Yii;
 /**
  * Integration-тесты сервиса подготовки и сохранения формы заметки.
  *
- * Проверяют create/update сценарии Post и прикрепление фотографий без HTTP-обвязки PostsController.
+ * Проверяют create/update сценарии Post без HTTP-обвязки PostsController.
  */
 final class PostFormServiceTest extends DbTestCase
 {
     /**
-     * prepareForCreate() выставляет служебные поля, а save() создает заметку и прикрепляет JPEG.
+     * prepareForCreate() выставляет служебные поля, а save() создает заметку.
      */
-    public function testPrepareForCreateAndSaveCreatesPostWithUploadedPhoto(): void
+    public function testPrepareForCreateAndSaveCreatesPost(): void
     {
         [, $item] = $this->prepareFixture();
-        $uploadedFile = $this->createUploadedJpegFixture();
         $service = new PostFormService();
 
         $postForm = $service->prepareForCreate($item, Yii::$app->getUser());
@@ -43,19 +41,7 @@ final class PostFormServiceTest extends DbTestCase
                     'text' => 'Текст новой заметки',
                 ],
             ],
-            [
-                'photos' => [
-                    'tmp_name' => [
-                        $uploadedFile,
-                        '',
-                    ],
-                ],
-            ],
         );
-
-        @unlink($uploadedFile);
-
-        $postPhoto = $post->getPostPhotos()->one();
 
         self::assertTrue($result);
         self::assertFalse($post->isNewRecord);
@@ -65,9 +51,6 @@ final class PostFormServiceTest extends DbTestCase
         self::assertSame('Новая заметка', $post->title);
         self::assertSame('Текст новой заметки', $post->text);
         self::assertSame($this->timestamp('01.06.2026 12:30'), (int) $post->datetime);
-        self::assertNotNull($postPhoto);
-        self::assertFileExists($postPhoto->photo->getFile());
-        self::assertSame(0, (int) $postPhoto->sortIndex);
     }
 
     /**
@@ -93,7 +76,6 @@ final class PostFormServiceTest extends DbTestCase
                     'text' => 'Новый текст',
                 ],
             ],
-            [],
         );
 
         self::assertTrue($result);

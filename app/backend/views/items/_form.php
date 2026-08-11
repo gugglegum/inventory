@@ -2,7 +2,9 @@
 
 use backend\models\ItemForm;
 use backend\models\ItemTagsForm;
+use backend\models\PhotoEditorForm;
 use common\models\Item;
+use common\models\PhotoUploadSession;
 use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -13,12 +15,12 @@ use yii\widgets\ActiveForm;
 /** @var Repo $repo */
 /** @var ItemTagsForm $tagsForm */
 /** @var string $goto */
+/** @var PhotoEditorForm $photoEditorForm */
+/** @var array $photoEntries */
 
-$this->registerJsFile('@web/js/upload_photo.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]], 'upload_photo');
 $this->registerJsFile('@web/js/item-form.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]], 'item-form');
 $this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items');
 $this->registerCssFile('@web/css/item-form.css', ['appendTimestamp' => true], 'item-form');
-$this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 
 /** @var \yii\widgets\ActiveForm $form */
 $tabIndex = 1;
@@ -63,36 +65,24 @@ $item = $model->getItem();
     </div>
 
     <label class="control-label">Фотографии</label>
-    <?php
-        $photos = $item->itemPhotos;
-        if (count($photos) !== 0) {
-            echo Html::beginTag('div', ['class' => 'uploaded-photos']);
-
-            foreach ($photos as $itemPhoto) {
-                /** @var \common\models\ItemPhoto $itemPhoto */
-                echo Html::beginTag('div', ['class' => 'photo-wrapper']);
-                echo Html::beginTag('div', ['class' => 'photo-frame']);
-                echo '<button type="button" class="btn btn-mini btn-delete" data-action="' . Html::encode(Url::to(['photo/delete'])) . '" data-id="' . $itemPhoto->id . '" data-photo-type="item"><i class="glyphicon glyphicon-trash"></i></button>';
-                echo '<button type="button" class="btn btn-mini btn-sort-up" data-action="' . Html::encode(Url::to(['photo/sort-up'])) . '" data-id="' . $itemPhoto->id . '" data-photo-type="item"><i class="glyphicon glyphicon-arrow-up"></i></button>';
-                echo '<button type="button" class="btn btn-mini btn-sort-down" data-action="' . Html::encode(Url::to(['photo/sort-down'])) . '" data-id="' . $itemPhoto->id . '" data-photo-type="item"><i class="glyphicon glyphicon-arrow-down"></i></button>';
-                echo Html::beginTag('a', ['href' => $itemPhoto->photo->getUrl(), 'rel' => 'item-photos', 'class' => 'fancybox']);
-                echo Html::img($itemPhoto->photo->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
-                echo Html::endTag('a');
-                echo Html::endTag('div');
-                echo Html::endTag('div');
-            }
-
-            echo '<div class="clearfix"></div>';
-            echo Html::endTag('div');
-        }
-    ?>
-
-    <label class="control-label">Добавить фотографии</label>
-    <ol class="form-group" id="PhotosContainer">
-        <li class="field-item-photos">
-            <input class="custom-file-input" type="file" name="photos[]" tabindex="<?= $tabIndex++ ?>" />
-        </li>
-    </ol>
+    <?= $this->render('//_photo-editor', [
+        'photoEditorForm' => $photoEditorForm,
+        'photoEntries' => $photoEntries,
+        'createSessionUrl' => Url::to(['photo-upload/create']),
+        'repoId' => (int) $repo->id,
+        'uploadContext' => $model->isNewRecord
+            ? PhotoUploadSession::CONTEXT_ITEM_CREATE
+            : PhotoUploadSession::CONTEXT_ITEM_UPDATE,
+        'uploadUrl' => $photoEditorForm->sessionToken === '' ? '' : Url::to([
+            'photo-upload/upload',
+            'token' => $photoEditorForm->sessionToken,
+            'repoId' => (int) $repo->id,
+            'context' => $model->isNewRecord
+                ? PhotoUploadSession::CONTEXT_ITEM_CREATE
+                : PhotoUploadSession::CONTEXT_ITEM_UPDATE,
+        ]),
+        'maxUploadBytes' => (int) (Yii::$app->params['photos']['maxUploadBytes'] ?? 0),
+    ]) ?>
 
     <div class="form-group">
         <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>

@@ -2,6 +2,7 @@
 
 use backend\models\ItemForm;
 use backend\models\ItemTagsForm;
+use backend\models\PhotoEditorForm;
 use common\models\Repo;
 use yii\helpers\Html;
 
@@ -9,6 +10,8 @@ use yii\helpers\Html;
 /** @var ItemForm $model */
 /** @var Repo $repo */
 /** @var ItemTagsForm $tagsForm */
+/** @var PhotoEditorForm $photoEditorForm */
+/** @var array $photoEntries */
 
 $item = $model->getItem();
 $this->title = $model->name;
@@ -26,6 +29,8 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
         'repo' => $repo,
         'tagsForm' => $tagsForm,
         'goto' => null,
+        'photoEditorForm' => $photoEditorForm,
+        'photoEntries' => $photoEntries,
     ]) ?>
 
 </div>

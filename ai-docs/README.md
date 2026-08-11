@@ -61,7 +61,11 @@ fastcgi_pass stockhub-php:9000;
 
 Доменная модель фотографий устроена так: сам файл описывает `common/models/Photo`, а привязка к месту использования хранится в `ItemPhoto` или `PostPhoto`. На уровне текущего поведения связь фактически 1 к 1: одна фотография используется только в одном месте. Исторически файл фотографии жил прямо в `ItemPhoto`; после появления фотографий у заметок общая часть была вынесена в `Photo`, чтобы не дублировать файловую логику.
 
-Миниатюры сейчас работают как кэш: при удалении основной фотографии оригинальный файл удаляется, а уже созданные thumbnails могут оставаться в `app/thumbnails/`. Это ожидаемое текущее поведение. В будущем можно добавить чистку thumbnails при удалении `Photo`, но это отдельное изменение с риском задеть генерацию/кэширование миниатюр.
+Миниатюры работают как кэш. Новый async photo editor
+явно удаляет все найденные thumbnails при отмене временной загрузки
+и при отсоединении `Photo` через форму. Другие исторические пути
+удаления могут по-прежнему оставить cache files в `app/thumbnails/`;
+автоматически искать и удалять такие исторические orphan-файлы нельзя.
 
 С 2026-08-11 публичные URL фотографий не должны указывать напрямую на
 `app/photos` или `app/thumbnails`. `Photo::getUrl()` и
@@ -74,14 +78,241 @@ fastcgi_pass stockhub-php:9000;
 из `/_protected-photos/` или `/_protected-thumbnails/`; оба location имеют
 директиву `internal`, поэтому прямой внешний запрос получает 404.
 
-При deployment нужно синхронизировать tracked
+При deployment защищенной отдачи нужно синхронизировать tracked
 `docker/nginx/default.conf.example` с фактическим игнорируемым
 `docker/nginx/default.conf`, выполнить `nginx -t` и graceful reload. Обновление
 PHP без одновременного обновления nginx приведет к 404 на новых внутренних URI,
 а сохранение старых публичных `location /photos` и `/thumbnails` оставит обход
-авторизации. Локально целевые controller-тесты, полный `app/bin/check-quality`
-(183 теста / 1577 assertions), `nginx -t` и direct-URL smoke прошли; production
-rollout этой защиты пока не выполнялся.
+авторизации. Защищенная отдача развернута на production 2026-08-11;
+ее internal locations также переиспользуются для preview временных загрузок.
+
+## Асинхронная загрузка и редактирование фотографий
+
+Формы предмета и заметки используют один shared editor:
+
+- view `backend/views/_photo-editor.php`;
+- client controller `backend/web/js/photo-editor.js` и стили
+  `backend/web/css/photo-editor.css`;
+- form model `backend/models/PhotoEditorForm.php`;
+- HTTP API `backend/controllers/PhotoUploadController.php`;
+- lifecycle-сервисы `backend/services/PhotoUploadService.php` и
+  `backend/services/PhotoEditorService.php`.
+
+В формах больше нет синхронного `input type=file` с массивом
+`photos[]`. По клику на droparea открывается multiple file picker,
+файлы можно перетаскивать на droparea или вставлять из clipboard.
+Глобальный paste-listener не зависит от focus: если на странице один
+видимый editor, он получит clipboard image; при нескольких
+видимых editor-ах используется последний активированный.
+
+Каждый файл отправляется отдельным XHR с собственным progress.
+Сессия создается лениво перед первым корректным файлом. Клиент
+держит не более трех concurrent uploads, ставит остальные в очередь
+и показывает статусы `queued`, `uploading`, `ready` и `error`.
+Файл можно повторить после network/server error. Submit родительской формы
+заблокирован, пока есть queued/uploading/error карточка или активный
+DELETE временной карточки.
+
+Готовая карточка сразу получает thumbnail и protected preview.
+Прежние и новые карточки сортируются одним drag handle: визуальная копия
+следует за pointer, исходная карточка занимает место placeholder, а соседние
+карточки перестраиваются с короткой FLIP-анимацией. С клавиатуры порядок
+меняется стрелками на focused handle. Клик по карточке
+открывает общую Fancybox 2-галерею с явным `type: image`, поэтому
+preview работает и для URL без `.jpg`.
+
+HTTP API состоит из routes `photo-upload/create`, `photo-upload/state`,
+`photo-upload/upload`, `photo-upload/view`, `photo-upload/thumbnail` и
+`photo-upload/delete`. Все routes требуют авторизацию; для каждого
+запроса перепроверяются owner, `repoId`, server-whitelisted `context`
+и текущее право `RepoUser`. Контексты: `item-create`, `item-update`
+и `post`; они требуют соответственно `ACCESS_CREATE_ITEMS`,
+`ACCESS_EDIT_ITEMS` и наличие `RepoUser`. Отзыв доступа к репозиторию
+немедленно закрывает state/upload/preview уже созданной сессии.
+Токен — 64 lowercase hex characters и сравнивается в БД побайтно, но
+знание токена не заменяет session authentication и owner/access checks.
+
+Оригинал и thumbnail временной фотографии отдаются через
+`PhotoDeliveryService` и те же nginx `internal` locations
+`/_protected-photos/` / `/_protected-thumbnails/`, что и у обычных
+фотографий. PHP проверяет доступ и возвращает `X-Accel-Redirect`,
+а nginx отдает body; прямой запрос к internal URI остается 404.
+
+### Manifest, revision и семантика save
+
+`PhotoEditorForm` отправляет вместе с формой три hidden-поля:
+
+- `sessionToken` — owner-bound upload-сессия;
+- `manifest` — единый ordered JSON list вида
+  `[{"type":"existing","id":12},{"type":"temporary","id":34}]`;
+- `revision` — SHA-256 от текущих ID связей и `sortIndex`, полученный
+  при открытии формы и не меняющийся на клиенте.
+
+ID `existing` — это ID связи `ItemPhoto`/`PostPhoto`, а не `Photo.id`;
+ID `temporary` — `PhotoUploadFile.id`. Порядок manifest становится
+итоговым `sortIndex` от нуля. Манифест содержит не более 500
+уникальных записей и валидируется server-side.
+
+До сохранения формы удаление и перестановка прежних
+фотографий меняют только manifest в browser. Кнопка remove для уже
+загруженной временной карточки может удалить ее сразу: это еще не
+пользовательская привязка, а temporary marker. Если DELETE не удался,
+карточка исчезает из UI, а marker подберет TTL cleanup.
+
+При submit `PhotoEditorService` внутри транзакции родительской формы:
+
+1. блокирует current `ItemPhoto`/`PostPhoto` и upload rows через
+   `SELECT ... FOR UPDATE`;
+2. проверяет immutable revision, owner/repo/context сессии и что все
+   IDs manifest принадлежат текущей форме;
+3. сохраняет Item/Post и остальные поля формы;
+4. создает `ItemPhoto`/`PostPhoto` для temporary entries, переставляет
+   все связи и удаляет опущенные existing связи;
+5. удаляет markers примененных загрузок и помечает пустую
+   сессию `consumedAt`;
+6. commit-ит все DB-изменения вместе.
+
+Перед установкой финальных sortIndex связи временно переносятся
+в отрицательный диапазон, чтобы не нарушить соответствующий unique index
+`(itemId, sortIndex)` или `(postId, sortIndex)`. Revision mismatch при параллельном редактировании
+не перезатирает чужой список, а возвращает ошибку с требованием
+обновить страницу.
+
+Если основная форма не прошла валидацию или транзакция
+откатилась, ни порядок, ни удаление existing-фотографий, ни
+привязка temporary-фотографий не применяются. Последние остаются
+доступны в повторно отрисованной форме до истечения TTL.
+
+### Temporary markers, 24-hour TTL и безопасная очистка
+
+Успешный upload сразу создает обычную `Photo`, физический JPEG в
+`app/photos/` и thumbnail cache в `app/thumbnails/`. Отдельной папки
+с ожидающими finalize файлами нет. Временность задается
+исключительно явной строкой `photo_upload_file`, связывающей
+`photo_upload_session` с `Photo`. Пока marker существует, `Photo` не считается
+примененной к предмету/заметке.
+
+Сессия привязана к user, repo и context, имеет `expiresAt` и
+`consumedAt`. TTL равен 24 часам и продлевается от каждого успешного
+upload, поэтому файл из давно открытой формы не будет удален раньше
+чем через 24 часа после последней успешной активности. При удалении
+пользователя или репозитория их upload-сессии удаляются явно до
+hard delete, потому что FK сами по себе не могут безопасно удалить
+физические files.
+
+Удаление existing-фотографии формой не удаляет JPEG до commit.
+В той же DB-транзакции, где удаляется `ItemPhoto`/`PostPhoto`,
+создается явный marker `photo_deletion_queue`. После commit сервис
+пытается сразу удалить thumbnails, JPEG, `Photo` и queue marker.
+Если post-commit filesystem cleanup завершился ошибкой, queue marker
+остается для повтора hourly cron. Если такая `Photo` к моменту cleanup
+снова привязана, cleanup удалит только queue marker и сохранит данные.
+
+Критический safety invariant: `photo-uploads/prune` и любая ручная
+очистка этой подсистемы могут трогать `Photo` только при наличии
+явного `photo_upload_file` или `photo_deletion_queue`. Cron никогда не
+должен искать «все Photo без ItemPhoto/PostPhoto» и никогда не должен
+удалять unmarked historical orphans. Это отдельные данные, которые могут
+происходить из старых версий проекта.
+
+Команда только показывает кандидатов при явном Yii bool option
+`--dry-run=1`:
+
+```bash
+cd /home/gugglegum/stockhub.ru
+docker compose exec -T php ./yii photo-uploads/prune --dry-run=1
+```
+
+Реальная очистка:
+
+```bash
+cd /home/gugglegum/stockhub.ru
+docker compose exec -T php ./yii photo-uploads/prune
+```
+
+В production нет и не нужен отдельный scheduler-container. Команду раз в час
+запускает cron хоста от пользователя, имеющего доступ к Docker. Пока достаточно
+простого crontab; позднее его можно заменить общим runner-ом с lock, timeout и
+централизованным логированием. Пути `docker` и checkout нужно предварительно
+сверить на самом сервере:
+
+```cron
+17 * * * * cd /home/gugglegum/stockhub.ru && /usr/bin/docker compose exec -T php ./yii photo-uploads/prune >> logs/photo-uploads-prune.log 2>&1
+```
+
+Перед установкой cron на production обязателен ручной dry run. Первый
+реальный запуск также нужно проконтролировать по выводу и логу.
+
+### Форматы, нормализация и лимиты
+
+Сервер принимает только фактически распознанные `getimagesize()`
+GIF, JPEG, PNG и WebP. Расширение и client MIME не являются границей
+доверия. `Photo::assignFile()` полностью декодирует source и всегда
+сохраняет нормализованный JPEG; и `Photo`, и protected preview поэтому
+всегда указывают на JPEG. Thumbnail 320x320 с параметрами
+`upscale=false`, `crop=false`, quality 90 создается сразу после upload; если
+предварительная генерация не удалась, thumbnail endpoint повторяет ее
+при первом GET.
+
+Прикладные лимиты задаются в `common/config/params.php` внутри
+`photos`:
+
+- `maxUploadBytes = 50 * 1024 * 1024` — 50 MiB на файл;
+- `maxUploadPixels = 60_000_000` — 60 млн пикселей после чтения заголовка;
+- `maxFilesPerUploadSession = 100`;
+- `maxTemporaryFilesPerUser = 300` во всех его сессиях;
+- `maxOpenUploadSessionsPerUser = 20`.
+
+Клиент повторяет проверку формата и 50 MiB для UX, но
+авторитетны только server checks. Нулевой лимит в params отключает
+соответствующее ограничение. Transport-лимиты сейчас выше: PHP
+`upload_max_filesize`/`post_max_size` и inner/edge nginx `client_max_body_size`
+равны 512M. При изменении `maxUploadBytes` нужно отдельно
+сверять оба nginx-слоя и PHP ini.
+
+### Миграция, deployment и checklist
+
+Миграция `m260811_120000_create_photo_upload_tables`:
+
+- исправляет исторический индекс `post_photo`: нормализует `sortIndex`
+  внутри каждой заметки и создает unique index `(postId, sortIndex)`;
+- создает `photo_upload_session` с binary-comparable 64-char token,
+  owner/repo/context, rolling expiry и consumed marker;
+- создает `photo_upload_file`, где `photoId` уникален и FK к сессии/
+  `Photo` имеют cascade semantics;
+- создает rollback-safe `photo_deletion_queue` с уникальным `photoId`.
+
+Порядок rollout:
+
+1. сделать бэкап MariaDB и убедиться, что есть актуальная
+   восстанавливаемая копия `app/photos/`; миграция меняет порядок
+   `post_photo`, а новый code получает право физически удалять файлы только
+   по explicit markers;
+2. до rollout прогнать `app/bin/check-quality`, отдельно
+   `git diff --check` и миграции с нуля на `stockhub_test`;
+3. обновить tracked code на production и применить
+   `docker compose exec -T php ./yii migrate --interactive=0`;
+4. проверить наличие трех новых таблиц, `uq_photo_upload_session_token`,
+   `ux_post_photo_postId_sortIndex` и историю миграций;
+5. убедиться, что PHP-FPM может писать `app/photos/`,
+   `app/thumbnails/` и их temp-подкаталоги; внутренний nginx должен
+   читать файлы для `X-Accel-Redirect`;
+6. пройти browser smoke для create/update предмета и create/update
+   заметки: multi-select, drop, paste при focus в textarea, individual progress,
+   retry/error, preview, drag/keyboard reorder, remove и то, что все эти изменения
+   применяются только после Save;
+7. отдельно проверить validation-error с повторным показом temporary cards,
+   revision conflict и запрет preview без login/другому user/после отзыва
+   RepoUser; прямые `/_protected-*` URL должны оставаться 404;
+8. выполнить production `photo-uploads/prune --dry-run=1`, сверить
+   счетчики с DB markers и только после этого установить hourly host cron;
+9. после первого реального prune проверить счетчики, application log,
+   наличие expected files и что unmarked historical orphans не изменились.
+
+Для отката code не нужно автоматически запускать `safeDown()`:
+новые таблицы не мешают старому runtime, а down migration меняет
+уникальный индекс `post_photo`. Откат схемы требует отдельного
+осознанного решения и бэкапа.
 
 ## Граница POST-форм и ActiveRecord
 
@@ -154,15 +385,15 @@ docker compose exec php ./vendor/bin/phpunit -c phpunit.xml
 
 Удаление предметов из `ItemsController::actionDelete()` вынесено в `backend/services/ItemDeletionService.php`. `backend/models/ItemDeleteForm.php` теперь остается формой выбора режима удаления и контейнером ошибок, а сервис выполняет мягкое или жесткое удаление предмета. Поведение защищено controller-тестами soft/hard delete в `tests/phpunit/integration/ItemsControllerTest.php` и прямым integration-тестом сервиса `tests/phpunit/integration/ItemDeletionServiceTest.php`.
 
-Сохранение связанных данных формы предмета вынесено из `ItemsController::actionCreate()` и `ItemsController::actionUpdate()` в `backend/services/ItemFormAssetService.php`. Сервис сохраняет теги через `ItemTagsForm` и прикрепляет новые фотографии к предмету после успешного сохранения `Item`; контроллеры create/update теперь оставляют за собой подготовку формы, redirect/render и передачу POST/FILES в сервисы. Контроллерные сценарии create/update с тегами покрыты в `tests/phpunit/integration/ItemsControllerTest.php`, а прямой сервисный тест `tests/phpunit/integration/ItemFormAssetServiceTest.php` проверяет сохранение тегов и реальное прикрепление JPEG-файла. Тестовый фото-конфиг в `tests/phpunit/config/common.php` использует реальные файловые пути через alias `@phpunitRuntime`, потому что `Photo::assignFile()` ожидает пути файловой системы, а не Yii alias.
+Сохранение связанных текстовых данных формы предмета вынесено из `ItemsController::actionCreate()` и `ItemsController::actionUpdate()` в `backend/services/ItemFormAssetService.php`. Сервис теперь сохраняет только теги через `ItemTagsForm`; синхронный разбор `$_FILES['photos']` удален. Единый `PhotoEditorService` готовит и применяет ordered manifest фотографий в той же DB-транзакции, что и Item/теги. Тестовый фото-конфиг в `tests/phpunit/config/common.php` использует реальные файловые пути через alias `@phpunitRuntime`, потому что `Photo::assignFile()` ожидает пути файловой системы, а не Yii alias.
 
 Подготовка и сохранение предмета для форм создания/редактирования вынесены в `backend/services/ItemFormService.php` и `backend/models/ItemForm.php`. Сервис выставляет create/update scenario, access validator, repo/parent, createdBy/updatedBy и начальный флаг контейнера на `Item`, затем возвращает `ItemForm`. POST загружается в `ItemForm`, а ее `save()` валидирует строки и переносит типизированные значения в `Item`. Контракт покрыт `tests/phpunit/integration/ItemFormServiceTest.php`, а HTTP-сценарии create/update остаются защищены `tests/phpunit/integration/ItemsControllerTest.php`.
 
 Read-часть `ItemsController::actionView()` и `ItemsController::actionJsonPreview()` вынесена в `backend/services/ItemViewDataService.php`. Сервис готовит дочерние предметы в порядке отображения, соседние предметы для prev/next навигации и path-данные для preview partial, а DTO `backend/services/ItemViewData.php` и `backend/services/ItemPreviewData.php` переносят эти данные обратно в контроллер. Контракт сервиса покрыт `tests/phpunit/integration/ItemViewDataServiceTest.php`, включая сортировку детей, соседние предметы и path URLs; HTTP-слой дополнительно проверяется render/json-preview сценариями в `tests/phpunit/integration/ItemsControllerTest.php`.
 
-Create/update формы заметок вынесены из `PostsController` в `backend/services/PostFormService.php` и `backend/models/PostForm.php`. Сервис готовит create/update сценарии `Post`, служебные поля `createdBy`/`updatedBy`, возвращает `PostForm`, сохраняет ее и прикрепляет новые фотографии через `Photo` + `PostPhoto`. POST-дата `datetimeText` валидируется в `PostForm` и записывается в `Post.datetime` как unix timestamp. Контроллер оставляет за собой поиск repo/item/post, render и redirect. Удаление заметок вынесено в `backend/services/PostDeletionService.php`. Контроллерные сценарии create/update/delete покрыты в `tests/phpunit/integration/PostsControllerTest.php`, а прямые контракты сервисов - в `tests/phpunit/integration/PostFormServiceTest.php` и `tests/phpunit/integration/PostDeletionServiceTest.php`.
+Create/update формы заметок вынесены из `PostsController` в `backend/services/PostFormService.php` и `backend/models/PostForm.php`. Сервис готовит create/update сценарии `Post`, служебные поля `createdBy`/`updatedBy` и сохраняет только данные заметки; синхронный `$_FILES` contract удален. POST-дата `datetimeText` валидируется в `PostForm` и записывается в `Post.datetime` как unix timestamp. Фотографии заметки применяются тем же shared `PhotoEditorService`, что и фотографии предмета, в одной транзакции с `Post`. Удаление заметок вынесено в `backend/services/PostDeletionService.php`.
 
-Управление существующими фотографиями предметов и заметок вынесено из `PhotoController` в `backend/services/PhotoAttachmentService.php`. Сервис поддерживает два типа связей, `ItemPhoto` и `PostPhoto`, сортирует фотографии внутри правильного списка и удаляет нужную связь. Форма предмета и форма заметки передают в AJAX явный `photoType` (`item` или `post`), а `backend/web/js/upload_photo.js` отправляет этот тип вместе с ID связи. Это исправляет прежний дефект, когда сортировка и удаление фотографий работали у предметов, но не работали у заметок. Поведение покрыто `tests/phpunit/integration/PhotoAttachmentServiceTest.php`, `tests/phpunit/integration/PhotoControllerTest.php` и render-проверкой формы заметки в `tests/phpunit/integration/PostsControllerTest.php`.
+Прежние immediate AJAX actions `photo/delete`, `photo/sort-up` и `photo/sort-down`, сервис `PhotoAttachmentService` и script `backend/web/js/upload_photo.js` удалены. Они меняли DB до сохранения родительской формы. Теперь shared `PhotoEditorService` одинаково обслуживает `ItemPhoto` и `PostPhoto`, а удаление и порядок existing-связей применяются только после успешного Save. Новые контракты покрыты `tests/phpunit/integration/PhotoUploadServiceTest.php`, `PhotoUploadControllerTest.php` и `PhotoEditorServiceTest.php`; controller/service-тесты Item/Post закрепляют интеграцию с основными формами.
 
 Подготовка create/update форм репозитория вынесена из `RepoController` в `backend/services/RepoFormService.php`. Сервис готовит `RepoForm` для создания и редактирования, заполняет update-форму текущими значениями `Repo` + `RepoUser` и делегирует сохранение самой форме. `RepoForm::save()` валидирует строковые поля и переносит значения в `Repo`/`RepoUser` прямым присваиванием, без `load()` у AR. Удаление репозитория и расчет `affectedUsers` вынесены в `backend/services/RepoDeletionService.php`. Контроллерные сценарии create/update/delete покрыты в `tests/phpunit/integration/RepoControllerTest.php`, а прямые контракты сервисов - в `tests/phpunit/integration/RepoFormServiceTest.php` и `tests/phpunit/integration/RepoDeletionServiceTest.php`.
 
@@ -184,7 +415,7 @@ Read-side ветки `ItemsController::actionIndex()`, `ItemsController::actionP
 
 Каскадная логика удаления из ActiveRecord-моделей вынесена в common-сервисы: `common/services/ItemDeletionCascadeService.php` обслуживает `Item::softDelete()`, `Item::beforeSoftDelete()` и `Item::beforeDelete()`, а `common/services/RepoDeletionCascadeService.php` обслуживает `Repo::beforeDelete()`. Модельные методы и hooks оставлены как публичные точки входа, поэтому существующие вызовы `$item->delete()`, `$item->softDelete()` и `$repo->delete()` сохраняют поведение, но обход дочерних предметов, фотографий, заметок и root items больше не живет прямо в моделях. Поведение закреплено тестами `tests/phpunit/integration/ItemDeletionCascadeServiceTest.php` и `tests/phpunit/integration/RepoDeletionCascadeServiceTest.php`; существующие deletion/controller тесты дополнительно страхуют совместимость.
 
-На 2026-06-08 вручную проверены вход, выход, создание предмета, создание заметки, оба сценария с несколькими картинками, а также жесткое удаление предмета. В этом ручном сценарии физически удалялись оригинальные фотографии и предмета, и связанной заметки; thumbnails оставались, что соответствует текущей кэш-семантике. Сложный сценарий удаления предмета-контейнера с вложенными контейнерами, предметами, заметками и фотографиями пока не проходил ручную проверку целиком.
+Ручная проверка 2026-06-08 относилась к удаленному синхронному `photos[]` flow и не является acceptance-проверкой async editor. Для нового flow обязателен отдельный browser smoke из deployment checklist выше. Сложный сценарий удаления предмета-контейнера с вложенными контейнерами, предметами, заметками и фотографиями пока не проходил ручную проверку целиком.
 
 ## Качество кода
 

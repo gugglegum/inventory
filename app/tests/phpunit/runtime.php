@@ -6,6 +6,7 @@ Yii::setAlias('phpunitRuntime', sys_get_temp_dir() . '/stockhub-phpunit-' . md5(
 
 foreach ([
     '@phpunitRuntime/backend',
+    '@phpunitRuntime/console',
     '@phpunitRuntime/assets',
     '@phpunitRuntime/photos/temp',
     '@phpunitRuntime/thumbnails/temp',

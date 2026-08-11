@@ -131,9 +131,9 @@ final class PostsControllerTest extends DbTestCase
     }
 
     /**
-     * GET update рендерит кнопки управления фотографиями заметки с явным photoType=post.
+     * GET update рендерит существующую фотографию в общем редакторе заметки.
      */
-    public function testUpdateGetRendersPostPhotoTypeButtons(): void
+    public function testUpdateGetRendersPostPhotoInEditor(): void
     {
         [$controller, $repo, $item, $user] = $this->prepareFixture();
         $post = $this->createPost($item, $user, [
@@ -146,8 +146,10 @@ final class PostsControllerTest extends DbTestCase
         $response = $controller->actionUpdate($repo->id, (int) $item->itemId, $post->id);
 
         self::assertIsString($response);
-        self::assertStringContainsString('data-id="' . $postPhoto->id . '"', $response);
-        self::assertStringContainsString('data-photo-type="post"', $response);
+        self::assertStringContainsString('data-photo-editor', $response);
+        self::assertStringContainsString('data-entry-type="existing"', $response);
+        self::assertStringContainsString('data-entry-id="' . $postPhoto->id . '"', $response);
+        self::assertStringContainsString('data-upload-context="post"', $response);
     }
 
     /**

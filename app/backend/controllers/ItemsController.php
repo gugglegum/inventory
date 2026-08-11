@@ -12,6 +12,7 @@ use backend\services\ItemImportService;
 use backend\services\ItemListService;
 use backend\services\ItemSearchService;
 use backend\services\ItemViewDataService;
+use backend\services\PhotoEditorService;
 use common\helpers\PostDataHelper;
 use Yii;
 use yii\base\Exception;
@@ -204,26 +205,58 @@ class ItemsController extends RepoAwareController
         );
         $item = $itemForm->getItem();
         $tagsForm = $itemFormService->createTagsForm();
+        $photoEditorService = new PhotoEditorService();
+        $photoEditorForm = $photoEditorService->createFormForItem($item);
 
         $goto = Yii::$app->request->post('goto', Yii::$app->request->getQueryParam('goto', 'view'));
 
         if (Yii::$app->request->isPost) {
             $postData = PostDataHelper::toArray(Yii::$app->request->post());
-            /** @noinspection NestedPositiveIfStatementsInspection */
-            if ($itemFormService->save($itemForm, $postData)) {
-                (new ItemFormAssetService())->save($item, $tagsForm, $postData, $_FILES);
+            $photoEditorForm->load($postData);
+            $tagsForm->load($postData);
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                $photoPlan = $photoEditorService->prepareForItem(
+                    $photoEditorForm,
+                    $item,
+                    (int) $this->getLoggedUser()->id,
+                );
+                if ($photoPlan !== null && $itemFormService->save($itemForm, $postData)) {
+                    (new ItemFormAssetService())->save($item, $tagsForm, $postData);
+                    $detachedPhotoIds = $photoEditorService->applyToItem($photoPlan, $item);
+                    $transaction->commit();
+                    $photoEditorService->cleanupDetachedPhotos($detachedPhotoIds);
 
-                return $this->redirect($goto === 'create'
-                    ? ['items/create', 'repoId' => $repo->id, 'parentItemId' => $parentItemId, 'goto' => $goto]
-                    : ['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
+                    return $this->redirect($goto === 'create'
+                        ? ['items/create', 'repoId' => $repo->id, 'parentItemId' => $parentItemId, 'goto' => $goto]
+                        : ['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
+                }
+
+                if ($photoPlan === null) {
+                    $itemForm->load($postData);
+                    $itemForm->validate();
+                }
+                $transaction->rollBack();
+            } catch (\Throwable $exception) {
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
+                throw $exception;
             }
         }
+        $photoEntries = $photoEditorService->viewEntriesForItem(
+            $photoEditorForm,
+            $item,
+            (int) $this->getLoggedUser()->id,
+        );
         return $this->render('create', [
             'model' => $itemForm,
             'parent' => $parent,
             'repo' => $repo,
             'tagsForm' => $tagsForm,
             'goto' => $goto,
+            'photoEditorForm' => $photoEditorForm,
+            'photoEntries' => $photoEntries,
         ]);
     }
 
@@ -249,20 +282,52 @@ class ItemsController extends RepoAwareController
         );
         $item = $itemForm->getItem();
         $tagsForm = $itemFormService->createTagsForm($item);
+        $photoEditorService = new PhotoEditorService();
+        $photoEditorForm = $photoEditorService->createFormForItem($item);
 
         if (Yii::$app->request->isPost) {
             $postData = PostDataHelper::toArray(Yii::$app->request->post());
-            /** @noinspection NestedPositiveIfStatementsInspection */
-            if ($itemFormService->save($itemForm, $postData)) {
-                (new ItemFormAssetService())->save($item, $tagsForm, $postData, $_FILES);
+            $photoEditorForm->load($postData);
+            $tagsForm->load($postData);
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                $photoPlan = $photoEditorService->prepareForItem(
+                    $photoEditorForm,
+                    $item,
+                    (int) $this->getLoggedUser()->id,
+                );
+                if ($photoPlan !== null && $itemFormService->save($itemForm, $postData)) {
+                    (new ItemFormAssetService())->save($item, $tagsForm, $postData);
+                    $detachedPhotoIds = $photoEditorService->applyToItem($photoPlan, $item);
+                    $transaction->commit();
+                    $photoEditorService->cleanupDetachedPhotos($detachedPhotoIds);
 
-                return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
+                    return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
+                }
+
+                if ($photoPlan === null) {
+                    $itemForm->load($postData);
+                    $itemForm->validate();
+                }
+                $transaction->rollBack();
+            } catch (\Throwable $exception) {
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
+                throw $exception;
             }
         }
+        $photoEntries = $photoEditorService->viewEntriesForItem(
+            $photoEditorForm,
+            $item,
+            (int) $this->getLoggedUser()->id,
+        );
         return $this->render('update', [
             'model' => $itemForm,
             'repo' => $repo,
             'tagsForm' => $tagsForm,
+            'photoEditorForm' => $photoEditorForm,
+            'photoEntries' => $photoEntries,
         ]);
     }
 

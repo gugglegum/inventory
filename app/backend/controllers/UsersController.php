@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace backend\controllers;
 
+use backend\services\PhotoUploadService;
 use backend\services\UserFormService;
 use common\components\UserAccess;
 use common\helpers\PostDataHelper;
@@ -134,7 +135,9 @@ class UsersController extends Controller
      */
     public function actionDelete(int $id): Response|string
     {
-        $this->findModel($id)->delete();
+        $user = $this->findModel($id);
+        (new PhotoUploadService())->discardSessionsForUser((int) $user->id);
+        $user->delete();
 
         return $this->redirect(['index']);
     }

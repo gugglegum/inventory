@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace backend\services;
 
+use common\components\ItemAccessValidator;
 use common\models\Repo;
 use common\models\RepoUser;
 use common\models\User;
@@ -44,6 +45,13 @@ final class RepoDeletionService
      */
     public function delete(Repo $repo): bool
     {
+        if (!(new ItemAccessValidator())->hasUserAccessToRepo($repo, RepoUser::ACCESS_DELETE_REPO)) {
+            $repo->addError('', 'Недостаточно прав для удаления репозитория.');
+            return false;
+        }
+
+        (new PhotoUploadService())->discardSessionsForRepo((int) $repo->id);
+
         return $repo->delete() !== false;
     }
 }

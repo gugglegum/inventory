@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace backend\controllers;
 
 use backend\services\PostDeletionService;
+use backend\services\PhotoEditorService;
 use backend\services\PostFormService;
 use common\helpers\PostDataHelper;
 use common\models\Post;
@@ -92,18 +93,55 @@ class PostsController extends RepoAwareController
         $item = $this->findItem($repo->id, $itemId);
         $postFormService = new PostFormService();
         $postForm = $postFormService->prepareForCreate($item, $this->getLoggedUser());
+        $photoEditorService = new PhotoEditorService();
+        $photoEditorForm = $photoEditorService->createFormForPost($postForm->getPost());
 
         if (Yii::$app->request->isPost) {
-            if ($postFormService->save($postForm, PostDataHelper::toArray(Yii::$app->request->post()), $_FILES)) {
-                $post = $postForm->getPost();
-                return $this->redirect(['posts/view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
+            $postData = PostDataHelper::toArray(Yii::$app->request->post());
+            $photoEditorForm->load($postData);
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                $photoPlan = $photoEditorService->prepareForPost(
+                    $photoEditorForm,
+                    $postForm->getPost(),
+                    $repo->id,
+                    (int) $this->getLoggedUser()->id,
+                );
+                if ($photoPlan !== null && $postFormService->save($postForm, $postData)) {
+                    $post = $postForm->getPost();
+                    $detachedPhotoIds = $photoEditorService->applyToPost($photoPlan, $post);
+                    $transaction->commit();
+                    $photoEditorService->cleanupDetachedPhotos($detachedPhotoIds);
+
+                    return $this->redirect(['posts/view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
+                }
+
+                if ($photoPlan === null) {
+                    $postForm->load($postData);
+                    $postForm->validate();
+                }
+                $transaction->rollBack();
+            } catch (\Throwable $exception) {
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
+                throw $exception;
             }
         }
+
+        $photoEntries = $photoEditorService->viewEntriesForPost(
+            $photoEditorForm,
+            $postForm->getPost(),
+            $repo->id,
+            (int) $this->getLoggedUser()->id,
+        );
 
         return $this->render('create', [
             'postForm' => $postForm,
             'item' => $item,
             'repo' => $repo,
+            'photoEditorForm' => $photoEditorForm,
+            'photoEntries' => $photoEntries,
         ]);
     }
 
@@ -126,17 +164,53 @@ class PostsController extends RepoAwareController
             $this->findPost($item->id, $postId),
             $this->getLoggedUser(),
         );
+        $photoEditorService = new PhotoEditorService();
+        $photoEditorForm = $photoEditorService->createFormForPost($postForm->getPost());
 
         if (Yii::$app->request->isPost) {
-            if ($postFormService->save($postForm, PostDataHelper::toArray(Yii::$app->request->post()), $_FILES)) {
-                $post = $postForm->getPost();
-                return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
+            $postData = PostDataHelper::toArray(Yii::$app->request->post());
+            $photoEditorForm->load($postData);
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                $photoPlan = $photoEditorService->prepareForPost(
+                    $photoEditorForm,
+                    $postForm->getPost(),
+                    $repo->id,
+                    (int) $this->getLoggedUser()->id,
+                );
+                if ($photoPlan !== null && $postFormService->save($postForm, $postData)) {
+                    $post = $postForm->getPost();
+                    $detachedPhotoIds = $photoEditorService->applyToPost($photoPlan, $post);
+                    $transaction->commit();
+                    $photoEditorService->cleanupDetachedPhotos($detachedPhotoIds);
+
+                    return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
+                }
+
+                if ($photoPlan === null) {
+                    $postForm->load($postData);
+                    $postForm->validate();
+                }
+                $transaction->rollBack();
+            } catch (\Throwable $exception) {
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
+                throw $exception;
             }
         }
+        $photoEntries = $photoEditorService->viewEntriesForPost(
+            $photoEditorForm,
+            $postForm->getPost(),
+            $repo->id,
+            (int) $this->getLoggedUser()->id,
+        );
         return $this->render('update', [
             'postForm' => $postForm,
             'item' => $item,
             'repo' => $repo,
+            'photoEditorForm' => $photoEditorForm,
+            'photoEntries' => $photoEntries,
         ]);
     }
 

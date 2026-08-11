@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace tests\phpunit\integration;
 
 use backend\controllers\PhotoController;
-use backend\services\PhotoAttachmentService;
 use common\models\Item;
 use common\models\Photo;
 use common\models\Post;
-use common\models\PostPhoto;
 use common\models\RepoUser;
 use common\models\User;
 use tests\phpunit\DbTestCase;
@@ -126,69 +124,6 @@ final class PhotoControllerTest extends DbTestCase
             ],
             $query
         );
-    }
-
-    /**
-     * sort-up без photoType сохраняет старое поведение для фотографий предметов.
-     */
-    public function testSortUpDefaultsToItemPhotoType(): void
-    {
-        [$controller, $item] = $this->prepareFixture();
-        $firstPhoto = $this->createItemPhoto($item);
-        $secondPhoto = $this->createItemPhoto($item);
-
-        $this->setPostRequest([
-            'id' => $secondPhoto->id,
-        ]);
-
-        $controller->actionSortUp();
-
-        $firstPhoto->refresh();
-        $secondPhoto->refresh();
-
-        self::assertSame(1, (int) $firstPhoto->sortIndex);
-        self::assertSame(0, (int) $secondPhoto->sortIndex);
-    }
-
-    /**
-     * sort-down с photoType=post меняет порядок фотографий заметки.
-     */
-    public function testSortDownSupportsPostPhotoType(): void
-    {
-        [$controller, , $post] = $this->prepareFixture();
-        $firstPhoto = $this->createPostPhoto($post);
-        $secondPhoto = $this->createPostPhoto($post);
-
-        $this->setPostRequest([
-            'id' => $firstPhoto->id,
-            'photoType' => PhotoAttachmentService::TYPE_POST,
-        ]);
-
-        $controller->actionSortDown();
-
-        $firstPhoto->refresh();
-        $secondPhoto->refresh();
-
-        self::assertSame(1, (int) $firstPhoto->sortIndex);
-        self::assertSame(0, (int) $secondPhoto->sortIndex);
-    }
-
-    /**
-     * delete с photoType=post удаляет фотографию заметки.
-     */
-    public function testDeleteSupportsPostPhotoType(): void
-    {
-        [$controller, , $post] = $this->prepareFixture();
-        $postPhoto = $this->createPostPhoto($post);
-
-        $this->setPostRequest([
-            'id' => $postPhoto->id,
-            'photoType' => PhotoAttachmentService::TYPE_POST,
-        ]);
-
-        $controller->actionDelete();
-
-        self::assertNull(PostPhoto::findOne($postPhoto->id));
     }
 
     /**

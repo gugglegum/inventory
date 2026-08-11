@@ -60,6 +60,11 @@ return [
         'thumbnailTemp' => dirname(__DIR__, 2) . '/thumbnails/temp',
         'thumbnailXAccelUrl' => '/_protected-thumbnails',
         'md5salt' => '',
+        'maxUploadBytes' => 50 * 1024 * 1024,
+        'maxUploadPixels' => 60_000_000,
+        'maxFilesPerUploadSession' => 100,
+        'maxTemporaryFilesPerUser' => 300,
+        'maxOpenUploadSessionsPerUser' => 20,
         'resize' => [
             'width' => 1024,
             'height' => 1024,
