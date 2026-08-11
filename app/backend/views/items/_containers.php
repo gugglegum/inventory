@@ -12,7 +12,7 @@ use yii\helpers\Url;
 
 $this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items');
 
-$this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
+$this->render('//_fancybox');
 
 ?>
 <?php if (!empty($containers)) { ?>
@@ -26,7 +26,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                     <?php
                     $primaryPhoto = $item->primaryPhoto;
                     if ($primaryPhoto) {
-                        echo Html::beginTag('a', ['href' => $item->primaryPhoto->photo->getUrl(), 'rel' => 'item-photos#' . $item->id, 'class' => 'fancybox']);
+                        echo Html::beginTag('a', ['href' => $item->primaryPhoto->photo->getUrl(), 'data-fancybox' => 'item-photos-' . $item->id]);
                     }
 
                     echo Html::img($item->primaryPhoto

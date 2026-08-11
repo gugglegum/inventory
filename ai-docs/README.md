@@ -98,6 +98,9 @@ PHP без одновременного обновления nginx привед�
 - view `backend/views/_photo-editor.php`;
 - client controller `backend/web/js/photo-editor.js` и стили
   `backend/web/css/photo-editor.css`;
+- просмотрщик Fancybox 6.1.14 подключается через
+  `backend/assets/FancyboxAsset.php`; неизменённые assets из проекта
+  `pyrda.ru/photo` лежат в `backend/web/fancybox/6.1.14/`;
 - form model `backend/models/PhotoEditorForm.php`;
 - HTTP API `backend/controllers/PhotoUploadController.php`;
 - lifecycle-сервисы `backend/services/PhotoUploadService.php` и
@@ -123,8 +126,10 @@ DELETE временной карточки.
 следует за pointer, исходная карточка занимает место placeholder, а соседние
 карточки перестраиваются с короткой FLIP-анимацией. С клавиатуры порядок
 меняется стрелками на focused handle. Клик по карточке
-открывает общую Fancybox 2-галерею с явным `type: image`, поэтому
-preview работает и для URL без `.jpg`.
+открывает общую Fancybox 6-галерею. Постоянные фотографии и preview
+временных загрузок группируются атрибутом `data-fancybox`; делегированный
+`Fancybox.bind()` автоматически подхватывает карточки, добавленные после
+асинхронной загрузки, без jQuery API.
 
 HTTP API состоит из routes `photo-upload/create`, `photo-upload/state`,
 `photo-upload/upload`, `photo-upload/view`, `photo-upload/thumbnail` и

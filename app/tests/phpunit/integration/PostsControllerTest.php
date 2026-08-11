@@ -31,6 +31,7 @@ final class PostsControllerTest extends DbTestCase
             'title' => 'Просматриваемая заметка',
             'text' => 'Текст для просмотра',
         ]);
+        $this->createPostPhoto($post);
 
         $this->setGetRequest();
 
@@ -39,6 +40,8 @@ final class PostsControllerTest extends DbTestCase
         self::assertIsString($response);
         self::assertStringContainsString('Просматриваемая заметка', $response);
         self::assertStringContainsString('Текст для просмотра', $response);
+        self::assertStringContainsString('data-fancybox="post-photos"', $response);
+        self::assertStringNotContainsString('rel="post-photos"', $response);
     }
 
     /**
@@ -150,6 +153,7 @@ final class PostsControllerTest extends DbTestCase
         self::assertStringContainsString('data-entry-type="existing"', $response);
         self::assertStringContainsString('data-entry-id="' . $postPhoto->id . '"', $response);
         self::assertStringContainsString('data-upload-context="post"', $response);
+        self::assertMatchesRegularExpression('/data-fancybox="photo-editor-[0-9a-f]{12}"/', $response);
     }
 
     /**

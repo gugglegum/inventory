@@ -145,6 +145,7 @@ final class ItemsControllerTest extends DbTestCase
     public function testViewRendersItemPage(): void
     {
         [$controller, $repo, $parent, $item] = $this->prepareItemViewFixture();
+        $this->createItemPhoto($item);
 
         $this->setGetRequest(['q' => 'usb']);
 
@@ -153,6 +154,8 @@ final class ItemsControllerTest extends DbTestCase
         self::assertIsString($response);
         self::assertStringContainsString('Просматриваемый предмет', $response);
         self::assertStringContainsString('usb', $response);
+        self::assertStringContainsString('data-fancybox="item-photos"', $response);
+        self::assertStringNotContainsString('rel="item-photos"', $response);
     }
 
     /**

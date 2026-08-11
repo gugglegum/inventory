@@ -16,7 +16,7 @@ use yii\helpers\Url;
 
 $this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items');
 
-$this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
+$this->render('//_fancybox');
 
 ?>
 <table class="container-items">
@@ -26,7 +26,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 <?php
                 $primaryPhoto = $item->primaryPhoto;
                 if ($primaryPhoto) {
-                    echo Html::beginTag('a', ['href' => $item->primaryPhoto->photo->getUrl(), 'rel' => 'item-photos#' . $item->id, 'class' => 'fancybox']);
+                    echo Html::beginTag('a', ['href' => $item->primaryPhoto->photo->getUrl(), 'data-fancybox' => 'item-photos-' . $item->id]);
                 }
 
                 echo Html::img($item->primaryPhoto
@@ -67,7 +67,7 @@ $this->render('//_fancybox'); // Подключение jQuery-плагина Fa
                 <?php $secondaryPhotos = $item->secondaryPhotos; if (count($secondaryPhotos) != 0) { ?>
                 <div class="secondary-photos">
                 <?php foreach ($item->secondaryPhotos as $itemPhoto) { ?>
-                    <?= Html::beginTag('a', ['href' => $itemPhoto->photo->getUrl(), 'rel' => 'item-photos#' . $item->id, 'class' => 'fancybox']) ?>
+                    <?= Html::beginTag('a', ['href' => $itemPhoto->photo->getUrl(), 'data-fancybox' => 'item-photos-' . $item->id]) ?>
                     <?= Html::img($itemPhoto->photo->getThumbnailUrl(48, 48, true, true, 90), ['alt' => 'Photo']) ?>
                     <?= Html::endTag('a') ?>
                 <?php } ?>

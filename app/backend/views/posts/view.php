@@ -19,7 +19,7 @@ $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true],
 $this->registerCssFile('@web/css/post-view.css', ['appendTimestamp' => true], 'post-view');
 //$this->registerJsFile('@web/js/item-view.js', ['appendTimestamp' => true, 'depends' => [\yii\web\JqueryAsset::class]], 'item-view');
 
-$this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
+$this->render('//_fancybox');
 
 $text = trim((string) $post->text);
 if ($text !== '') {
@@ -48,7 +48,7 @@ if ($text !== '') {
             foreach ($photos as $postPhoto) {
                 echo Html::beginTag('div', ['class' => 'photo-wrapper']);
                 echo Html::beginTag('div', ['class' => 'photo-frame']);
-                echo Html::beginTag('a', ['href' => $postPhoto->photo->getUrl(), 'rel' => 'post-photos', 'class' => 'fancybox']);
+                echo Html::beginTag('a', ['href' => $postPhoto->photo->getUrl(), 'data-fancybox' => 'post-photos']);
                 echo Html::img($postPhoto->photo->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
                 echo Html::endTag('a');
                 echo '<div class="upload-date">' . Html::encode(date('d.m.Y H:i T', $postPhoto->photo->created)) . '</div>';

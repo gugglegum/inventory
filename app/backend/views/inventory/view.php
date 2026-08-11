@@ -28,7 +28,7 @@ $this->render('/_breadcrumbs', ['item' => $container, 'repo' => $repo, 'suffix' 
 
 $this->registerCssFile('@web/css/inventory-view.css', ['appendTimestamp' => true], 'inventory-view');
 
-$this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
+$this->render('//_fancybox');
 
 $unconfirmedBottomCallback = function (Item $item) use ($inventory) {
     if ($inventory->status !== Inventory::STATUS_OPENED) {

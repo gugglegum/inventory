@@ -18,7 +18,7 @@ $this->render('/_breadcrumbs', ['item' => $item, 'repo' => $repo, 'suffix' => [
         'Редактирование'
 ]]);
 
-$this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
+$this->render('//_fancybox');
 
 ?>
 <div class="item-delete">

@@ -122,6 +122,7 @@ $this->registerJsFile(
                     class="photo-editor__preview"
                     href="<?= Html::encode($entry['previewUrl']) ?>"
                     data-photo-editor-preview
+                    data-fancybox="<?= Html::encode($editorId) ?>"
                     data-caption="<?= Html::encode($name) ?>"
                     aria-label="Просмотреть: <?= Html::encode($name) ?>"
                 >

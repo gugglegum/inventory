@@ -295,8 +295,6 @@
         this.list.addEventListener('click', function(event) {
             var remove = event.target.closest('[data-photo-editor-remove]');
             var retry = event.target.closest('[data-photo-editor-retry]');
-            var preview = event.target.closest('[data-photo-editor-preview]');
-
             if (remove) {
                 event.preventDefault();
                 self.removeCard(remove.closest('[data-photo-editor-card]'));
@@ -307,10 +305,6 @@
                 event.preventDefault();
                 self.retryCard(retry.closest('[data-photo-editor-card]'));
                 return;
-            }
-
-            if (preview) {
-                self.openPreview(event, preview);
             }
         });
 
@@ -746,6 +740,7 @@
         preview.className = 'photo-editor__preview';
         preview.href = String(previewUrl);
         preview.setAttribute('data-photo-editor-preview', '');
+        preview.setAttribute('data-fancybox', this.root.id);
         preview.setAttribute('data-caption', String(name));
         preview.setAttribute('aria-label', 'Просмотреть: ' + String(name));
         preview.innerHTML = '<img class="photo-editor__thumbnail" alt="" loading="lazy" decoding="async" draggable="false">';
@@ -859,46 +854,6 @@
                 self.activeDeletes = Math.max(0, self.activeDeletes - 1);
                 self.updateState();
             });
-    };
-
-    PhotoEditor.prototype.openPreview = function(event, preview) {
-        var jquery = window.jQuery;
-        var previews;
-        var items;
-        var index;
-
-        if (!jquery || !jquery.fancybox || typeof jquery.fancybox.open !== 'function') {
-            return;
-        }
-
-        previews = arrayFrom(this.list.querySelectorAll('[data-photo-editor-preview]'));
-        index = previews.indexOf(preview);
-        if (index === -1) {
-            return;
-        }
-
-        event.preventDefault();
-        items = previews.map(function(link) {
-            return {
-                href: link.href,
-                title: link.getAttribute('data-caption') || '',
-                type: 'image'
-            };
-        });
-        jquery.fancybox.open(items, {
-            index: index,
-            padding: 0,
-            openEffect: 'none',
-            closeEffect: 'none',
-            prevEffect: 'none',
-            nextEffect: 'none',
-            helpers: {
-                overlay: {
-                    speedOut: 0,
-                    locked: false
-                }
-            }
-        });
     };
 
     PhotoEditor.prototype.startSorting = function(event, card, handle) {

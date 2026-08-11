@@ -21,7 +21,7 @@ $this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo]);
 $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 $this->registerCssFile('@web/css/item-view.css', ['appendTimestamp' => true], 'item-view');
 
-$this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
+$this->render('//_fancybox');
 
 $description = trim((string) $model->description);
 if ($description !== '') {
@@ -92,7 +92,7 @@ if ($description !== '') {
                     foreach ($photos as $itemPhoto) {
                         echo Html::beginTag('div', ['class' => 'photo-wrapper']);
                         echo Html::beginTag('div', ['class' => 'photo-frame']);
-                        echo Html::beginTag('a', ['href' => $itemPhoto->photo->getUrl(), 'rel' => 'item-photos', 'class' => 'fancybox']);
+                        echo Html::beginTag('a', ['href' => $itemPhoto->photo->getUrl(), 'data-fancybox' => 'item-photos']);
                         echo Html::img($itemPhoto->photo->getThumbnailUrl(240, 240, false, false, 90), ['alt' => 'Photo']);
                         echo Html::endTag('a');
                         echo '<div class="upload-date">' . Html::encode(date('d.m.Y H:i T', $itemPhoto->photo->created)) . '</div>';

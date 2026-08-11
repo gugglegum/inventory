@@ -19,7 +19,7 @@ use yii\helpers\Html;
 $this->title = 'Создание ' . ($model->isContainer === '1' ? 'контейнера' : 'предмета');
 $this->render('/_breadcrumbs', ['item' => $parent, 'repo' => $repo, 'suffix' => [$this->title]]);
 
-$this->render('//_fancybox'); // Подключение jQuery-плагина Fancybox (*.js + *.css)
+$this->render('//_fancybox');
 ?>
 <div class="item-create">
 

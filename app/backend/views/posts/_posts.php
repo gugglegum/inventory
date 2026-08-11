@@ -33,7 +33,7 @@ use yii\helpers\Url;
             <?php $postPhotos = $post->postPhotos; if (count($postPhotos) != 0) { ?>
                 <div class="photos">
                     <?php foreach ($postPhotos as $postPhoto) { ?>
-                        <?= Html::beginTag('a', ['href' => $postPhoto->photo->getUrl(), 'rel' => 'post-photos#' . $post->id, 'class' => 'fancybox']) ?>
+                        <?= Html::beginTag('a', ['href' => $postPhoto->photo->getUrl(), 'data-fancybox' => 'post-photos-' . $post->id]) ?>
                         <?= Html::img($postPhoto->photo->getThumbnailUrl(48, 48, true, true, 90), ['alt' => 'Photo']) ?>
                         <?= Html::endTag('a') ?>
                     <?php } ?>

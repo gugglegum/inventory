@@ -45,23 +45,6 @@ $(document).ready(function() {
             xhr = $.ajax('/repo/' + encodeURIComponent(repoId) + '/items/' + encodeURIComponent(id) + '/json-preview', {
                 'success': function (data/*, textStatus, jqXHR*/) {
                     $('#divParentPreview').html(data.content);
-
-                    $("#divParentPreview .fancybox").fancybox({
-                        padding : 0,
-                        //closeBtn		: false,
-                        openEffect      : 'none',
-                        closeEffect     : 'none',
-                        prevEffect		: 'none',
-                        nextEffect		: 'none',
-                        //openOpacity     : false,
-                        //closeOpacity    : false,
-                        helpers         : {
-                            overlay : {
-                                speedOut   : 0,
-                                locked     : false   // if true, the content will be locked into overlay
-                            }
-                        }
-                    });
                 },
                 'error' : function(jqXHR, textStatus, errorThrown) {
                     console.log(jqXHR, textStatus, errorThrown);
