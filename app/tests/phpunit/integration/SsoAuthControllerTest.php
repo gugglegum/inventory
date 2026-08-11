@@ -13,6 +13,7 @@ use RuntimeException;
 use tests\phpunit\DbTestCase;
 use tests\phpunit\unit\FakeOidcHttpTransport;
 use Yii;
+use yii\web\Cookie;
 use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -246,12 +247,20 @@ final class SsoAuthControllerTest extends DbTestCase
             'code' => 'one-time-code',
             'state' => $pending['state'],
         ], '/auth/sso/callback');
+        Yii::$app->user->enableAutoLogin = true;
+        $loginStartedAt = time();
 
         $response = $controller->actionSsoCallback();
 
         self::assertSame(302, $response->statusCode);
         self::assertFalse(Yii::$app->user->isGuest);
         self::assertSame((int) $user->id, (int) Yii::$app->user->id);
+
+        $loginDuration = (int) Yii::$app->params['auth']['sessionDurationSeconds'];
+        $identityCookie = Yii::$app->response->cookies->get(Yii::$app->user->identityCookie['name']);
+        self::assertInstanceOf(Cookie::class, $identityCookie);
+        self::assertGreaterThanOrEqual($loginStartedAt + $loginDuration, $identityCookie->expire);
+        self::assertLessThanOrEqual(time() + $loginDuration, $identityCookie->expire);
 
         $user->refresh();
         self::assertSame(self::ISSUER, $user->ssoIssuer);

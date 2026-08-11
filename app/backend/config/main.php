@@ -32,7 +32,9 @@ return [
             ),
         ],
         'session' => [
+            'timeout' => (int) ($params['auth']['sessionDurationSeconds'] ?? 86400 * 180),
             'cookieParams' => [
+                'lifetime' => (int) ($params['auth']['sessionDurationSeconds'] ?? 86400 * 180),
                 'httpOnly' => true,
                 'secure' => $secureCookies,
                 'sameSite' => yii\web\Cookie::SAME_SITE_LAX,

@@ -201,7 +201,8 @@ class SiteController extends Controller
             $claims = (new OidcTokenVerifier($provider))->verify($idToken, $pending['nonce']);
             $user = (new SsoUserLinker())->link($claims);
 
-            if (!Yii::$app->user->login($user)) {
+            $loginDuration = (int) (Yii::$app->params['auth']['sessionDurationSeconds'] ?? 86400 * 180);
+            if (!Yii::$app->user->login($user, $loginDuration)) {
                 throw new RuntimeException('Yii user login failed.');
             }
 

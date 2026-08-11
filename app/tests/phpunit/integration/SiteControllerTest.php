@@ -57,6 +57,37 @@ final class SiteControllerTest extends DbTestCase
     }
 
     /**
+     * Remember-me cookie парольного входа использует общий длительный срок авторизации.
+     */
+    public function testLoginRememberMeUsesConfiguredSessionDuration(): void
+    {
+        $this->createUser([
+            'username' => 'remember_user',
+            'password' => 'secret123',
+        ]);
+        Yii::$app->user->logout();
+        Yii::$app->user->enableAutoLogin = true;
+        $controller = $this->prepareController();
+        $this->setPostRequest([
+            'LoginForm' => [
+                'username' => 'remember_user',
+                'password' => 'secret123',
+                'rememberMe' => '1',
+            ],
+        ], [], '/site/login');
+        $loginStartedAt = time();
+
+        $response = $controller->actionLogin();
+
+        self::assertInstanceOf(Response::class, $response);
+        $loginDuration = (int) Yii::$app->params['auth']['sessionDurationSeconds'];
+        $identityCookie = Yii::$app->response->cookies->get(Yii::$app->user->identityCookie['name']);
+        self::assertInstanceOf(Cookie::class, $identityCookie);
+        self::assertGreaterThanOrEqual($loginStartedAt + $loginDuration, $identityCookie->expire);
+        self::assertLessThanOrEqual(time() + $loginDuration, $identityCookie->expire);
+    }
+
+    /**
      * POST login с неверным паролем оставляет пользователя гостем и рендерит форму с ошибкой.
      */
     public function testLoginPostWithWrongPasswordRendersLoginForm(): void

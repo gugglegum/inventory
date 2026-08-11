@@ -576,6 +576,19 @@ FileTarget после recreate проверен записью в `backend/runti
 безопасный default `YII_ENV=prod`, для локальной работы через
 `http://stockhub.lc` в игнорируемом compose нужно явно задать `YII_ENV=dev`.
 
+Срок локальной авторизации задается
+`STOCKHUB_AUTH_SESSION_DURATION_SECONDS`; по умолчанию это `15552000` секунд,
+то есть 180 дней — столько же, сколько `SESSION_LIFETIME=259200` минут в
+Pyrda-проектах. Одно значение одновременно задает lifetime cookie
+`PHPSESSID`, серверный `session.gc_maxlifetime` через Yii `Session::timeout`,
+duration SSO-входа и remember-me парольного входа. Таким образом срок
+продлевается при использовании сайта, а не ограничивается прежними
+браузерным cookie и 1440-секундной очисткой session-файлов. Когда
+`enableAutoLogin` включен, успешный SSO-вход дополнительно выдает `_identity`
+на тот же срок; в SSO-only режиме длительная `PHPSESSID` продолжает работать
+без identity cookie. Явный logout уничтожает серверную сессию и истекает
+identity cookie.
+
 OIDC-конфигурация читается в `common/config/params.php` из переменных
 `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REDIRECT_URI`,
 `OIDC_SCOPES`, `OIDC_HTTP_TIMEOUT`, `OIDC_CLOCK_SKEW_SECONDS` и

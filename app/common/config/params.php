@@ -2,6 +2,7 @@
 
 $passwordLoginEnabled = getenv('STOCKHUB_PASSWORD_LOGIN_ENABLED');
 $ssoLoginEnabled = getenv('STOCKHUB_SSO_LOGIN_ENABLED');
+$authSessionDurationSeconds = getenv('STOCKHUB_AUTH_SESSION_DURATION_SECONDS');
 $oidcIssuer = getenv('OIDC_ISSUER');
 $oidcClientId = getenv('OIDC_CLIENT_ID');
 $oidcClientSecret = getenv('OIDC_CLIENT_SECRET');
@@ -42,6 +43,9 @@ return [
             : (bool) $passwordLoginEnabled,
         'ssoLoginEnabled' => (bool) $ssoLoginEnabled,
         'canonicalOrigin' => $canonicalOrigin,
+        'sessionDurationSeconds' => $authSessionDurationSeconds === false
+            ? 86400 * 180
+            : (int) $authSessionDurationSeconds,
     ],
     'oidc' => [
         'issuer' => $oidcIssuer === false ? '' : $oidcIssuer,

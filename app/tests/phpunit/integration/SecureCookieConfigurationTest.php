@@ -22,6 +22,8 @@ final class SecureCookieConfigurationTest extends TestCase
         self::assertTrue($cookies['session']['secure']);
         self::assertTrue($cookies['session']['httpOnly']);
         self::assertSame('Lax', $cookies['session']['sameSite']);
+        self::assertSame(86400 * 180, $cookies['session']['lifetime']);
+        self::assertSame(86400 * 180, $cookies['session']['timeout']);
 
         self::assertSame('_identity', $cookies['identity']['name']);
         self::assertTrue($cookies['identity']['secure']);
@@ -39,6 +41,8 @@ final class SecureCookieConfigurationTest extends TestCase
         self::assertFalse($cookies['session']['secure']);
         self::assertTrue($cookies['session']['httpOnly']);
         self::assertSame('Lax', $cookies['session']['sameSite']);
+        self::assertSame(86400 * 180, $cookies['session']['lifetime']);
+        self::assertSame(86400 * 180, $cookies['session']['timeout']);
 
         self::assertFalse($cookies['identity']['secure']);
         self::assertTrue($cookies['identity']['httpOnly']);
@@ -50,7 +54,7 @@ final class SecureCookieConfigurationTest extends TestCase
      * bootstrap has already defined immutable YII_ENV=test in this process.
      *
      * @return array{
-     *     session: array{name: string, secure: bool, httpOnly: bool, sameSite: string},
+     *     session: array{name: string, secure: bool, httpOnly: bool, sameSite: string, lifetime: int, timeout: int},
      *     identity: array{name: string, secure: bool, httpOnly: bool, sameSite: string}
      * }
      */
@@ -80,6 +84,8 @@ echo json_encode([
         'secure' => $sessionParams['secure'],
         'httpOnly' => $sessionParams['httponly'],
         'sameSite' => $sessionParams['samesite'],
+        'lifetime' => $sessionParams['lifetime'],
+        'timeout' => $session->getTimeout(),
     ],
     'identity' => [
         'name' => $identity['name'],
@@ -117,7 +123,7 @@ PHP;
         self::assertSame(0, $exitCode, $errorOutput . $output);
 
         /** @var array{
-         *     session: array{name: string, secure: bool, httpOnly: bool, sameSite: string},
+         *     session: array{name: string, secure: bool, httpOnly: bool, sameSite: string, lifetime: int, timeout: int},
          *     identity: array{name: string, secure: bool, httpOnly: bool, sameSite: string}
          * } $cookies
          */

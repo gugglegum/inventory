@@ -68,8 +68,12 @@ class LoginForm extends Model
     {
         if ($this->validate()) {
             $user = $this->getUser();
+            $loginDuration = (int) (Yii::$app->params['auth']['sessionDurationSeconds'] ?? 86400 * 180);
 
-            return $user !== null && Yii::$app->user->login($user, $this->shouldRememberUser() ? 86400 * 30 : 0);
+            return $user !== null && Yii::$app->user->login(
+                $user,
+                $this->shouldRememberUser() ? $loginDuration : 0
+            );
         } else {
             return false;
         }
