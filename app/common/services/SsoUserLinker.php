@@ -28,6 +28,10 @@ final class SsoUserLinker
     {
         $issuer = $this->requireIssuerClaim($claims);
         $subject = $this->requireSubjectClaim($claims);
+        $profileVersion = $this->optionalPositiveIntClaim($claims, 'profile_version');
+        $accessVersion = $this->optionalPositiveIntClaim($claims, 'access_version');
+        $sessionVersion = $this->optionalPositiveIntClaim($claims, 'session_version');
+        $profile = $this->profileSnapshot($claims);
 
         try {
             $claimsJson = json_encode(
@@ -41,7 +45,15 @@ final class SsoUserLinker
         try {
             /** @var User $user */
             $user = User::getDb()->transaction(
-                function () use ($issuer, $subject, $claimsJson): User {
+                function () use (
+                    $accessVersion,
+                    $claimsJson,
+                    $issuer,
+                    $profile,
+                    $profileVersion,
+                    $sessionVersion,
+                    $subject,
+                ): User {
                     $user = $this->findActiveByIdentityForUpdate($issuer, $subject);
                     if ($user === null) {
                         throw new SsoUserLinkException(
@@ -49,12 +61,56 @@ final class SsoUserLinker
                         );
                     }
 
-                    $user->ssoClaims = $claimsJson;
-                    $user->lastSsoLoginAt = time();
-                    $user->updateAttributes([
-                        'ssoClaims',
-                        'lastSsoLoginAt',
-                    ]);
+                    if (
+                        $user->ssoDisabledAt !== null
+                        && (
+                            $accessVersion === null
+                            || $user->ssoAccessVersion === null
+                            || $accessVersion <= (int) $user->ssoAccessVersion
+                        )
+                    ) {
+                        throw new SsoUserLinkException(
+                            'Доступ этой учетной записи отозван в Pyrda SSO.'
+                        );
+                    }
+
+                    $attributes = [
+                        'ssoClaims' => $claimsJson,
+                        'lastSsoLoginAt' => time(),
+                        'updated' => time(),
+                    ];
+
+                    if (
+                        $accessVersion !== null
+                        && ($user->ssoAccessVersion === null || $accessVersion > (int) $user->ssoAccessVersion)
+                    ) {
+                        $attributes['ssoAccessVersion'] = $accessVersion;
+                        $attributes['ssoDisabledAt'] = null;
+                    }
+
+                    if (
+                        $sessionVersion !== null
+                        && ($user->ssoSessionVersion === null || $sessionVersion > (int) $user->ssoSessionVersion)
+                    ) {
+                        if ($user->ssoSessionVersion !== null) {
+                            $user->generateAuthKey();
+                            $attributes['authKey'] = $user->authKey;
+                        }
+                        $attributes['ssoSessionVersion'] = $sessionVersion;
+                    }
+
+                    if (
+                        $profile !== null
+                        && $this->isNewProfileVersion($user->ssoProfileVersion, $profileVersion)
+                    ) {
+                        $attributes['username'] = $profile['preferredUsername'];
+                        $attributes['email'] = $profile['email'];
+                        if ($profileVersion !== null) {
+                            $attributes['ssoProfileVersion'] = $profileVersion;
+                        }
+                    }
+
+                    $user->updateAttributes($attributes);
 
                     return $user;
                 }
@@ -102,6 +158,62 @@ final class SsoUserLinker
         }
 
         return $value;
+    }
+
+    /**
+     * @param array<array-key, mixed> $claims
+     */
+    private function optionalPositiveIntClaim(array $claims, string $key): ?int
+    {
+        if (!array_key_exists($key, $claims)) {
+            return null;
+        }
+
+        $value = $claims[$key];
+        if (is_int($value) && $value > 0) {
+            return $value;
+        }
+        if (is_string($value) && ctype_digit($value) && (int) $value > 0) {
+            return (int) $value;
+        }
+
+        throw new SsoUserLinkException("SSO вернул некорректный claim {$key}.");
+    }
+
+    /**
+     * @param array<array-key, mixed> $claims
+     * @return array{email:string,preferredUsername:string}|null
+     */
+    private function profileSnapshot(array $claims): ?array
+    {
+        $email = $claims['email'] ?? null;
+        $preferredUsername = $claims['preferred_username'] ?? null;
+        if (!is_string($email) || $email === '' || !is_string($preferredUsername) || $preferredUsername === '') {
+            return null;
+        }
+        if (
+            strlen($email) > 255
+            || strlen($preferredUsername) > 255
+            || filter_var($email, FILTER_VALIDATE_EMAIL) === false
+        ) {
+            throw new SsoUserLinkException('SSO вернул некорректные данные профиля пользователя.');
+        }
+
+        return [
+            'email' => $email,
+            'preferredUsername' => $preferredUsername,
+        ];
+    }
+
+    private function isNewProfileVersion(mixed $storedVersion, ?int $incomingVersion): bool
+    {
+        if ($incomingVersion === null) {
+            // Проверенный id_token создается из текущего профиля во время
+            // token exchange, поэтому login также обновляет локальный кэш.
+            return true;
+        }
+
+        return $storedVersion === null || $incomingVersion > (int) $storedVersion;
     }
 
     /**

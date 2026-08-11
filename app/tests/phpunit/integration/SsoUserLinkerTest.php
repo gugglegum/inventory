@@ -370,6 +370,102 @@ final class SsoUserLinkerTest extends DbTestCase
     }
 
     /**
+     * Отозванный в SSO пользователь не может войти со старой access_version.
+     */
+    public function testRejectsDisabledUserWithStaleAccessVersion(): void
+    {
+        $user = $this->createUser(['username' => 'disabled-sso-user']);
+        $user->updateAttributes([
+            'ssoIssuer' => self::ISSUER,
+            'ssoSubject' => 'disabled-sso-subject',
+            'ssoDisabledAt' => time(),
+            'ssoAccessVersion' => 4,
+        ]);
+
+        try {
+            (new SsoUserLinker())->link([
+                'iss' => self::ISSUER,
+                'sub' => 'disabled-sso-subject',
+                'access_version' => 4,
+            ]);
+            self::fail('Отозванный пользователь был авторизован со старой access_version.');
+        } catch (SsoUserLinkException $exception) {
+            self::assertSame('Доступ этой учетной записи отозван в Pyrda SSO.', $exception->getMessage());
+        }
+
+        $user->refresh();
+        self::assertNotNull($user->ssoDisabledAt);
+        self::assertSame(4, (int) $user->ssoAccessVersion);
+    }
+
+    /**
+     * Свежий token после восстановления доступа синхронизирует версии и профиль.
+     */
+    public function testNewerOidcStateRestoresAccessAndUpdatesProfileCache(): void
+    {
+        $user = $this->createUser([
+            'username' => 'old-profile-name',
+            'email' => 'old-profile@example.test',
+        ]);
+        $user->updateAttributes([
+            'ssoIssuer' => self::ISSUER,
+            'ssoSubject' => 'restored-by-token-subject',
+            'ssoDisabledAt' => time(),
+            'ssoAccessVersion' => 2,
+            'ssoSessionVersion' => 3,
+            'ssoProfileVersion' => 4,
+        ]);
+        $oldAuthKey = $user->authKey;
+
+        $linkedUser = (new SsoUserLinker())->link([
+            'iss' => self::ISSUER,
+            'sub' => 'restored-by-token-subject',
+            'name' => 'Updated Profile',
+            'email' => 'new-profile@example.test',
+            'preferred_username' => 'new-profile-name',
+            'profile_version' => 5,
+            'access_version' => 3,
+            'session_version' => 4,
+        ]);
+
+        self::assertNull($linkedUser->ssoDisabledAt);
+        self::assertSame(3, (int) $linkedUser->ssoAccessVersion);
+        self::assertSame(4, (int) $linkedUser->ssoSessionVersion);
+        self::assertSame(5, (int) $linkedUser->ssoProfileVersion);
+        self::assertSame('new-profile-name', $linkedUser->username);
+        self::assertSame('new-profile@example.test', $linkedUser->email);
+        self::assertNotSame($oldAuthKey, $linkedUser->authKey);
+    }
+
+    /**
+     * Текущий id_token обновляет профиль даже без optional profile_version claim.
+     */
+    public function testOidcLoginRefreshesProfileWithoutVersionClaim(): void
+    {
+        $user = $this->createUser([
+            'username' => 'versioned-old-name',
+            'email' => 'versioned-old@example.test',
+        ]);
+        $user->updateAttributes([
+            'ssoIssuer' => self::ISSUER,
+            'ssoSubject' => 'unversioned-token-subject',
+            'ssoProfileVersion' => 8,
+        ]);
+
+        $linkedUser = (new SsoUserLinker())->link([
+            'iss' => self::ISSUER,
+            'sub' => 'unversioned-token-subject',
+            'name' => 'Current Token Profile',
+            'email' => 'current-token@example.test',
+            'preferred_username' => 'current-token-name',
+        ]);
+
+        self::assertSame('current-token-name', $linkedUser->username);
+        self::assertSame('current-token@example.test', $linkedUser->email);
+        self::assertSame(8, (int) $linkedUser->ssoProfileVersion);
+    }
+
+    /**
      * Миграция закрепляет точные бинарные значения и уникальность полной identity pair.
      */
     public function testSchemaUsesBinaryCompositeIdentityAndCompletePairConstraint(): void

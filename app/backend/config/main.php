@@ -53,6 +53,8 @@ return [
                 '' => 'repo/index',
                 'auth/sso/redirect' => 'site/sso-login',
                 'auth/sso/callback' => 'site/sso-callback',
+                'sso/profile-webhook' => 'sso-webhook/profile',
+                'sso/access-webhook' => 'sso-webhook/access',
                 'photo/<id:\d+>/thumbnail' => 'photo/thumbnail',
                 'photo/<id:\d+>.jpg' => 'photo/view',
                 'repo/<repoId:\d+>/items' => 'items/index',

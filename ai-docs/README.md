@@ -607,6 +607,76 @@ URL по умолчанию: issuer и callback обязаны приходит�
 client ID, redirect URI и scopes из одного проверенного snapshot
 `OidcConfiguration`; исходные Yii params контроллер повторно не читает.
 
+### Profile и access webhooks Pyrda SSO
+
+Stockhub принимает подписанные события SSO на двух публичных POST endpoints:
+
+- `/sso/profile-webhook` — `user.profile.updated`;
+- `/sso/access-webhook` — `user.access.revoked`, `user.access.restored` и
+  `user.sessions.revoked`.
+
+Оба endpoint отключают только Yii CSRF-проверку и вместо нее требуют отдельный
+HMAC secret. Проверяются `X-SSO-Event`, UUID в `X-SSO-Delivery`, timestamp с
+допуском по умолчанию 300 секунд и `X-SSO-Signature`, вычисленная как
+HMAC-SHA256 от `<timestamp>.<raw body>`. Значения `event_id`/`event_type` в JSON
+должны совпадать с headers. Payload ограничен 64 KiB и не записывается в
+приложенческий лог; после проверки он сохраняется в delivery-таблице для
+идемпотентности и диагностики. Повторный `event_id` получает `204` без повторной
+обработки. Неизвестный `sub` также получает `204` и не создает пользователя.
+
+Получатель ищет пользователя только по точной паре `(OIDC_ISSUER, sub)`.
+Profile webhook обновляет локальные `username`/`email` из
+`preferred_username`/`email`, сливает `name`, email и username в `ssoClaims` и
+применяет только более новую `profile_version`. Если новые username/email
+конфликтуют с другой локальной записью, транзакция откатывается и возвращает
+неуспешный ответ, чтобы SSO retry не потерял изменение.
+
+Access и session versions хранятся независимо. Новый `user.access.revoked`
+ставит `ssoDisabledAt` и ротирует `authKey`; на следующем запросе Yii отвергает
+и файловую session, и remember-cookie, а парольный и SSO-вход блокируются.
+`user.access.restored` очищает блокировку, но не авторизует пользователя.
+`user.sessions.revoked` также ротирует `authKey`, не меняя disabled-флаг. Это
+событие отправляется SSO только для явного `Logout everywhere`. Обычный logout
+из Pyrda SSO завершает лишь текущую SSO-сессию, webhook не отправляет и
+180-дневные сессии подключенных проектов не затрагивает.
+
+Настройки получателя:
+
+```env
+SSO_PROFILE_WEBHOOK_SECRET=<отдельный secret не короче 32 байт>
+SSO_PROFILE_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS=300
+SSO_ACCESS_WEBHOOK_SECRET=<другой secret не короче 32 байт>
+SSO_ACCESS_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS=300
+```
+
+Secrets не должны попадать в Git и должны храниться рядом с OIDC credentials в
+production env-файле. После применения миграции
+`m260812_120000_add_sso_webhooks` клиент StockHub на стороне SSO настраивается
+командами:
+
+```sh
+php artisan sso:client:profile-webhook <client-id> \
+  https://stockhub.ru/sso/profile-webhook --secret=<profile-secret>
+php artisan sso:client:access-webhook <client-id> \
+  https://stockhub.ru/sso/access-webhook --secret=<access-secret>
+```
+
+Команды нужно выполнять внутри SSO PHP-контейнера от его штатного пользователя.
+При rollout сначала разворачиваются миграция, endpoints и receiver secrets, и
+только после успешной проверки endpoints включается отправка у клиента SSO.
+Иначе outbox будет накапливать заведомо неуспешные delivery. Изменение env
+Stockhub требует recreate PHP-контейнера; одной замены bind-mounted PHP здесь
+недостаточно.
+
+На 2026-08-12 локальный клиент StockHub уже настроен на оба URL
+`http://stockhub.lc/sso/*-webhook`. Отдельные dev-only secrets находятся только
+в игнорируемом `stockhub.ru/docker-compose.yml`; в игнорируемый compose SSO для
+PHP и scheduler добавлен `stockhub.lc:host-gateway`. SSO scheduler запущен.
+Подписанные smoke events с неизвестным subject получили `204`, создали по одной
+delivery-записи с ID `00000000-0000-4000-8000-000000009001` и
+`00000000-0000-4000-8000-000000009002` и не изменили шесть локальных
+пользователей. Эти development secrets нельзя переносить на production.
+
 За TLS-terminating proxy нужно задать `TRUSTED_PROXIES` точным адресом или CIDR
 сети этого proxy. Только для этих адресов Yii учитывает `X-Forwarded-For`,
 `X-Forwarded-Host`, `X-Forwarded-Proto` и `X-Forwarded-Port`. Последний
@@ -709,7 +779,9 @@ vendor и служебные каталоги.
 `master`/`b4d362f`, а Pyrda SSO — на `master`/`88fa7fb`. Production-клиент
 `StockHub` зарегистрирован как confidential с callback
 `https://stockhub.ru/auth/sso/callback`, homepage `https://stockhub.ru` и portal
-order `60`; profile/access webhooks намеренно выключены. Credentials хранятся
+order `60`. На 2026-08-12 production profile/access webhooks еще выключены:
+receiver-код подготовлен локально, но миграция, secrets и настройки клиента SSO
+еще не развернуты. Credentials хранятся
 вне репозитория в `/home/gugglegum/.config/stockhub/production.env` с режимом
 `0600`. Включены оба независимых способа входа: пароль и SSO. Локальный
 пользователь `gugglegum` явно связан с `(https://sso.pyrda.ru, 1)`; остальные

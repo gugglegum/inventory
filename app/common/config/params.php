@@ -11,6 +11,10 @@ $scopeString = getenv('OIDC_SCOPES');
 $httpTimeout = getenv('OIDC_HTTP_TIMEOUT');
 $clockSkewSeconds = getenv('OIDC_CLOCK_SKEW_SECONDS');
 $trustedProxiesString = getenv('TRUSTED_PROXIES');
+$ssoProfileWebhookSecret = getenv('SSO_PROFILE_WEBHOOK_SECRET');
+$ssoProfileWebhookTolerance = getenv('SSO_PROFILE_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS');
+$ssoAccessWebhookSecret = getenv('SSO_ACCESS_WEBHOOK_SECRET');
+$ssoAccessWebhookTolerance = getenv('SSO_ACCESS_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS');
 
 $oidcRedirectUri = $oidcRedirectUri === false ? '' : $oidcRedirectUri;
 $scopeString = $scopeString === false ? 'openid profile email' : $scopeString;
@@ -55,6 +59,20 @@ return [
         'scopes' => $scopes === false ? [] : $scopes,
         'httpTimeout' => $httpTimeout === false ? 10 : (int) $httpTimeout,
         'clockSkewSeconds' => $clockSkewSeconds === false ? 60 : (int) $clockSkewSeconds,
+    ],
+    'ssoWebhooks' => [
+        'profile' => [
+            'secret' => $ssoProfileWebhookSecret === false ? '' : $ssoProfileWebhookSecret,
+            'timestampToleranceSeconds' => $ssoProfileWebhookTolerance === false
+                ? 300
+                : (int) $ssoProfileWebhookTolerance,
+        ],
+        'access' => [
+            'secret' => $ssoAccessWebhookSecret === false ? '' : $ssoAccessWebhookSecret,
+            'timestampToleranceSeconds' => $ssoAccessWebhookTolerance === false
+                ? 300
+                : (int) $ssoAccessWebhookTolerance,
+        ],
     ],
     'photos' => [
         'storagePath' => dirname(__DIR__, 2) . '/photos',

@@ -23,6 +23,10 @@ use yii\web\IdentityInterface;
  * @property ?string $ssoIssuer Точный OIDC issuer привязанного пользователя
  * @property ?string $ssoSubject Стабильный OIDC subject пользователя Pyrda SSO
  * @property ?string $ssoClaims JSON-снимок claims последнего успешного SSO-входа
+ * @property ?int $ssoProfileVersion Последняя примененная версия профиля SSO
+ * @property ?int $ssoDisabledAt Время отзыва доступа пользователя в SSO
+ * @property ?int $ssoAccessVersion Последняя примененная версия доступа SSO
+ * @property ?int $ssoSessionVersion Последняя примененная версия global logout SSO
  * @property ?int $lastSsoLoginAt Время последнего успешного SSO-входа
  * @property integer $status
  * @property integer $created
@@ -70,7 +74,14 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             [['username', 'authKey', 'passwordHash', 'email'], 'required'],
-            [['status', 'lastSsoLoginAt'], 'integer'],
+            [[
+                'status',
+                'lastSsoLoginAt',
+                'ssoProfileVersion',
+                'ssoDisabledAt',
+                'ssoAccessVersion',
+                'ssoSessionVersion',
+            ], 'integer'],
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
             [['username', 'passwordHash', 'passwordResetToken', 'email', 'ssoIssuer', 'ssoSubject'], 'string', 'max' => 255],
@@ -103,7 +114,10 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function findIdentity($id): User|IdentityInterface|null
     {
-        return static::findOne(['id' => $id, 'status' => self::STATUS_ACTIVE]);
+        return static::find()
+            ->andWhere(['id' => $id, 'status' => self::STATUS_ACTIVE])
+            ->andWhere(['ssoDisabledAt' => null])
+            ->one();
     }
 
     /**
@@ -123,7 +137,10 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function findByUsername(string $username): ?static
     {
-        return static::findOne(['username' => $username, 'status' => self::STATUS_ACTIVE]);
+        return static::find()
+            ->andWhere(['username' => $username, 'status' => self::STATUS_ACTIVE])
+            ->andWhere(['ssoDisabledAt' => null])
+            ->one();
     }
 
     /**
