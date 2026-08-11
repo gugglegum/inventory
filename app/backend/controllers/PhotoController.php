@@ -2,7 +2,9 @@
 
 namespace backend\controllers;
 
+use backend\services\PhotoAccessService;
 use backend\services\PhotoAttachmentService;
+use backend\services\PhotoDeliveryService;
 use common\models\Photo;
 use InvalidArgumentException;
 use Yii;
@@ -10,7 +12,9 @@ use yii\base\Exception;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
+use yii\web\ForbiddenHttpException;
 use yii\web\HttpException;
+use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
 /**
@@ -47,6 +51,19 @@ class PhotoController extends Controller
     }
 
     /**
+     * Отдает оригинал фотографии после проверки доступа к связанному репозиторию.
+     */
+    public function actionView(int $id): Response
+    {
+        $photo = $this->findAccessiblePhoto($id);
+        if (!is_file($photo->getFile())) {
+            throw new NotFoundHttpException('Файл фотографии не найден.');
+        }
+
+        return (new PhotoDeliveryService())->original($photo);
+    }
+
+    /**
      * Возвращает уменьшенную фотографию предмета
      *
      * Пример запроса:
@@ -65,22 +82,15 @@ class PhotoController extends Controller
      */
     public function actionThumbnail(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality): Response
     {
-        $photo = Photo::findOne($id);
-        if ($photo === null) {
-            throw new HttpException(404, 'Photo #' . $id . ' is not found');
-        }
+        $photo = $this->findAccessiblePhoto($id);
 
-        $staticThumbnailUrl = $photo->getStaticThumbnailUrl($width, $height, $upscale, $crop, $quality);
         $thumbnailFile = $photo->getThumbnailFile($width, $height, $upscale, $crop, $quality);
 
         if (!file_exists($thumbnailFile)) {
             $photo->createThumbnail($width, $height, $upscale, $crop, $quality);
         }
-//        session_cache_limiter('private_no_expire');
-        header_remove('Pragma');
-        Yii::$app->getResponse()->getHeaders()
-            ->set('Expires', gmdate('D, d M Y H:i:s', time() + 86400 * 7) . ' GMT');
-        return $this->redirect($staticThumbnailUrl);
+
+        return (new PhotoDeliveryService())->thumbnail($photo, $width, $height, $upscale, $crop, $quality);
     }
 
     /**
@@ -155,5 +165,23 @@ class PhotoController extends Controller
     private function getPhotoType(): string
     {
         return (string) Yii::$app->request->post('photoType', PhotoAttachmentService::TYPE_ITEM);
+    }
+
+    /**
+     * Находит фотографию и проверяет право текущего пользователя на ее репозиторий.
+     */
+    private function findAccessiblePhoto(int $id): Photo
+    {
+        $photo = Photo::findOne($id);
+        if ($photo === null) {
+            throw new NotFoundHttpException('Фотография не найдена.');
+        }
+
+        $userId = (int) Yii::$app->getUser()->id;
+        if (!(new PhotoAccessService())->canView($photo, $userId)) {
+            throw new ForbiddenHttpException('У вас нет доступа к этой фотографии.');
+        }
+
+        return $photo;
     }
 }

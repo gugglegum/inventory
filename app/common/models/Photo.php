@@ -206,7 +206,7 @@ class Photo extends ActiveRecord
      * @param int $id
      * @return string
      */
-    private static function getFileRelativePath(int $id): string
+    public static function getFileRelativePath(int $id): string
     {
         $hash = md5(Yii::$app->params['photos']['md5salt'] . $id);
         $hash = substr_replace($hash, '/', 2, 0);
@@ -225,7 +225,7 @@ class Photo extends ActiveRecord
      * @param int $quality
      * @return string
      */
-    private static function getThumbnailFileRelativePath(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality): string
+    public static function getThumbnailFileRelativePath(int $id, int $width, int $height, bool $upscale, bool $crop, int $quality): string
     {
         $suffixes = ["q{$quality}"];
         if ($upscale) {
@@ -299,43 +299,13 @@ class Photo extends ActiveRecord
      */
     public function getUrl(): string
     {
-        $urlParts = [];
-        $urlParts[] = Yii::$app->request->baseUrl;
-        $storageRelativeUrl = trim(Yii::$app->params['photos']['storageRelativeUrl'], '/');
-        if ($storageRelativeUrl !== '') {
-            $urlParts[] = $storageRelativeUrl;
-        }
-        $urlParts[] = self::getFileRelativePath($this->primaryKey);
-        return implode('/', $urlParts);
+        return Url::toRoute(['photo/view', 'id' => $this->primaryKey]);
     }
 
     /**
-     * Возвращает строго статический URL уменьшенной фотографии
-     * 
-     * @param int $width
-     * @param int $height
-     * @param bool $upscale
-     * @param bool $crop
-     * @param int $quality
-     * @return string
-     */
-    public function getStaticThumbnailUrl(int $width, int $height, bool $upscale, bool $crop, int $quality): string
-    {
-        $urlParts = [];
-        $urlParts[] = Yii::$app->request->baseUrl;
-        $storageRelativeUrl = trim(Yii::$app->params['photos']['thumbnailRelativeUrl'], '/');
-        if ($storageRelativeUrl !== '') {
-            $urlParts[] = $storageRelativeUrl;
-        }
-        $urlParts[] = self::getThumbnailFileRelativePath($this->primaryKey, $width, $height, $upscale, $crop, $quality);
-        return implode('/', $urlParts);
-    }
-
-    /**
-     * Возвращает URL уменьшенной фотографии. При этом, если уменьшенная фотография на диске
-     * есть, то возвращает ссылку на статику, отдаваемую веб-сервером напрямую без участия PHP.
-     * Если же уменьшенной фотографии нет, то возвращает ссылку на action, который генерирует 
-     * уменьшенную фотографию на диске и редиректит 
+     * Возвращает URL уменьшенной фотографии через защищенный action.
+     * Action проверяет право текущего пользователя на репозиторий и после этого
+     * передает готовый файл nginx через X-Accel-Redirect.
      *
      * @param int $width
      * @param int $height
@@ -347,11 +317,15 @@ class Photo extends ActiveRecord
      */
     public function getThumbnailUrl(int $width, int $height, bool $upscale, bool $crop, int $quality): string
     {
-        if (file_exists($this->getThumbnailFile($width, $height, $upscale, $crop, $quality))) {
-            return $this->getStaticThumbnailUrl($width, $height, $upscale, $crop, $quality);
-        } else {
-            return Url::toRoute(['photo/thumbnail', 'id' => $this->primaryKey, 'width' => $width, 'height' => $height, 'upscale' => $upscale, 'crop' => $crop, 'quality' => $quality]);
-        }
+        return Url::toRoute([
+            'photo/thumbnail',
+            'id' => $this->primaryKey,
+            'width' => $width,
+            'height' => $height,
+            'upscale' => $upscale,
+            'crop' => $crop,
+            'quality' => $quality,
+        ]);
     }
 
     /**

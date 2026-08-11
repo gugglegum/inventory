@@ -70,13 +70,15 @@ server {
         expires         3d;
     }
 
-    location /photos {
-        alias /var/www/html/photos;
+    location ^~ /_protected-photos/ {
+        internal;
+        alias /var/www/html/photos/;
         expires         14d;
     }
 
-    location /thumbnails {
-        alias /var/www/html/thumbnails;
+    location ^~ /_protected-thumbnails/ {
+        internal;
+        alias /var/www/html/thumbnails/;
         expires         14d;
     }
 

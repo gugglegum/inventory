@@ -51,6 +51,8 @@ return [
                 '' => 'repo/index',
                 'auth/sso/redirect' => 'site/sso-login',
                 'auth/sso/callback' => 'site/sso-callback',
+                'photo/<id:\d+>/thumbnail' => 'photo/thumbnail',
+                'photo/<id:\d+>.jpg' => 'photo/view',
                 'repo/<repoId:\d+>/items' => 'items/index',
                 'repo/<repoId:\d+>/items/<itemId:\d+>' => 'items/view',
                 'repo/<repoId:\d+>/items/<itemId:\d+>/json-preview' => 'items/json-preview',

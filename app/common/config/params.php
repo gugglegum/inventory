@@ -55,10 +55,10 @@ return [
     'photos' => [
         'storagePath' => dirname(__DIR__, 2) . '/photos',
         'storageTemp' => dirname(__DIR__, 2) . '/photos/temp',
-        'storageRelativeUrl' => '/photos',
+        'storageXAccelUrl' => '/_protected-photos',
         'thumbnailPath' => dirname(__DIR__, 2) . '/thumbnails',
         'thumbnailTemp' => dirname(__DIR__, 2) . '/thumbnails/temp',
-        'thumbnailRelativeUrl' => '/thumbnails',
+        'thumbnailXAccelUrl' => '/_protected-thumbnails',
         'md5salt' => '',
         'resize' => [
             'width' => 1024,

@@ -63,6 +63,26 @@ fastcgi_pass stockhub-php:9000;
 
 Миниатюры сейчас работают как кэш: при удалении основной фотографии оригинальный файл удаляется, а уже созданные thumbnails могут оставаться в `app/thumbnails/`. Это ожидаемое текущее поведение. В будущем можно добавить чистку thumbnails при удалении `Photo`, но это отдельное изменение с риском задеть генерацию/кэширование миниатюр.
 
+С 2026-08-11 публичные URL фотографий не должны указывать напрямую на
+`app/photos` или `app/thumbnails`. `Photo::getUrl()` и
+`Photo::getThumbnailUrl()` формируют маршруты `/photo/<id>.jpg` и
+`/photo/<id>/thumbnail`; `PhotoController` требует авторизованного пользователя,
+а `backend/services/PhotoAccessService` разрешает чтение только при наличии
+`repo_user` для репозитория связанного предмета или заметки. После проверки
+`backend/services/PhotoDeliveryService` возвращает пустой ответ с
+`X-Accel-Redirect`, private cache headers и ETag. Внутренний nginx отдает тело
+из `/_protected-photos/` или `/_protected-thumbnails/`; оба location имеют
+директиву `internal`, поэтому прямой внешний запрос получает 404.
+
+При deployment нужно синхронизировать tracked
+`docker/nginx/default.conf.example` с фактическим игнорируемым
+`docker/nginx/default.conf`, выполнить `nginx -t` и graceful reload. Обновление
+PHP без одновременного обновления nginx приведет к 404 на новых внутренних URI,
+а сохранение старых публичных `location /photos` и `/thumbnails` оставит обход
+авторизации. Локально целевые controller-тесты, полный `app/bin/check-quality`
+(183 теста / 1577 assertions), `nginx -t` и direct-URL smoke прошли; production
+rollout этой защиты пока не выполнялся.
+
 ## Граница POST-форм и ActiveRecord
 
 После рефакторинга 2026-06-09 сырые POST-данные не должны загружаться напрямую в ActiveRecord-модели через `load()`. `Model::load()` используется только у form/search моделей, а AR получает значения уже после валидации формы через прямое присваивание с явным приведением типов.
