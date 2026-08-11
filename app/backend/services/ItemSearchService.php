@@ -8,6 +8,7 @@ use common\models\Item;
 use common\models\ItemQuery;
 use common\models\ItemTag;
 use common\models\Repo;
+use yii\db\Query;
 
 /**
  * Выполняет поиск предметов внутри репозитория и готовит данные для отображения результатов.
@@ -32,11 +33,13 @@ final class ItemSearchService
      */
     public function search(Repo $repo, ?string $queryString, ?Item $container, string|int|null $itemId): ItemSearchResult
     {
-        $containerId = $container?->itemId;
         $queryWords = $queryString !== null ? $this->splitQuery($queryString) : [];
 
-        $items = null;
-        $query = Item::find()->where(['repoId' => $repo->id]);
+        $query = Item::find()->andWhere([Item::tableName() . '.repoId' => $repo->id]);
+        if ($container !== null) {
+            $this->restrictToSubtree($query, $container);
+        }
+
         $hasPositiveCondition = false;
 
         if (count($queryWords) > 0) {
@@ -50,42 +53,17 @@ final class ItemSearchService
             $hasPositiveCondition = true;
         }
 
-        if ($hasPositiveCondition) {
-            $items = $query->all();
+        if (!$hasPositiveCondition) {
+            return new ItemSearchResult(null, [], $container, false);
         }
 
-        $paths = [];
-        $isMoreThan = false;
-        if (is_array($items)) {
-            $tmpItems = [];
-            $i = 0;
-            foreach ($items as $item) {
-                if ($i >= self::MAX_RESULTS) {
-                    $isMoreThan = true;
-                    break;
-                }
-
-                $doSkipItem = $containerId !== null;
-                $path = $this->getItemPathForView($item, $repo);
-                if ($containerId !== null) {
-                    foreach ($path as $pathItem) {
-                        if ($pathItem['itemId'] == $containerId) {
-                            $doSkipItem = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (!$doSkipItem) {
-                    $tmpItems[] = $item;
-                    $paths[$item->id] = $path;
-                    $i++;
-                }
-            }
-            $items = $tmpItems;
+        $items = $query->limit(self::MAX_RESULTS + 1)->all();
+        $isMoreThan = count($items) > self::MAX_RESULTS;
+        if ($isMoreThan) {
+            array_pop($items);
         }
 
-        return new ItemSearchResult($items, $paths, $container, $isMoreThan);
+        return new ItemSearchResult($items, $this->getItemPathsForView($items, $repo), $container, $isMoreThan);
     }
 
     /**
@@ -101,7 +79,7 @@ final class ItemSearchService
         }
 
         $query = Item::find()
-            ->where(['repoId' => $repo->id])
+            ->andWhere([Item::tableName() . '.repoId' => $repo->id])
             ->andWhere('isContainer != 0');
 
         $hasPositiveCondition = $this->applyWordConditions($query, $queryWords);
@@ -136,21 +114,31 @@ final class ItemSearchService
     private function applyWordConditions(ItemQuery $query, array $queryWords): bool
     {
         $hasPositiveCondition = false;
+        $itemTable = Item::tableName();
         $i = 0;
 
         foreach ($queryWords as $queryWord) {
             if ($queryWord[0] !== '-') {
-                $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = id");
+                $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = {$itemTable}.id");
                 $query->andWhere(
-                    "t{$i}.tag LIKE :tagMask{$i} OR name LIKE :tagMask{$i} OR description LIKE :tagMask{$i} OR id = :tag{$i}",
+                    "t{$i}.tag LIKE :tagMask{$i}"
+                    . " OR {$itemTable}.name LIKE :tagMask{$i}"
+                    . " OR {$itemTable}.description LIKE :tagMask{$i}"
+                    . " OR {$itemTable}.id = :tag{$i}",
                     ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']
                 );
                 $hasPositiveCondition = true;
             } else {
-                $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = id AND t{$i}.tag LIKE :tagMask{$i}");
+                $query->leftJoin(
+                    ["t{$i}" => ItemTag::tableName()],
+                    "t{$i}.itemId = {$itemTable}.id AND t{$i}.tag LIKE :tagMask{$i}"
+                );
                 $queryWord = mb_substr($queryWord, 1);
                 $query->andWhere(
-                    "t{$i}.tag IS NULL AND name NOT LIKE :tagMask{$i} AND description NOT LIKE :tagMask{$i} AND id != :tag{$i}",
+                    "t{$i}.tag IS NULL"
+                    . " AND {$itemTable}.name NOT LIKE :tagMask{$i}"
+                    . " AND {$itemTable}.description NOT LIKE :tagMask{$i}"
+                    . " AND {$itemTable}.id != :tag{$i}",
                     ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']
                 );
             }
@@ -161,23 +149,128 @@ final class ItemSearchService
     }
 
     /**
-     * Строит путь от предмета вверх по родительским контейнерам для хлебных крошек результата поиска.
+     * Ограничивает поисковый запрос самим контейнером и всеми его потомками.
      *
-     * @return array<int, array{itemId:int, repoId:int, label:string, url:array}>
+     * В CTE намеренно используется UNION DISTINCT только по идентификаторам узлов. Помимо удаления
+     * дублей это не дает поврежденному дереву с циклом выполнять рекурсию до системного лимита MariaDB.
      */
-    private function getItemPathForView(Item $item, Repo $repo): array
+    private function restrictToSubtree(ItemQuery $query, Item $container): void
     {
-        $path = [];
-        $tmpItem = $item;
-        while ($tmpItem) {
-            $path[] = [
-                'itemId' => (int) $tmpItem->itemId,
-                'repoId' => $tmpItem->repoId,
-                'label' => $tmpItem->name,
-                'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => (int) $tmpItem->itemId],
-            ];
-            $tmpItem = $tmpItem->parentItem;
+        $cteName = 'item_subtree';
+        $rootQuery = (new Query())
+            ->select([
+                'id' => 'root.id',
+                'repoId' => 'root.repoId',
+                'itemId' => 'root.itemId',
+            ])
+            ->from(['root' => Item::tableName()])
+            ->where([
+                'root.id' => $container->id,
+                'root.repoId' => $container->repoId,
+                'root.deleted' => null,
+            ]);
+
+        $descendantsQuery = (new Query())
+            ->select([
+                'id' => 'child.id',
+                'repoId' => 'child.repoId',
+                'itemId' => 'child.itemId',
+            ])
+            ->from(['child' => Item::tableName()])
+            ->innerJoin(
+                ['parent' => $cteName],
+                'child.repoId = parent.repoId AND child.parentItemId = parent.itemId'
+            )
+            ->where(['child.deleted' => null]);
+
+        $rootQuery->union($descendantsQuery);
+        $query->withQuery($rootQuery, $cteName, true)
+            ->innerJoin($cteName, $cteName . '.id = ' . Item::tableName() . '.id');
+    }
+
+    /**
+     * Строит пути от найденных предметов вверх по родительским контейнерам одним рекурсивным запросом.
+     *
+     * @param Item[] $items Найденные предметы.
+     * @return array<int, array<int, array{itemId:int, repoId:int, label:string, url:array}>>
+     */
+    private function getItemPathsForView(array $items, Repo $repo): array
+    {
+        if ($items === []) {
+            return [];
         }
-        return $path;
+
+        $cteName = 'item_ancestors';
+        $columns = [
+            'id' => 'node.id',
+            'repoId' => 'node.repoId',
+            'itemId' => 'node.itemId',
+            'parentItemId' => 'node.parentItemId',
+            'name' => 'node.name',
+        ];
+        $globalItemIds = array_map(static fn(Item $item): int => (int) $item->id, $items);
+
+        $itemsQuery = (new Query())
+            ->select($columns)
+            ->from(['node' => Item::tableName()])
+            ->where([
+                'node.repoId' => $repo->id,
+                'node.id' => $globalItemIds,
+                'node.deleted' => null,
+            ]);
+
+        $parentsQuery = (new Query())
+            ->select($columns)
+            ->from(['node' => Item::tableName()])
+            ->innerJoin(
+                ['child' => $cteName],
+                'node.repoId = child.repoId AND node.itemId = child.parentItemId'
+            )
+            ->where(['node.deleted' => null]);
+
+        $itemsQuery->union($parentsQuery);
+        $rows = (new Query())
+            ->withQuery($itemsQuery, $cteName, true)
+            ->from($cteName)
+            ->all(Item::getDb());
+
+        /** @var array<int, array{id:int, repoId:int, itemId:int, parentItemId:?int, name:string}> $nodesByItemId */
+        $nodesByItemId = [];
+        foreach ($rows as $row) {
+            $nodesByItemId[(int) $row['itemId']] = [
+                'id' => (int) $row['id'],
+                'repoId' => (int) $row['repoId'],
+                'itemId' => (int) $row['itemId'],
+                'parentItemId' => $row['parentItemId'] !== null ? (int) $row['parentItemId'] : null,
+                'name' => (string) $row['name'],
+            ];
+        }
+
+        $paths = [];
+        foreach ($items as $item) {
+            $path = [];
+            $currentItemId = (int) $item->itemId;
+            $visitedItemIds = [];
+
+            while (isset($nodesByItemId[$currentItemId]) && !isset($visitedItemIds[$currentItemId])) {
+                $visitedItemIds[$currentItemId] = true;
+                $node = $nodesByItemId[$currentItemId];
+                $path[] = [
+                    'itemId' => $node['itemId'],
+                    'repoId' => $node['repoId'],
+                    'label' => $node['name'],
+                    'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => $node['itemId']],
+                ];
+
+                if ($node['parentItemId'] === null) {
+                    break;
+                }
+                $currentItemId = $node['parentItemId'];
+            }
+
+            $paths[$item->id] = $path;
+        }
+
+        return $paths;
     }
 }

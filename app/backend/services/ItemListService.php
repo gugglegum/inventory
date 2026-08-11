@@ -66,7 +66,7 @@ final class ItemListService
     private function createContainerQuery(Repo $repo): ItemQuery
     {
         return Item::find()
-            ->where(['repoId' => $repo->id])
+            ->andWhere([Item::tableName() . '.repoId' => $repo->id])
             ->andWhere('isContainer != 0')
             ->orderBy(['priority' => SORT_DESC, 'id' => SORT_ASC]);
     }

@@ -65,6 +65,22 @@ final class ItemListServiceTest extends DbTestCase
     }
 
     /**
+     * prepareContainerPicker() не показывает мягко удаленные контейнеры.
+     */
+    public function testPrepareContainerPickerHidesSoftDeletedContainers(): void
+    {
+        [$repo, $rootContainer, , , $deletedContainer, $visibleContainer, $matchingContainer] = $this->prepareListFixture();
+        $deletedContainer->updateAttributes(['deleted' => time()]);
+
+        $pickerData = (new ItemListService())->prepareContainerPicker($repo, (string) $rootContainer->itemId);
+
+        self::assertSame(
+            [(int) $visibleContainer->id, (int) $matchingContainer->id],
+            array_map(static fn(Item $item): int => (int) $item->id, $pickerData->containers)
+        );
+    }
+
+    /**
      * searchContainers() ищет только предметы-контейнеры.
      */
     public function testSearchContainersReturnsOnlyMatchingContainers(): void
