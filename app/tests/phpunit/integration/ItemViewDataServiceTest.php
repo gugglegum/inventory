@@ -13,7 +13,7 @@ use tests\phpunit\DbTestCase;
 /**
  * Integration-тесты read-side сервиса просмотра предмета.
  *
- * Проверяют дочерние предметы, навигацию prev/next и path-данные для JSON-preview.
+ * Проверяют дочерние предметы, последние заметки, навигацию prev/next и path-данные для JSON-preview.
  */
 final class ItemViewDataServiceTest extends DbTestCase
 {
@@ -36,6 +36,32 @@ final class ItemViewDataServiceTest extends DbTestCase
         self::assertSame(
             [(int) $secondChild->id, (int) $firstChild->id, (int) $thirdChild->id],
             array_map(static fn(Item $item): int => (int) $item->id, $containerViewData->children)
+        );
+    }
+
+    /**
+     * prepare() возвращает общее число заметок и только пять самых новых.
+     */
+    public function testPrepareReturnsRecentPostsAndTotalCount(): void
+    {
+        [, , , $item] = $this->prepareFixture();
+        $user = User::findOne((int) $item->createdBy);
+        self::assertNotNull($user);
+
+        $posts = [];
+        for ($index = 1; $index <= 7; $index++) {
+            $posts[$index] = $this->createPost($item, $user, [
+                'datetime' => 1_700_000_000 + $index,
+                'title' => 'Заметка ' . $index,
+            ]);
+        }
+
+        $viewData = (new ItemViewDataService())->prepare($item);
+
+        self::assertSame(7, $viewData->postCount);
+        self::assertSame(
+            [$posts[7]->id, $posts[6]->id, $posts[5]->id, $posts[4]->id, $posts[3]->id],
+            array_column($viewData->recentPosts, 'id')
         );
     }
 

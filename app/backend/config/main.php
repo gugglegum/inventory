@@ -72,6 +72,7 @@ return [
                 'repo/<repoId:\d+>/update' => 'repo/update',
                 'repo/<repoId:\d+>/delete' => 'repo/delete',
                 'repo/<repoId:\d+>/items/<itemId:\d+>/posts' => 'posts/index',
+                'repo/<repoId:\d+>/items/<itemId:\d+>/posts/quick-create' => 'posts/quick-create',
                 'repo/<repoId:\d+>/items/<itemId:\d+>/posts/create' => 'posts/create',
                 'repo/<repoId:\d+>/items/<itemId:\d+>/posts/<postId:\d+>' => 'posts/view',
                 'repo/<repoId:\d+>/items/<itemId:\d+>/posts/<postId:\d+>/edit' => 'posts/update',

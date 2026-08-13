@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace backend\controllers;
 
 use backend\services\PostDeletionService;
+use backend\services\ItemViewDataService;
 use backend\services\PhotoEditorService;
 use backend\services\PostFormService;
 use common\helpers\PostDataHelper;
 use common\models\Post;
 use Yii;
 use yii\base\Exception;
+use yii\data\ActiveDataProvider;
 use yii\db\StaleObjectException;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -23,6 +25,8 @@ use yii\web\Response;
  */
 class PostsController extends RepoAwareController
 {
+    private const int POST_PAGE_SIZE = 20;
+
     /**
      * @inheritdoc
      */
@@ -43,12 +47,42 @@ class PostsController extends RepoAwareController
                 'actions' => [
                     'index' => ['get'],
                     'view' => ['get'],
+                    'quick-create' => ['post'],
                     'create' => ['get', 'post'],
                     'update' => ['get', 'post'],
                     'delete' => ['get', 'post'],
                 ],
             ],
         ];
+    }
+
+    /**
+     * Показывает полный журнал заметок предмета с пагинацией.
+     */
+    public function actionIndex(int $repoId, int $itemId): Response|string
+    {
+        $repo = $this->findRepo($repoId);
+        $item = $this->findItem($repo->id, $itemId);
+        $dataProvider = new ActiveDataProvider([
+            'query' => Post::find()
+                ->where(['itemId' => $item->id])
+                ->with(['postPhotos.photo'])
+                ->orderBy([
+                    'datetime' => SORT_DESC,
+                    'id' => SORT_DESC,
+                ]),
+            'pagination' => [
+                'pageSize' => self::POST_PAGE_SIZE,
+                'pageSizeLimit' => [self::POST_PAGE_SIZE, self::POST_PAGE_SIZE],
+            ],
+            'sort' => false,
+        ]);
+
+        return $this->render('index', [
+            'dataProvider' => $dataProvider,
+            'item' => $item,
+            'repo' => $repo,
+        ]);
     }
 
     /**
@@ -67,6 +101,14 @@ class PostsController extends RepoAwareController
         $item = $this->findItem($repo->id, $itemId);
         $post = $this->findPost($item->id, $postId);
 
+        if (Yii::$app->request->isAjax && Yii::$app->request->getQueryParam('modal') === '1') {
+            return $this->renderPartial('_modalContent', [
+                'post' => $post,
+                'item' => $item,
+                'repo' => $repo,
+            ]);
+        }
+
         return $this->render('view', [
             'post' => $post,
             'item' => $item,
@@ -75,9 +117,31 @@ class PostsController extends RepoAwareController
     }
 
     /**
+     * Создает короткую заметку с текущей датой без перехода на полную форму.
+     *
+     * @throws Exception
+     * @throws ForbiddenHttpException
+     * @throws NotFoundHttpException
+     */
+    public function actionQuickCreate(int $repoId, int $itemId): Response
+    {
+        $repo = $this->findRepo($repoId);
+        $item = $this->findItem($repo->id, $itemId);
+        $postFormService = new PostFormService();
+        $postForm = $postFormService->prepareForCreate($item, $this->getLoggedUser());
+
+        if ($postFormService->save($postForm, PostDataHelper::toArray(Yii::$app->request->post()))) {
+            return $this->redirectToItemPost($repo->id, (int) $item->itemId, $postForm->getPost());
+        }
+
+        Yii::$app->session->setFlash('error', implode(' ', $postForm->getFirstErrors()));
+        return $this->redirect(['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]);
+    }
+
+    /**
      * Creates a new Post model.
      *
-     * If creation is successful, the browser will be redirected to the 'view' page.
+     * If creation is successful, the browser will be redirected to the post card on the item page.
      *
      * @param int $repoId
      * @param int $itemId
@@ -113,7 +177,7 @@ class PostsController extends RepoAwareController
                     $transaction->commit();
                     $photoEditorService->cleanupDetachedPhotos($detachedPhotoIds);
 
-                    return $this->redirect(['posts/view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
+                    return $this->redirectToItemPost($repo->id, (int) $item->itemId, $post);
                 }
 
                 if ($photoPlan === null) {
@@ -184,7 +248,7 @@ class PostsController extends RepoAwareController
                     $transaction->commit();
                     $photoEditorService->cleanupDetachedPhotos($detachedPhotoIds);
 
-                    return $this->redirect(['view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]);
+                    return $this->redirectToItemPost($repo->id, (int) $item->itemId, $post);
                 }
 
                 if ($photoPlan === null) {
@@ -265,5 +329,46 @@ class PostsController extends RepoAwareController
         } else {
             throw new NotFoundHttpException("Запрошенный пост {$postId} не существует");
         }
+    }
+
+    /**
+     * Возвращает пользователя к заметке на странице предмета или в полном журнале.
+     */
+    private function redirectToItemPost(int $repoId, int $itemId, Post $post): Response
+    {
+        $newerPostCount = (int) Post::find()
+            ->where(['itemId' => $post->itemId])
+            ->andWhere([
+                'or',
+                ['>', 'datetime', (int) $post->datetime],
+                [
+                    'and',
+                    ['datetime' => (int) $post->datetime],
+                    ['>', 'id', $post->id],
+                ],
+            ])
+            ->count();
+
+        if ($newerPostCount >= ItemViewDataService::RECENT_POST_LIMIT) {
+            $route = [
+                'posts/index',
+                'repoId' => $repoId,
+                'itemId' => $itemId,
+                '#' => 'post-' . $post->id,
+            ];
+            $page = intdiv($newerPostCount, self::POST_PAGE_SIZE) + 1;
+            if ($page > 1) {
+                $route['page'] = $page;
+            }
+
+            return $this->redirect($route);
+        }
+
+        return $this->redirect([
+            'items/view',
+            'repoId' => $repoId,
+            'itemId' => $itemId,
+            '#' => 'post-' . $post->id,
+        ]);
     }
 }

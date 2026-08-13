@@ -70,28 +70,3 @@
 #item-view #item-description #item-post {
     margin-top: 2em;
 }
-#item-view #item-description #item-post .add-post-link {
-    margin: 1em;
-}
-#item-view #item-description #item-post .add-post-link .bi {
-    margin-right: 5px;
-}
-#item-view #item-description #item-post ul {
-    padding-left: 1em;
-}
-#item-view #item-description #item-post ul li {
-    margin: 1em 0 0 0;
-    list-style: none;
-}
-#item-view #item-description #item-post .title a.edit-link {
-    font-size: 50%;
-    vertical-align: super;
-}
-#item-view #item-description #item-post .text {
-    color: #999;
-    font-size: 80%;
-    margin: 0.2em 0 0.5em 0;
-}
-#item-view #item-description #item-post .text p {
-    margin: 0;
-}

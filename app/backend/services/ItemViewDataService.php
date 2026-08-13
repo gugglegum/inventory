@@ -13,6 +13,8 @@ use common\models\Item;
  */
 final class ItemViewDataService
 {
+    public const int RECENT_POST_LIMIT = 5;
+
     /**
      * Готовит данные для страницы `items/view`.
      */
@@ -25,11 +27,19 @@ final class ItemViewDataService
                 'id' => SORT_ASC,
             ])
             ->all();
+        $postQuery = $item->getPosts();
+        $postCount = (int) (clone $postQuery)->count();
+        $recentPosts = $postQuery
+            ->with(['postPhotos.photo'])
+            ->limit(self::RECENT_POST_LIMIT)
+            ->all();
 
         return new ItemViewData(
             $children,
             $this->findPrevItem($item),
             $this->findNextItem($item),
+            $recentPosts,
+            $postCount,
         );
     }
 

@@ -433,7 +433,7 @@ docker compose exec php ./vendor/bin/phpunit -c phpunit.xml
 
 Подготовка и сохранение предмета для форм создания/редактирования вынесены в `backend/services/ItemFormService.php` и `backend/models/ItemForm.php`. Сервис выставляет create/update scenario, access validator, repo/parent, createdBy/updatedBy и начальный флаг контейнера на `Item`, затем возвращает `ItemForm`. POST загружается в `ItemForm`, а ее `save()` валидирует строки и переносит типизированные значения в `Item`. Контракт покрыт `tests/phpunit/integration/ItemFormServiceTest.php`, а HTTP-сценарии create/update остаются защищены `tests/phpunit/integration/ItemsControllerTest.php`.
 
-Read-часть `ItemsController::actionView()` и `ItemsController::actionJsonPreview()` вынесена в `backend/services/ItemViewDataService.php`. Сервис готовит дочерние предметы в порядке отображения, соседние предметы для prev/next навигации и path-данные для preview partial, а DTO `backend/services/ItemViewData.php` и `backend/services/ItemPreviewData.php` переносят эти данные обратно в контроллер. Контракт сервиса покрыт `tests/phpunit/integration/ItemViewDataServiceTest.php`, включая сортировку детей, соседние предметы и path URLs; HTTP-слой дополнительно проверяется render/json-preview сценариями в `tests/phpunit/integration/ItemsControllerTest.php`.
+Read-часть `ItemsController::actionView()` и `ItemsController::actionJsonPreview()` вынесена в `backend/services/ItemViewDataService.php`. Сервис готовит дочерние предметы в порядке отображения, соседние предметы для prev/next навигации, пять последних заметок с общим счетчиком и path-данные для preview partial, а DTO `backend/services/ItemViewData.php` и `backend/services/ItemPreviewData.php` переносят эти данные обратно в контроллер. Контракт сервиса покрыт `tests/phpunit/integration/ItemViewDataServiceTest.php`, включая сортировку детей, лимит последних заметок, соседние предметы и path URLs; HTTP-слой дополнительно проверяется render/json-preview сценариями в `tests/phpunit/integration/ItemsControllerTest.php`.
 
 Create/update формы заметок вынесены из `PostsController` в `backend/services/PostFormService.php` и `backend/models/PostForm.php`. Сервис готовит create/update сценарии `Post`, служебные поля `createdBy`/`updatedBy` и сохраняет только данные заметки; синхронный `$_FILES` contract удален. POST-дата `datetimeText` валидируется в `PostForm` и записывается в `Post.datetime` как unix timestamp. Фотографии заметки применяются тем же shared `PhotoEditorService`, что и фотографии предмета, в одной транзакции с `Post`. Удаление заметок вынесено в `backend/services/PostDeletionService.php`.
 
@@ -522,6 +522,40 @@ nested sets автоматически.
 формы. Поэтому закрытые фильтры не участвуют в следующем поиске, пустые `q`,
 `description` и `notes` не добавляются в query string, а Back не восстанавливает
 раскрытые поля в отключенном состоянии.
+
+## Журнал заметок
+
+Страница предмета показывает компактный табличный журнал из пяти последних
+заметок и общее количество записей. Заголовок занимает одну строку, а текст и
+маленькие превью фотографий — необязательную вторую; длинные значения визуально
+обрезаются с ellipsis, а полный текст остается в `title` и modal. Рамок между
+строками нет; четные строки получают слабоконтрастный фоновый оттенок. Read-side
+выполняет отдельный `COUNT` и ограниченную выборку с eager loading фотографий,
+поэтому число заметок не увеличивает объем HTML или количество lazy-запросов на
+основной странице. Если записей больше пяти, ссылка «Все заметки» открывает
+`PostsController::actionIndex()` с фиксированной пагинацией по 20 записей.
+
+Любая карточка, включая заметку только с заголовком, целиком открывает одно общее
+Bootstrap modal, чтобы оставались доступны автор и служебные даты. Содержимое загружается лениво из
+канонического `posts/view` с AJAX-параметром `modal=1`. Положение dialog по
+вертикали вычисляется из нажатой строки и ограничивается viewport, чтобы modal
+появлялся рядом с записью и сохранял доступную высоту с внутренней прокруткой.
+Ссылки редактирования и фотографий остаются самостоятельными интерактивными
+областями поверх карточки. При отключенном JavaScript карточка ведет на прежнюю
+полную страницу заметки.
+
+Однострочная форма «Что произошло?» создает title-only запись с текущей датой
+через POST-only route `posts/quick-create`. Для текста, иной даты и фотографий
+рядом остается ссылка на полную форму. У поля быстрого ввода и поля заголовка в
+полной форме установлен `autocomplete="off"`. После быстрого или полного создания и
+после редактирования пользователь возвращается к якорю `#post-<id>`. Для пяти
+последних записей это страница предмета; backdated или старая запись открывается
+сразу на соответствующей странице полного журнала. Якорное выделение плавно
+исчезает примерно через три секунды; hash удаляется через History API без
+перезагрузки страницы. HTTP-сценарии журнала,
+пагинации, modal partial, quick create и редиректов покрыты
+`tests/phpunit/integration/PostsControllerTest.php` и
+`tests/phpunit/integration/ItemsControllerTest.php`.
 
 ## Качество кода
 

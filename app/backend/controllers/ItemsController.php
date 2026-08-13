@@ -195,6 +195,8 @@ class ItemsController extends RepoAwareController
             'containerId' => $itemId,
             'prevItem' => $viewData->prevItem,
             'nextItem' => $viewData->nextItem,
+            'recentPosts' => $viewData->recentPosts,
+            'postCount' => $viewData->postCount,
             'query' => $queryString,
             'descriptionQuery' => $descriptionQuery,
             'notesQuery' => $notesQuery,

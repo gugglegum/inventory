@@ -51,7 +51,11 @@ $post = $postForm->getPost();
             'removeButton' => false,
             'layout' => '{picker}{remove}{input} <span style="position: relative; top: 0.5em; left: 0.5em;">(UTC)</span>',
     ]) ?>
-    <?= $form->field($postForm, 'title')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
+    <?= $form->field($postForm, 'title')->textInput([
+        'maxlength' => true,
+        'autocomplete' => 'off',
+        'tabindex' => $tabIndex++,
+    ]) ?>
     <?= $form->field($postForm, 'text')->textarea(['rows' => 4, 'tabindex' => $tabIndex++]) ?>
 
     <label class="form-label">Фотографии</label>
@@ -72,9 +76,12 @@ $post = $postForm->getPost();
 
     <div class="mb-3">
         <?= Html::submitButton($post->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $post->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
-        <?= Html::a('<i class="bi bi-x-lg"></i> Отмена', Url::to(
-                $post->isNewRecord ? ['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId] : ['view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]
-        ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
+        <?= Html::a('<i class="bi bi-x-lg"></i> Отмена', Url::to([
+            'items/view',
+            'repoId' => $repo->id,
+            'itemId' => $item->itemId,
+            '#' => $post->isNewRecord ? null : 'post-' . $post->id,
+        ]), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$post->isNewRecord) { ?>
             <?= Html::a('<i class="bi bi-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id], [
                 'style' => 'margin-left: 1em',

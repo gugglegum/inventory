@@ -1,6 +1,7 @@
 <?php
 
 use common\models\Item;
+use common\models\Post;
 use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -12,6 +13,8 @@ use yii\helpers\Url;
 /** @var int $containerId title */
 /** @var ?Item $prevItem */
 /** @var ?Item $nextItem */
+/** @var Post[] $recentPosts */
+/** @var int $postCount */
 /** @var string $query */
 /** @var string $descriptionQuery */
 /** @var string $notesQuery */
@@ -22,6 +25,8 @@ $this->render('/_breadcrumbs', ['item' => $model, 'repo' => $repo]);
 
 $this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 $this->registerCssFile('@web/css/item-view.css', ['appendTimestamp' => true], 'item-view');
+$this->registerCssFile('@web/css/post-list.css', ['appendTimestamp' => true], 'post-list');
+$this->registerJsFile('@web/js/post-list.js', ['appendTimestamp' => true], 'post-list');
 
 $this->render('//_fancybox');
 
@@ -69,14 +74,28 @@ if ($description !== '') {
         <dt>Описание</dt>
         <dd><?= $description ?></dd>
         <div id="item-post">
-            <h3>Заметки о предмете</h3>
-            <div class="add-post-link">
-                <?= Html::a('<i class="bi bi-plus-circle"></i> Добавить заметку', ['posts/create', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
+            <div class="post-section-header">
+                <h3>Заметки <span class="post-count"><?= $postCount ?></span></h3>
+                <?php if ($postCount > count($recentPosts)) { ?>
+                    <?= Html::a('Все заметки', ['posts/index', 'repoId' => $repo->id, 'itemId' => $model->itemId], ['class' => 'all-posts-link']) ?>
+                <?php } ?>
             </div>
-<?php $posts = $model->posts; ?>
-<?php if ($posts !== []) { ?>
+            <?= Html::beginForm(['posts/quick-create', 'repoId' => $repo->id, 'itemId' => $model->itemId], 'post', ['class' => 'quick-post-form']) ?>
+                <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                <?= Html::textInput('Post[title]', '', [
+                    'class' => 'form-control',
+                    'maxlength' => 200,
+                    'required' => true,
+                    'autocomplete' => 'off',
+                    'placeholder' => 'Что произошло?',
+                    'aria-label' => 'Быстрая заметка',
+                ]) ?>
+                <?= Html::submitButton('Добавить', ['class' => 'btn btn-primary']) ?>
+                <?= Html::a('Добавить детали или фотографии', ['posts/create', 'repoId' => $repo->id, 'itemId' => $model->itemId], ['class' => 'quick-post-details-link']) ?>
+            <?= Html::endForm() ?>
+<?php if ($recentPosts !== []) { ?>
 <?= $this->render('/posts/_posts', [
-        'posts' => $posts,
+        'posts' => $recentPosts,
         'item' => $model,
         'repo' => $repo,
     ]) ?>

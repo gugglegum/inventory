@@ -216,14 +216,14 @@ final class ItemsControllerTest extends DbTestCase
         $item->isContainer = 1;
         self::assertTrue($item->save(false));
         $this->createItemPhoto($item);
-        $olderPost = $this->createPost($item, $user, [
-            'datetime' => 1_700_000_000,
-            'title' => 'Более старая заметка',
-        ]);
-        $newerPost = $this->createPost($item, $user, [
-            'datetime' => 1_800_000_000,
-            'title' => 'Самая новая заметка',
-        ]);
+        $posts = [];
+        for ($index = 1; $index <= 7; $index++) {
+            $posts[$index] = $this->createPost($item, $user, [
+                'datetime' => 1_700_000_000 + $index,
+                'title' => 'Заметка ' . $index,
+                'text' => $index === 7 ? '' : 'Подробности заметки ' . $index,
+            ]);
+        }
 
         $this->setGetRequest(['q' => 'usb']);
 
@@ -237,16 +237,18 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringContainsString('dropdown-menu dropdown-menu-end', $response);
         self::assertStringContainsString('class="dropdown-item"', $response);
         self::assertStringContainsString('bi bi-three-dots-vertical', $response);
-        self::assertSame([$newerPost->id, $olderPost->id], array_column($item->posts, 'id'));
-
-        $addPostPosition = strpos($response, 'Добавить заметку');
-        $newerPostPosition = strpos($response, 'Самая новая заметка');
-        $olderPostPosition = strpos($response, 'Более старая заметка');
-        self::assertIsInt($addPostPosition);
-        self::assertIsInt($newerPostPosition);
-        self::assertIsInt($olderPostPosition);
-        self::assertLessThan($newerPostPosition, $addPostPosition);
-        self::assertLessThan($olderPostPosition, $newerPostPosition);
+        self::assertStringContainsString('Заметки <span class="post-count">7</span>', $response);
+        self::assertStringContainsString('Что произошло?', $response);
+        self::assertStringContainsString('autocomplete="off" placeholder="Что произошло?"', $response);
+        self::assertStringContainsString('Добавить детали или фотографии', $response);
+        self::assertStringContainsString('Все заметки', $response);
+        self::assertStringContainsString('Заметка 7', $response);
+        self::assertStringContainsString('Заметка 3', $response);
+        self::assertStringNotContainsString('Заметка 2', $response);
+        self::assertStringNotContainsString('Заметка 1', $response);
+        self::assertSame(5, substr_count($response, '<article id="post-'));
+        self::assertSame(5, substr_count($response, 'data-post-modal-url='));
+        self::assertStringNotContainsString('post-card--compact', $response);
         self::assertStringNotContainsString('rel="item-photos"', $response);
         self::assertStringNotContainsString('data-toggle="dropdown"', $response);
     }
