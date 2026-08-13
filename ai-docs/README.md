@@ -51,11 +51,45 @@ fastcgi_pass stockhub-php:9000;
 Ключевые зависимости и расширения:
 
 - `yiisoft/yii2`
-- `yiisoft/yii2-bootstrap`
+- `yiisoft/yii2-bootstrap5`
+- `twbs/bootstrap-icons`
 - `yiisoft/yii2-swiftmailer`
 - `s9e/text-formatter`
 - `kartik-v/yii2-widget-datetimepicker`
 - PHP-расширения `gd`, `exif`, `mbstring`, `pdo_mysql`
+
+### Bootstrap 5
+
+Интерфейс переведен с Bootstrap 3 на Bootstrap 5. Composer lock фиксирует
+Bootstrap 5.3.8, Yii-расширение `yiisoft/yii2-bootstrap5` 2.0.51 и локальный
+пакет Bootstrap Icons 1.13.1. Backend и frontend `AppAsset` подключают
+`BootstrapPluginAsset` и `BootstrapIconAsset`; CDN для этих зависимостей не
+используется. Старые `yiisoft/yii2-bootstrap`, `bower-asset/bootstrap` и
+Glyphicons удалены.
+
+Формы используют `yii\bootstrap5\ActiveForm`, хлебные крошки —
+`yii\bootstrap5\Breadcrumbs`, а таблица пользователей явно задает
+`yii\bootstrap5\LinkPager`. Bootstrap JavaScript-разметка должна использовать
+`data-bs-*`; модальное окно выбора контейнера закрывается через
+`bootstrap.Modal`, а не через старый jQuery `.modal()`.
+
+Глобальный `params['bsVersion'] = '5.x'` нужен расширениям Krajee. Для
+DateTimePicker дополнительно явно заданы Bootstrap Icons и отключен режим
+Font Awesome, иначе виджет выводит отсутствующие классы `fas`.
+Автоматические тесты проверяют assets, формы, flash alerts, modal/dropdown,
+DateTimePicker и инвентаризацию. После визуальных изменений всё равно нужен
+ручной browser smoke на desktop и mobile: navbar, формы предмета и заметки,
+выбор контейнера, dropdown групповых действий, календарь, photo editor и
+Fancybox.
+
+Backend дополнительно подключает `backend/web/css/bootstrap-compat.css` перед
+обычным `site.css`. Этот слой не возвращает старые компоненты Bootstrap 3, а
+только сохраняет привычную визуальную плотность Stockhub: базовый шрифт 14px
+Helvetica, старые ширины контейнера до 1170px, цвета и поведение ссылок,
+компактные navbar/breadcrumbs, формы и кнопки. Без него Bootstrap 5 расширяет
+desktop-контейнер до 1320px, включает постоянное подчеркивание ссылок и заметно
+увеличивает интерфейс. Изменять или удалять этот файл следует только со
+сравнительным browser smoke страницы предмета.
 
 Фотографии хранятся в `app/photos/`, миниатюры - в `app/thumbnails/`. Эти каталоги могут быть большими и содержат пользовательские данные, поэтому в Git должны попадать только `.gitignore`-заглушки.
 

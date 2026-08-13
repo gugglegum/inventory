@@ -151,6 +151,26 @@ final class InventoryTest extends DbTestCase
     }
 
     /**
+     * GET view использует Bootstrap 5 разметку быстрых форм инвентаризации.
+     */
+    public function testInventoryViewGetRendersBootstrapFiveForms(): void
+    {
+        [$controller, $repo, $container, , $inventory] = $this->prepareOpenedInventoryFixture();
+
+        $this->setGetRequest();
+
+        $response = $controller->actionView($repo->id, (int) $container->itemId, $inventory->id);
+
+        self::assertIsString($response);
+        self::assertStringContainsString('inventory-by-item-id d-flex flex-wrap align-items-end gap-2', $response);
+        self::assertStringContainsString('class="input-group-text"', $response);
+        self::assertStringContainsString('form-control', $response);
+        self::assertStringNotContainsString('form-inline', $response);
+        self::assertStringNotContainsString('input-group-addon', $response);
+        self::assertStringNotContainsString('glyphicon', $response);
+    }
+
+    /**
      * Контроллерный сценарий закрытия обновляет найденные и отсутствующие предметы и возвращает redirect.
      */
     public function testClosingInventoryMarksConfirmedAndMissingItems(): void

@@ -5,7 +5,7 @@ use common\models\Item;
 use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\widgets\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 
 /** @var \yii\web\View $this */
 /** @var Post $post */
@@ -44,14 +44,14 @@ $this->render('//_fancybox');
 
     <?= $form->errorSummary($post) ?>
 
-    <?= Html::submitButton('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', [
+    <?= Html::submitButton('<i class="bi bi-trash" style="margin-right: 5px;"></i> Удалить', [
         'class' => 'btn btn-danger',
         'data' => [
             'confirm' => 'Вы действительно хотите удалить этот пост?',
             'method' => 'post',
         ],
     ]) ?>
-    <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]), ['style' => 'margin-left: 1em']) ?>
+    <?= Html::a('<i class="bi bi-x-lg"></i> Отмена', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]), ['style' => 'margin-left: 1em']) ?>
     <?php ActiveForm::end(); ?>
 
 </div>

@@ -8,7 +8,7 @@ use common\models\PhotoUploadSession;
 use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\widgets\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 
 /** @var \yii\web\View $this */
 /** @var ItemForm $model */
@@ -22,7 +22,7 @@ $this->registerJsFile('@web/js/item-form.js', ['appendTimestamp' => true, 'depen
 $this->registerCssFile('@web/css/items.css', ['appendTimestamp' => true], 'items');
 $this->registerCssFile('@web/css/item-form.css', ['appendTimestamp' => true], 'item-form');
 
-/** @var \yii\widgets\ActiveForm $form */
+/** @var \yii\bootstrap5\ActiveForm $form */
 $tabIndex = 1;
 $item = $model->getItem();
 ?>
@@ -39,7 +39,7 @@ $item = $model->getItem();
     <?= $form->field($model, 'name')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
     <?= $form->field($model, 'description')->textarea(['rows' => 4, 'tabindex' => $tabIndex++]) ?>
     <?= $form->field($model, 'parentItemId')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
-    <button type="button" style="float: left" id="btnTogglePickContainerModal" class="btn" data-toggle="modal" data-target="#pickContainerModal" tabindex="<?= $tabIndex++ ?>">Сменить...</button>
+    <button type="button" style="float: left" id="btnTogglePickContainerModal" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#pickContainerModal" tabindex="<?= $tabIndex++ ?>">Сменить...</button>
     <div id="divParentPreview"></div>
     <div class="clearfix"></div>
     <?= $form->field($tagsForm, 'tags')->textInput(['tabindex' => $tabIndex++]) ?>
@@ -49,22 +49,22 @@ $item = $model->getItem();
         <?= $form->field($model, 'itemId')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
     <?php } ?>
 
-    <div class="form-group">
+    <div class="mb-3">
         <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
-        <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
+        <?= Html::a('<i class="bi bi-x-lg"></i> Отмена', Url::to(
             $model->isNewRecord
                 ? $model->parentItemId !== '' ? ['items/view', 'repoId' => $repo->id, 'itemId' => $model->parentItemId] : ['items/index']
                 : ['items/view', 'repoId' => $repo->id, 'itemId' => $model->itemId]
         ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$model->isNewRecord) { ?>
-            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $model->itemId], [
+            <?= Html::a('<i class="bi bi-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $model->itemId], [
                 'style' => 'margin-left: 1em',
                 'tabindex' => $tabIndex++,
             ]) ?>
         <?php } ?>
     </div>
 
-    <label class="control-label">Фотографии</label>
+    <label class="form-label">Фотографии</label>
     <?= $this->render('//_photo-editor', [
         'photoEditorForm' => $photoEditorForm,
         'photoEntries' => $photoEntries,
@@ -84,15 +84,15 @@ $item = $model->getItem();
         'maxUploadBytes' => (int) (Yii::$app->params['photos']['maxUploadBytes'] ?? 0),
     ]) ?>
 
-    <div class="form-group">
+    <div class="mb-3">
         <?= Html::submitButton($model->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
-        <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
+        <?= Html::a('<i class="bi bi-x-lg"></i> Отмена', Url::to(
             $model->isNewRecord
                 ? $model->parentItemId !== '' ? ['items/view', 'repoId' => $repo->id, 'itemId' => $model->parentItemId] : ['items/index']
                 : ['items/view', 'repoId' => $repo->id, 'itemId' => $model->itemId]
         ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$model->isNewRecord) { ?>
-            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $model->itemId], [
+            <?= Html::a('<i class="bi bi-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $model->itemId], [
                 'style' => 'margin-left: 1em',
                 'tabindex' => $tabIndex++,
             ]) ?>
@@ -102,7 +102,7 @@ $item = $model->getItem();
     <?php if ($model->isNewRecord) { ?>
     <div>
         <label for="goto">После создания:</label>
-        <select id="goto" name="goto" tabindex="<?= $tabIndex++ ?>">
+        <select class="form-select" id="goto" name="goto" tabindex="<?= $tabIndex++ ?>">
         <?= Html::renderSelectOptions($goto, [
             'view' => 'перейти к просмотру',
             'create' => 'перейти к созданию ещё одного',
@@ -115,12 +115,12 @@ $item = $model->getItem();
 
 </div>
 <!-- Modal -->
-<div class="modal fade" id="pickContainerModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="pickContainerModal" tabindex="-1" aria-labelledby="pickContainerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel">Выбор родительского контейнера</h4>
+                <h5 class="modal-title" id="pickContainerModalLabel">Выбор родительского контейнера</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
             <div class="modal-body" data-iframe-base-src="<?= Html::encode(Url::to(['items/pick-container', 'repoId' => $repo->id, 'itemId' => '0'])) ?>">
             </div>

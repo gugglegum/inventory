@@ -3,7 +3,7 @@
 use backend\models\RepoForm;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\widgets\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 
 /** @var \yii\web\View $this */
 /** @var RepoForm $repoForm */
@@ -13,7 +13,7 @@ use yii\widgets\ActiveForm;
 //$this->registerCssFile('@web/css/item-form.css', ['appendTimestamp' => true], 'item-form');
 //$this->registerCssFile('@web/css/upload_photo.css', ['appendTimestamp' => true], 'upload_photo');
 
-/** @var \yii\widgets\ActiveForm $form */
+/** @var \yii\bootstrap5\ActiveForm $form */
 $tabIndex = 1;
 ?>
 
@@ -39,11 +39,11 @@ $tabIndex = 1;
     <?= $form->field($repoForm, 'priority')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
 
 
-    <div class="form-group">
+    <div class="mb-3">
         <?= Html::submitButton($repoForm->scenario === RepoForm::SCENARIO_CREATE ? 'Создать' : 'Сохранить', ['class' => $repoForm->scenario === RepoForm::SCENARIO_CREATE ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
-        <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(['repo/index']), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
+        <?= Html::a('<i class="bi bi-x-lg"></i> Отмена', Url::to(['repo/index']), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if ($repoForm->scenario !== RepoForm::SCENARIO_CREATE) { ?>
-            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repoForm->getRepo()->id], [
+            <?= Html::a('<i class="bi bi-trash"></i> Удалить', ['delete', 'repoId' => $repoForm->getRepo()->id], [
                 'style' => 'margin-left: 1em',
                 'tabindex' => $tabIndex++,
             ]) ?>

@@ -140,14 +140,14 @@ $this->registerJsFile(
                     data-photo-editor-drag-handle
                     title="Изменить порядок"
                     aria-label="Изменить порядок фотографии"
-                ><i class="glyphicon glyphicon-move" aria-hidden="true"></i></button>
+                ><i class="bi bi-arrows-move" aria-hidden="true"></i></button>
                 <button
                     class="photo-editor__remove"
                     type="button"
                     data-photo-editor-remove
                     title="Убрать"
                     aria-label="Убрать фотографию"
-                ><i class="glyphicon glyphicon-trash" aria-hidden="true"></i></button>
+                ><i class="bi bi-trash" aria-hidden="true"></i></button>
                 <div class="photo-editor__meta">
                     <span class="photo-editor__name" title="<?= Html::encode($name) ?>"><?= Html::encode($name) ?></span>
                     <span class="photo-editor__status" data-photo-editor-status>Готово</span>

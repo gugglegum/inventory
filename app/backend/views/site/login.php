@@ -4,7 +4,7 @@
 /** @var \common\models\LoginForm $model */
 
 use yii\helpers\Html;
-use yii\bootstrap\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 
 $this->title = 'Вход';
 $passwordLoginEnabled = (bool) (Yii::$app->params['auth']['passwordLoginEnabled'] ?? true);
@@ -42,10 +42,10 @@ $ssoLoginEnabled = (bool) (Yii::$app->params['auth']['ssoLoginEnabled'] ?? false
 
                     <?= $form->field($model, 'rememberMe')->checkbox() ?>
 
-                    <div class="form-group">
+                    <div class="mb-3">
                         <?= Html::submitButton(
                             'Войти по паролю',
-                            ['class' => 'btn btn-default', 'name' => 'login-button']
+                            ['class' => 'btn btn-outline-secondary', 'name' => 'login-button']
                         ) ?>
                     </div>
 

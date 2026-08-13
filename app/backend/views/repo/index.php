@@ -32,9 +32,9 @@ $this->registerCssFile('@web/css/repos.css', ['appendTimestamp' => true], 'repos
             </td>
             <td class="count"><?= $repo->getItems()->count() ?></td>
             <td class="actions">
-                <?= Html::a('', \yii\helpers\Url::to(['repo/view', 'repoId' => $repo->id]), ['class' => 'glyphicon glyphicon-eye-open', 'style' => 'margin: 0 20px']) ?>
-                <?= Html::a('', \yii\helpers\Url::to(['repo/update', 'repoId' => $repo->id]), ['class' => 'glyphicon glyphicon-edit', 'style' => 'margin: 0 20px']) ?>
-                <?= Html::a('', \yii\helpers\Url::to(['repo/delete', 'repoId' => $repo->id]), ['class' => 'glyphicon glyphicon-trash', 'style' => 'margin: 0 20px']) ?>
+                <?= Html::a('', \yii\helpers\Url::to(['repo/view', 'repoId' => $repo->id]), ['class' => 'bi bi-eye', 'style' => 'margin: 0 20px', 'title' => 'Просмотреть', 'aria-label' => 'Просмотреть репозиторий']) ?>
+                <?= Html::a('', \yii\helpers\Url::to(['repo/update', 'repoId' => $repo->id]), ['class' => 'bi bi-pencil', 'style' => 'margin: 0 20px', 'title' => 'Изменить', 'aria-label' => 'Изменить репозиторий']) ?>
+                <?= Html::a('', \yii\helpers\Url::to(['repo/delete', 'repoId' => $repo->id]), ['class' => 'bi bi-trash', 'style' => 'margin: 0 20px', 'title' => 'Удалить', 'aria-label' => 'Удалить репозиторий']) ?>
             </td>
         </tr>
         <?php } ?>
@@ -44,6 +44,6 @@ $this->registerCssFile('@web/css/repos.css', ['appendTimestamp' => true], 'repos
     <?php } ?>
 
     <?php if (UserAccess::canCreateRepo()) { ?>
-    <p><?= Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить репозиторий', ['repo/create'], ['class' => 'btn btn-success']) ?></p>
+    <p><?= Html::a('<i class="bi bi-plus-circle" style="margin-right: 5px;"></i> Добавить репозиторий', ['repo/create'], ['class' => 'btn btn-success']) ?></p>
     <?php } ?>
 </div>

@@ -20,9 +20,9 @@ if ($repo) {
             $path[] = [
                 'label' => $tmpItem->name,
                 'url' => ['items/view', 'repoId' => $repo->id, 'itemId' => $tmpItem->itemId],
-                'template' => empty($path)
-                    ? '<li class="active">{link}<sup style="margin-left: 3px">#' . Html::encode($tmpItem->itemId) . "</sup></li>\n"
-                    : '<li>{link}<sup style="margin-left: 3px; color: #777">#' . Html::encode($tmpItem->itemId) . "</sup></li>\n",
+                'template' => empty($path) && empty($suffix)
+                    ? '<li class="breadcrumb-item active" aria-current="page">{link}<sup style="margin-left: 3px">#' . Html::encode($tmpItem->itemId) . "</sup></li>\n"
+                    : '<li class="breadcrumb-item">{link}<sup style="margin-left: 3px; color: #777">#' . Html::encode($tmpItem->itemId) . "</sup></li>\n",
             ];
             $tmpItem = $tmpItem->parentItem;
         }

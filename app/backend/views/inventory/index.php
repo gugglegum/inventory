@@ -5,7 +5,7 @@ use common\models\Item;
 use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\widgets\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 
 /** @var \yii\web\View $this */
 /** @var Repo $repo */
@@ -31,10 +31,10 @@ $this->registerCssFile('@web/css/inventories.css', ['appendTimestamp' => true], 
                     ],
             ]);
 
-            echo Html::submitButton('<i class="glyphicon glyphicon glyphicon-check" style="margin-right: 5px;"></i> Начать инвентаризацию', [
+            echo Html::submitButton('<i class="bi bi-check-lg" style="margin-right: 5px;"></i> Начать инвентаризацию', [
                     'class' => 'btn btn-primary',
             ]);
-            echo Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $container->itemId]), ['style' => 'margin-left: 1em']);
+            echo Html::a('<i class="bi bi-x-lg"></i> Отмена', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $container->itemId]), ['style' => 'margin-left: 1em']);
             ActiveForm::end();
         } else {
             ?><p>У вас уже есть начатая инвентаризация, вы можете <a href="<?= Html::encode(Url::to(['inventory/view', 'repoId' => $repo->id, 'itemId' => $container->itemId, 'inventoryId' => $container->lastOpenedInventory->id])) ?>">продолжить её</a>.</p>

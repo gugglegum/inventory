@@ -6,7 +6,7 @@ use common\models\PhotoUploadSession;
 use kartik\datetime\DateTimePicker;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\widgets\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 
 /** @var \yii\web\View $this */
 /** @var PostForm $postForm */
@@ -16,7 +16,7 @@ use yii\widgets\ActiveForm;
 /** @var array $photoEntries */
 
 
-/** @var \yii\widgets\ActiveForm $form */
+/** @var \yii\bootstrap5\ActiveForm $form */
 $tabIndex = 1;
 $post = $postForm->getPost();
 ?>
@@ -38,8 +38,15 @@ $post = $postForm->getPost();
                 'placeholder' => 'ДД.ММ.ГГГГ ЧЧ:ММ',
                 'style' => 'width: 150px',
             ],
+            'pickerIcon' => '<i class="bi bi-calendar3 kv-dp-icon"></i>',
             'pluginOptions' => [
                 'format' => 'dd.mm.yyyy hh:ii',
+                'fontAwesome' => false,
+                'icontype' => 'bi',
+                'icons' => [
+                    'leftArrow' => 'bi-chevron-left',
+                    'rightArrow' => 'bi-chevron-right',
+                ],
             ],
             'removeButton' => false,
             'layout' => '{picker}{remove}{input} <span style="position: relative; top: 0.5em; left: 0.5em;">(UTC)</span>',
@@ -47,7 +54,7 @@ $post = $postForm->getPost();
     <?= $form->field($postForm, 'title')->textInput(['maxlength' => true, 'tabindex' => $tabIndex++]) ?>
     <?= $form->field($postForm, 'text')->textarea(['rows' => 4, 'tabindex' => $tabIndex++]) ?>
 
-    <label class="control-label">Фотографии</label>
+    <label class="form-label">Фотографии</label>
     <?= $this->render('//_photo-editor', [
         'photoEditorForm' => $photoEditorForm,
         'photoEntries' => $photoEntries,
@@ -63,13 +70,13 @@ $post = $postForm->getPost();
         'maxUploadBytes' => (int) (Yii::$app->params['photos']['maxUploadBytes'] ?? 0),
     ]) ?>
 
-    <div class="form-group">
+    <div class="mb-3">
         <?= Html::submitButton($post->isNewRecord ? 'Создать' : 'Сохранить', ['class' => $post->isNewRecord ? 'btn btn-success' : 'btn btn-primary', 'tabindex' => $tabIndex++]) ?>
-        <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(
+        <?= Html::a('<i class="bi bi-x-lg"></i> Отмена', Url::to(
                 $post->isNewRecord ? ['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId] : ['view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]
         ), ['tabindex' => $tabIndex++, 'style' => 'margin-left: 1em']) ?>
         <?php if (!$post->isNewRecord) { ?>
-            <?= Html::a('<i class="glyphicon glyphicon-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id], [
+            <?= Html::a('<i class="bi bi-trash"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id], [
                 'style' => 'margin-left: 1em',
                 'tabindex' => $tabIndex++,
             ]) ?>

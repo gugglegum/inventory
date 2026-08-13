@@ -7,9 +7,9 @@ use backend\assets\AppAsset;
 use common\models\User;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\bootstrap\Nav;
-use yii\bootstrap\NavBar;
-use yii\widgets\Breadcrumbs;
+use yii\bootstrap5\Nav;
+use yii\bootstrap5\NavBar;
+use yii\bootstrap5\Breadcrumbs;
 use common\widgets\Alert;
 
 AppAsset::register($this);
@@ -35,7 +35,7 @@ AppAsset::register($this);
         'brandImage' => Url::to('@web/images/logo.svg'),
         'brandUrl' => Yii::$app->homeUrl,
         'options' => [
-            'class' => 'navbar-inverse navbar-static-top',
+            'class' => 'navbar-expand-md navbar-dark bg-dark',
         ],
     ]);
     $menuItems = [];
@@ -58,7 +58,7 @@ AppAsset::register($this);
         ];
     }
     echo Nav::widget([
-        'options' => ['class' => 'navbar-nav navbar-right'],
+        'options' => ['class' => 'navbar-nav ms-auto'],
         'items' => $menuItems,
     ]);
     NavBar::end();
@@ -75,10 +75,10 @@ AppAsset::register($this);
 </div>
 
 <footer class="footer">
-    <div class="container">
-        <p class="pull-left">&copy; Павел Мелехов 2015&mdash;<?= date('Y') ?></p>
+    <div class="container footer-content">
+        <p>&copy; Павел Мелехов 2015&mdash;<?= date('Y') ?></p>
 
-        <p class="pull-right"><?= Yii::powered() ?></p>
+        <p><?= Yii::powered() ?></p>
     </div>
 </footer>
 

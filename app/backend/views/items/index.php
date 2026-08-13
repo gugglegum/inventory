@@ -55,7 +55,7 @@ $this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo]);
         <p>Здесь пока ничего нет.</p>
     <?php } ?>
 
-    <p><?= Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить контейнер', ['items/create', 'repoId' => $repo->id, 'parentItemId' => 0, 'isContainer' => 1], ['class' => 'btn btn-success']) ?></p>
+    <p><?= Html::a('<i class="bi bi-plus-circle" style="margin-right: 5px;"></i> Добавить контейнер', ['items/create', 'repoId' => $repo->id, 'parentItemId' => 0, 'isContainer' => 1], ['class' => 'btn btn-success']) ?></p>
 
 
 </div>

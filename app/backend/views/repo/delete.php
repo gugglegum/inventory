@@ -3,7 +3,7 @@
 use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\widgets\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 
 /** @var \yii\web\View $this */
 /** @var Repo $repo */
@@ -55,14 +55,14 @@ $this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo, 'suffix' => [$t
 
     <?= $form->errorSummary($repo) ?>
 
-    <?= Html::submitButton('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', [
+    <?= Html::submitButton('<i class="bi bi-trash" style="margin-right: 5px;"></i> Удалить', [
         'class' => 'btn btn-danger',
         'data' => [
             'confirm' => 'Вы действительно хотите удалить этот репозиторий?',
             'method' => 'post',
         ],
     ]) ?>
-    <?= Html::a('<i class="glyphicon glyphicon-remove"></i> Отмена', Url::to(['repo/index']), ['style' => 'margin-left: 1em']) ?>
+    <?= Html::a('<i class="bi bi-x-lg"></i> Отмена', Url::to(['repo/index']), ['style' => 'margin-left: 1em']) ?>
     <?php ActiveForm::end(); ?>
 
 </div>

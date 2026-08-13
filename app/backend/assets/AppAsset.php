@@ -18,13 +18,15 @@ class AppAsset extends AssetBundle
     public $basePath = '@webroot';
     public $baseUrl = '@web';
     public $css = [
+        'css/bootstrap-compat.css',
         'css/site.css',
     ];
     public $js = [
     ];
     public $depends = [
         'yii\web\YiiAsset',
-        'yii\bootstrap\BootstrapAsset',
+        'yii\bootstrap5\BootstrapPluginAsset',
+        'yii\bootstrap5\BootstrapIconAsset',
     ];
     public $cssOptions = [
         'appendTimestamp' => true,

@@ -60,7 +60,7 @@ if ($description !== '') {
 
     <dl id="item-description">
         <div id="lnkEdit">
-            <?= Html::a('<i class="glyphicon glyphicon-edit" style="margin-right: 5px;"></i> Изменить', ['update', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
+            <?= Html::a('<i class="bi bi-pencil" style="margin-right: 5px;"></i> Изменить', ['update', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
         </div>
         <dt>Описание</dt>
         <dd><?= $description ?></dd>
@@ -76,7 +76,7 @@ if ($description !== '') {
     echo "<p class='hint-block'><em>Нет заметок</em></p>\n";
 } ?>
             <div class="add-post-link">
-                <?= Html::a('<i class="glyphicon glyphicon-plus-sign"></i> Добавить заметку', ['posts/create', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
+                <?= Html::a('<i class="bi bi-plus-circle"></i> Добавить заметку', ['posts/create', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
             </div>
         </div>
     </dl>
@@ -192,7 +192,7 @@ if ($description !== '') {
                     <?php if ($model->lastOpenedInventory !== null) { ?>
                         + есть незаконченная инвентаризация, <a href="<?= Html::encode(Url::to(['inventory/view', 'repoId' => $repo->id, 'itemId' => $model->itemId, 'inventoryId' => $model->lastOpenedInventory->id])) ?>">продолжить</a>.
                     <?php } ?>
-                        <p><?= Html::a('<i class="glyphicon glyphicon-check" style="margin-right: 5px;"></i> Инвентаризации', ['inventory/index', 'repoId' => $repo->id, 'itemId' => $model->itemId]); ?></p>
+                        <p><?= Html::a('<i class="bi bi-check-lg" style="margin-right: 5px;"></i> Инвентаризации', ['inventory/index', 'repoId' => $repo->id, 'itemId' => $model->itemId]); ?></p>
                     </dd>
                 </dl>
                 <?php } ?>
@@ -203,13 +203,13 @@ if ($description !== '') {
         <div id="item-children">
 
             <div class="dropdown" style="float:right">
-                <span class="dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
-                    <div id="optionDots"><i class="glyphicon glyphicon-option-vertical" ></i></div>
-                </span>
-                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu1">
-                    <li><a id="menuItemGroupOperation"><span class="glyphicon glyphicon-th-list"></span> Групповые операции</a></li>
-                    <li><a id="menuItemCheckAll"><span class="glyphicon glyphicon-check"></span> Выделить все</a></li>
-                    <li><a id="menuItemUncheckAll"><span class="glyphicon glyphicon-unchecked"></span> Снять все</a></li>
+                <button type="button" id="itemChildrenMenu" class="btn btn-link p-0 text-body" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Действия с предметами">
+                    <span id="optionDots"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="itemChildrenMenu">
+                    <li><button type="button" class="dropdown-item" id="menuItemGroupOperation"><span class="bi bi-list-task" aria-hidden="true"></span> Групповые операции</button></li>
+                    <li><button type="button" class="dropdown-item" id="menuItemCheckAll"><span class="bi bi-check-lg" aria-hidden="true"></span> Выделить все</button></li>
+                    <li><button type="button" class="dropdown-item" id="menuItemUncheckAll"><span class="bi bi-square" aria-hidden="true"></span> Снять все</button></li>
                 </ul>
             </div>
 
@@ -231,7 +231,7 @@ if ($description !== '') {
 
             <p style="margin-top: 1em"><?php
             if ($model->isContainer) {
-                echo Html::a('<i class="glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Добавить предмет внутрь', ['items/create', 'repoId' => $repo->id, 'parentItemId' => $model->itemId], ['class' => 'btn btn-success']);
+                echo Html::a('<i class="bi bi-plus-circle" style="margin-right: 5px;"></i> Добавить предмет внутрь', ['items/create', 'repoId' => $repo->id, 'parentItemId' => $model->itemId], ['class' => 'btn btn-success']);
             }
             ?></p>
 
@@ -247,6 +247,6 @@ if ($description !== '') {
     <div class="clearfix"></div>
 
     <p style="margin-top: 3em">
-        <?= Html::a('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
+        <?= Html::a('<i class="bi bi-trash" style="margin-right: 5px;"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
     </p>
 </div>

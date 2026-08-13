@@ -40,13 +40,21 @@
 #idForm input#inputId {
     width: 4.8em;
 }
-#idForm .glyphicon-arrow-up {
+#idForm button[type="submit"] {
+    width: 30px;
+    height: 26px;
+    padding: 1px 6px;
+    color: inherit;
+    border: 1px solid #767676;
+    border-radius: 2px;
+}
+#idForm .bi-arrow-up {
     margin-right: 0.75em;
 }
-#idForm .glyphicon-arrow-left {
+#idForm .bi-arrow-left {
     margin-right: 0.75em;
 }
-#idForm .glyphicon-arrow-right {
+#idForm .bi-arrow-right {
     margin-left: 0.75em;
 }
 #searchFormGroup {

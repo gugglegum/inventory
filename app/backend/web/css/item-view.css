@@ -1,5 +1,6 @@
 #item-view #item-description {
     max-width: 60em;
+    margin-bottom: 20px;
 }
 #item-view h1 {
     font-size: 30px;
@@ -72,7 +73,7 @@
 #item-view #item-description #item-post .add-post-link {
     margin: 1em;
 }
-#item-view #item-description #item-post .add-post-link .glyphicon {
+#item-view #item-description #item-post .add-post-link .bi {
     margin-right: 5px;
 }
 #item-view #item-description #item-post ul {

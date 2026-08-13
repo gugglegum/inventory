@@ -34,7 +34,7 @@ if ($text !== '') {
 
     <dl id="post-text">
         <div id="lnkEdit">
-            <?= Html::a('<i class="glyphicon glyphicon-edit" style="margin-right: 5px;"></i> Изменить', ['update', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]) ?>
+            <?= Html::a('<i class="bi bi-pencil" style="margin-right: 5px;"></i> Изменить', ['update', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]) ?>
         </div>
         <div><?= $text ?></div>
     </dl>
@@ -82,6 +82,6 @@ if ($text !== '') {
     </div>
 
     <p style="margin-top: 3em">
-        <?= Html::a('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id], []) ?>
+        <?= Html::a('<i class="bi bi-trash" style="margin-right: 5px;"></i> Удалить', ['delete', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id], []) ?>
     </p>
 </div>

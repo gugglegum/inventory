@@ -21,7 +21,7 @@
 #divParentPreview table.container-items tr {
     border-bottom: none;
 }
-#divParentPreview table.container-items td.thumbnail {
+#divParentPreview table.container-items td.item-thumbnail {
     margin: 5px 0;
 }
 #divParentPreview table.container-items td.details {

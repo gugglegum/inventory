@@ -7,7 +7,7 @@ use common\models\Item;
 use common\models\Repo;
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\bootstrap\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 
 /** @var \yii\web\View $this */
 /** @var \common\models\Inventory $inventory */
@@ -43,7 +43,7 @@ $unconfirmedBottomCallback = function (Item $item) use ($inventory) {
     $inventoryItem = new InventoryItemConfirmForm();
     $inventoryItem->itemId = (string) $item->itemId;
     echo $form->field($inventoryItem, 'itemId')->hiddenInput()->label(false);
-    echo Html::submitButton('<i class="glyphicon glyphicon glyphicon-plus-sign" style="margin-right: 5px;"></i> Подтвердить наличие', [
+    echo Html::submitButton('<i class="bi bi-plus-circle" style="margin-right: 5px;"></i> Подтвердить наличие', [
         'class' => 'btn btn-primary',
     ]);
     ActiveForm::end();
@@ -61,7 +61,7 @@ $confirmedBottomCallback = function (Item $item) use ($inventory) {
     $inventoryItem = new InventoryItemUnconfirmForm();
     $inventoryItem->itemId = (string) $item->itemId;
     echo $form->field($inventoryItem, 'itemId')->hiddenInput()->label(false);
-    echo Html::submitButton('<i class="glyphicon glyphicon glyphicon-minus-sign" style="margin-right: 5px;"></i> Снять подтверждение', [
+    echo Html::submitButton('<i class="bi bi-dash-circle" style="margin-right: 5px;"></i> Снять подтверждение', [
         'class' => 'btn btn-danger',
     ]);
     ActiveForm::end();
@@ -104,17 +104,16 @@ $tabIndex = 1;
                 <?php
                 $form = ActiveForm::begin([
                     'method' => 'post',
-                    'options' => ['class' => 'inventory-by-item-id form-inline'],
+                    'options' => ['class' => 'inventory-by-item-id d-flex flex-wrap align-items-end gap-2'],
                     'fieldConfig' => [
-                        'options' => ['class' => 'form-group', 'style' => 'margin-right: 10px;'],
-                        'labelOptions' => ['style' => 'margin-right: 6px;'],
+                        'options' => ['class' => 'mb-0'],
                     ],
                     'validateOnBlur' => false,
                 ]);
                 echo $form->field($inventoryItemConfirm, 'itemId', [
                     'inputTemplate' =>
                         '<div class="input-group" style="width:auto;">' .
-                        '<span class="input-group-addon">' . Html::encode($repo->id) . '#</span>' .
+                        '<span class="input-group-text">' . Html::encode($repo->id) . '#</span>' .
                         '{input}' .
                         '</div>',
                     ])
@@ -125,8 +124,8 @@ $tabIndex = 1;
                     ]);
 
                 echo Html::submitButton(
-                    '<i class="glyphicon glyphicon-plus-sign" style="margin-right:5px;"></i> Подтвердить наличие',
-                    ['class' => 'btn btn-primary', 'encode' => false, 'style' => 'vertical-align: top;']
+                    '<i class="bi bi-plus-circle" style="margin-right:5px;"></i> Подтвердить наличие',
+                    ['class' => 'btn btn-primary', 'encode' => false]
                 );
                 ActiveForm::end();
                 ?>
@@ -156,17 +155,16 @@ $tabIndex = 1;
                 <?php
                 $form = ActiveForm::begin([
                     'method' => 'post',
-                    'options' => ['class' => 'inventory-by-item-id form-inline'],
+                    'options' => ['class' => 'inventory-by-item-id d-flex flex-wrap align-items-end gap-2'],
                     'fieldConfig' => [
-                        'options' => ['class' => 'form-group', 'style' => 'margin-right: 10px;'],
-                        'labelOptions' => ['style' => 'margin-right: 6px;'],
+                        'options' => ['class' => 'mb-0'],
                     ],
                     'validateOnBlur' => false,
                 ]);
                 echo $form->field($inventoryItemUnconfirm, 'itemId', [
                     'inputTemplate' =>
                         '<div class="input-group" style="width:auto;">' .
-                        '<span class="input-group-addon">' . Html::encode($repo->id) . '#</span>' .
+                        '<span class="input-group-text">' . Html::encode($repo->id) . '#</span>' .
                         '{input}' .
                         '</div>',
                     ])
@@ -177,8 +175,8 @@ $tabIndex = 1;
                     ]);
 
                 echo Html::submitButton(
-                    '<i class="glyphicon glyphicon-minus-sign" style="margin-right:5px;"></i> Снять подтверждение',
-                    ['class' => 'btn btn-danger', 'encode' => false, 'style' => 'vertical-align: top;']
+                    '<i class="bi bi-dash-circle" style="margin-right:5px;"></i> Снять подтверждение',
+                    ['class' => 'btn btn-danger', 'encode' => false]
                 );
                 ActiveForm::end();
                 ?>
@@ -232,7 +230,7 @@ $tabIndex = 1;
                     'options' => [
                     ],
             ]);
-            echo Html::submitButton('<i class="glyphicon glyphicon glyphicon-check" style="margin-right: 5px;"></i> Завершить инвентаризацию', [
+            echo Html::submitButton('<i class="bi bi-check-lg" style="margin-right: 5px;"></i> Завершить инвентаризацию', [
                     'class' => 'btn btn-success',
             ]);
             ActiveForm::end();
@@ -244,7 +242,7 @@ $tabIndex = 1;
                     'options' => [
                     ],
             ]);
-            echo Html::submitButton('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Отмена', [
+            echo Html::submitButton('<i class="bi bi-trash" style="margin-right: 5px;"></i> Отмена', [
                     'class' => 'btn btn-danger',
                     'data' => [
                         'confirm' => 'Вы действительно хотите отменить эту инвентаризацию?',
@@ -265,7 +263,7 @@ $tabIndex = 1;
             ],
         ]); ?>
 
-        <?= Html::submitButton('<i class="glyphicon glyphicon-trash" style="margin-right: 5px;"></i> Удалить', [
+        <?= Html::submitButton('<i class="bi bi-trash" style="margin-right: 5px;"></i> Удалить', [
             'class' => 'btn btn-danger',
             'data' => [
                 'confirm' => 'Вы действительно хотите удалить эту инвентаризацию?',

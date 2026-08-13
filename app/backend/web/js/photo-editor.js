@@ -445,13 +445,13 @@
         card._photoEditorFile = file;
         card.innerHTML = [
             '<div class="photo-editor__placeholder" aria-hidden="true">',
-            '<i class="glyphicon glyphicon-picture photo-editor__placeholder-icon"></i>',
+            '<i class="bi bi-image photo-editor__placeholder-icon"></i>',
             '</div>',
             '<button class="photo-editor__drag-handle" type="button" data-photo-editor-drag-handle title="Изменить порядок" aria-label="Изменить порядок фотографии">',
-            '<i class="glyphicon glyphicon-move" aria-hidden="true"></i>',
+            '<i class="bi bi-arrows-move" aria-hidden="true"></i>',
             '</button>',
             '<button class="photo-editor__remove" type="button" data-photo-editor-remove title="Убрать" aria-label="Убрать фотографию">',
-            '<i class="glyphicon glyphicon-trash" aria-hidden="true"></i>',
+            '<i class="bi bi-trash" aria-hidden="true"></i>',
             '</button>',
             '<div class="photo-editor__meta">',
             '<span class="photo-editor__name"></span>',
@@ -772,7 +772,7 @@
             retry.setAttribute('data-photo-editor-retry', '');
             retry.title = 'Повторить';
             retry.setAttribute('aria-label', 'Повторить загрузку');
-            retry.innerHTML = '<i class="glyphicon glyphicon-repeat" aria-hidden="true"></i>';
+            retry.innerHTML = '<i class="bi bi-arrow-repeat" aria-hidden="true"></i>';
             card.appendChild(retry);
         }
 

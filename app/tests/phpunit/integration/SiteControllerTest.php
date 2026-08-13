@@ -115,6 +115,12 @@ final class SiteControllerTest extends DbTestCase
         self::assertStringContainsString('Используйте для входа учётную запись pyrda.ru.', $response);
         self::assertStringContainsString('Войти через Pyrda SSO', $response);
         self::assertStringContainsString('Войти по паролю', $response);
+        self::assertStringContainsString('form-label', $response);
+        self::assertStringContainsString('form-control', $response);
+        self::assertStringContainsString('form-check-input', $response);
+        self::assertStringContainsString('btn btn-outline-secondary', $response);
+        self::assertStringNotContainsString('form-group', $response);
+        self::assertStringNotContainsString('glyphicon', $response);
         self::assertStringNotContainsString('Временный вход', $response);
         self::assertStringNotContainsString('на время перехода', $response);
     }

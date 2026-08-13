@@ -35,7 +35,7 @@ $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 're
 
     <table class="container-items">
         <tr>
-            <td class="thumbnail">
+            <td class="item-thumbnail">
                 <?php
                 $primaryPhoto = $parentContainer->primaryPhoto;
                 if ($primaryPhoto) {
@@ -86,10 +86,16 @@ $this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 're
 
                 <div class="name">
                     <?= Html::encode($parentContainer->name) ?>&nbsp;<sup style="color: #ccc; font-size: 60%;">#<?= Html::encode($parentContainer->id) ?></sup>
-                    <?= Html::a('', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $parentContainer->itemId]), ['class' => 'glyphicon glyphicon-new-window view-link', 'style' => 'margin-left: 5px', 'target' => '_parent']) ?>
+                    <?= Html::a('', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $parentContainer->itemId]), [
+                        'class' => 'bi bi-box-arrow-up-right view-link',
+                        'style' => 'margin-left: 5px',
+                        'target' => '_parent',
+                        'title' => 'Открыть предмет',
+                        'aria-label' => 'Открыть предмет',
+                    ]) ?>
                 </div>
 
-                <button type="button" id="btnPick" class="btn btn-primary" data-toggle="modal" data-container-id="<?= $parentContainer->itemId ?>">
+                <button type="button" id="btnPick" class="btn btn-primary" data-container-id="<?= $parentContainer->itemId ?>">
                     Выбрать
                 </button>
 

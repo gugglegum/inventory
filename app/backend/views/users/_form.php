@@ -1,12 +1,12 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
+use yii\bootstrap5\ActiveForm;
 use common\models\User;
 
 /** @var yii\web\View $this */
 /** @var backend\models\UserForm $model */
-/** @var yii\widgets\ActiveForm $form */
+/** @var yii\bootstrap5\ActiveForm $form */
 ?>
 
 <div class="user-form">
@@ -30,7 +30,7 @@ use common\models\User;
         User::STATUS_DELETED => 'DELETED',
     ]) ?>
 
-    <div class="form-group">
+    <div class="mb-3">
         <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
     </div>
 

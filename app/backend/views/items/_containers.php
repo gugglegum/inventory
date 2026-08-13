@@ -22,7 +22,7 @@ $this->render('//_fancybox');
     <table class="container-items">
         <?php foreach ($containers as $item) { ?>
             <tr>
-                <td class="thumbnail" style="height: 52px; width: 52px">
+                <td class="item-thumbnail" style="height: 52px; width: 52px">
                     <?php
                     $primaryPhoto = $item->primaryPhoto;
                     if ($primaryPhoto) {
@@ -70,7 +70,13 @@ $this->render('//_fancybox');
                         <?= Html::beginTag('a', ['href' => Url::to(['items/pick-container', 'repoId' => $repo->id, 'itemId' => $item->itemId])])
                         . Html::encode($item->name)
                         . Html::endTag('a') ?>&nbsp;<sup style="color: #ccc; font-size: 60%;"><?= Html::encode($item->repoId) ?>#<?= Html::encode($item->itemId) ?></sup>
-                        <?= Html::a('', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]), ['class' => 'glyphicon glyphicon-new-window view-link', 'style' => 'margin-left: 5px', 'target' => '_parent']) ?>
+                        <?= Html::a('', Url::to(['items/view', 'repoId' => $repo->id, 'itemId' => $item->itemId]), [
+                            'class' => 'bi bi-box-arrow-up-right view-link',
+                            'style' => 'margin-left: 5px',
+                            'target' => '_parent',
+                            'title' => 'Открыть предмет',
+                            'aria-label' => 'Открыть предмет',
+                        ]) ?>
                     </div>
 
                 </td>

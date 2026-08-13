@@ -17,7 +17,12 @@ use yii\helpers\Url;
     <?php foreach ($item->posts as $post) { ?>
         <li>
             <div class="title"><?= Html::encode(date('d.m.Y', $post->datetime)) ?> <?= Html::a($post->title, ['posts/view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]) ?><?=
-                Html::a('', Url::to(['posts/update', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-left: 5px']) ?></div>
+                Html::a('', Url::to(['posts/update', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]), [
+                    'class' => 'bi bi-pencil edit-link',
+                    'style' => 'margin-left: 5px',
+                    'title' => 'Изменить заметку',
+                    'aria-label' => 'Изменить заметку',
+                ]) ?></div>
             <div class="text"><?php
                 // Выводим укороченный текст, если он слишком длинное. Заменяем в нём все избыточные белые
                 // пробелы на обычные пробелы.

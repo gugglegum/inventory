@@ -1,13 +1,14 @@
 html,
 body {
     height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .wrap {
-    min-height: 100%;
+    min-height: 0;
     height: auto;
-    margin: 0 auto -60px;
-    padding: 0 0 60px;
+    flex: 1 0 auto;
 }
 
 .wrap > .container {
@@ -15,18 +16,39 @@ body {
 }
 
 .footer {
-    height: 60px;
+    min-height: 60px;
+    flex-shrink: 0;
     background-color: #f5f5f5;
     border-top: 1px solid #ddd;
-    padding-top: 20px;
+    padding: 12px 0;
 }
 
-.jumbotron {
+.footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 16px;
+}
+
+.footer-content p {
+    margin: 4px 0;
+}
+
+@media (max-width: 575.98px) {
+    .footer-content {
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+}
+
+.site-hero {
     text-align: center;
     background-color: transparent;
 }
 
-.jumbotron .btn {
+.site-hero .btn {
     font-size: 21px;
     padding: 14px 24px;
 }
@@ -41,7 +63,7 @@ a.asc:after, a.desc:after {
     position: relative;
     top: 1px;
     display: inline-block;
-    font-family: 'Glyphicons Halflings';
+    font-family: bootstrap-icons;
     font-style: normal;
     font-weight: normal;
     line-height: 1;
@@ -49,27 +71,27 @@ a.asc:after, a.desc:after {
 }
 
 a.asc:after {
-    content: /*"\e113"*/ "\e151";
+    content: "\f57b";
 }
 
 a.desc:after {
-    content: /*"\e114"*/ "\e152";
+    content: "\f575";
 }
 
 .sort-numerical a.asc:after {
-    content: "\e153";
+    content: "\f579";
 }
 
 .sort-numerical a.desc:after {
-    content: "\e154";
+    content: "\f577";
 }
 
 .sort-ordinal a.asc:after {
-    content: "\e155";
+    content: "\f573";
 }
 
 .sort-ordinal a.desc:after {
-    content: "\e156";
+    content: "\f571";
 }
 
 .grid-view th {

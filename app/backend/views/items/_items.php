@@ -22,7 +22,7 @@ $this->render('//_fancybox');
 <table class="container-items">
     <?php foreach ($items as $item) { ?>
         <tr id="<?= 'item' . $item->repoId . '-' . $item->itemId ?>">
-            <td class="thumbnail">
+            <td class="item-thumbnail">
                 <?php
                 $primaryPhoto = $item->primaryPhoto;
                 if ($primaryPhoto) {
@@ -61,7 +61,12 @@ $this->render('//_fancybox');
                     <?= Html::beginTag('a', ['href' => Url::to(['items/view', 'repoId' => $item->repoId, 'itemId' => $item->itemId])])
                         . Html::encode($item->name)
                         . Html::endTag('a') ?>&nbsp;<sup><?= Html::encode($item->repoId) ?>#<?= Html::encode($item->itemId) ?></sup><?=
-                        Html::a('', Url::to(['items/update', 'repoId' => $item->repoId, 'itemId' => $item->itemId]), ['class' => 'glyphicon glyphicon-edit edit-link', 'style' => 'margin-left: 5px']) ?>
+                        Html::a('', Url::to(['items/update', 'repoId' => $item->repoId, 'itemId' => $item->itemId]), [
+                            'class' => 'bi bi-pencil edit-link',
+                            'style' => 'margin-left: 5px',
+                            'title' => 'Изменить предмет',
+                            'aria-label' => 'Изменить предмет',
+                        ]) ?>
                 </div>
 
                 <?php $secondaryPhotos = $item->secondaryPhotos; if (count($secondaryPhotos) != 0) { ?>

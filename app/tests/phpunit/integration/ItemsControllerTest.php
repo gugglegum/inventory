@@ -52,6 +52,10 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringContainsString($rootContainer->name, $response);
         self::assertStringContainsString($childContainer->name, $response);
         self::assertStringContainsString('Выбрать', $response);
+        self::assertStringContainsString('class="item-thumbnail"', $response);
+        self::assertStringContainsString('bi bi-box-arrow-up-right', $response);
+        self::assertStringNotContainsString('class="thumbnail"', $response);
+        self::assertStringNotContainsString('data-toggle=', $response);
     }
 
     /**
@@ -145,6 +149,8 @@ final class ItemsControllerTest extends DbTestCase
     public function testViewRendersItemPage(): void
     {
         [$controller, $repo, $parent, $item] = $this->prepareItemViewFixture();
+        $item->isContainer = 1;
+        self::assertTrue($item->save(false));
         $this->createItemPhoto($item);
 
         $this->setGetRequest(['q' => 'usb']);
@@ -155,7 +161,37 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringContainsString('Просматриваемый предмет', $response);
         self::assertStringContainsString('usb', $response);
         self::assertStringContainsString('data-fancybox="item-photos"', $response);
+        self::assertStringContainsString('data-bs-toggle="dropdown"', $response);
+        self::assertStringContainsString('dropdown-menu dropdown-menu-end', $response);
+        self::assertStringContainsString('class="dropdown-item"', $response);
+        self::assertStringContainsString('bi bi-three-dots-vertical', $response);
         self::assertStringNotContainsString('rel="item-photos"', $response);
+        self::assertStringNotContainsString('data-toggle="dropdown"', $response);
+    }
+
+    /**
+     * GET create рендерит Bootstrap 5 форму и модальное окно выбора контейнера.
+     */
+    public function testCreateGetRendersBootstrapFiveFormAndContainerModal(): void
+    {
+        [$controller, $repo, $parent] = $this->prepareItemFormFixture();
+
+        $this->setGetRequest();
+
+        $response = $controller->actionCreate($repo->id, (int) $parent->itemId);
+
+        self::assertIsString($response);
+        self::assertStringContainsString('form-label', $response);
+        self::assertStringContainsString('form-control', $response);
+        self::assertStringContainsString('form-check-input', $response);
+        self::assertStringContainsString('data-bs-toggle="modal"', $response);
+        self::assertStringContainsString('data-bs-target="#pickContainerModal"', $response);
+        self::assertStringContainsString('class="btn-close"', $response);
+        self::assertStringContainsString('data-bs-dismiss="modal"', $response);
+        self::assertStringNotContainsString('data-toggle=', $response);
+        self::assertStringNotContainsString('data-target=', $response);
+        self::assertStringNotContainsString('data-dismiss=', $response);
+        self::assertStringNotContainsString('glyphicon', $response);
     }
 
     /**

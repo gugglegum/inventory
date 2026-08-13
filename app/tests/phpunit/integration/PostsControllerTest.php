@@ -154,6 +154,11 @@ final class PostsControllerTest extends DbTestCase
         self::assertStringContainsString('data-entry-id="' . $postPhoto->id . '"', $response);
         self::assertStringContainsString('data-upload-context="post"', $response);
         self::assertMatchesRegularExpression('/data-fancybox="photo-editor-[0-9a-f]{12}"/', $response);
+        self::assertStringContainsString('bi bi-calendar3 kv-dp-icon', $response);
+        self::assertStringContainsString('form-label', $response);
+        self::assertStringContainsString('form-control', $response);
+        self::assertStringNotContainsString('fas fa-calendar-alt', $response);
+        self::assertStringNotContainsString('glyphicon', $response);
     }
 
     /**

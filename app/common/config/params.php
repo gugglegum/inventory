@@ -37,6 +37,7 @@ $trustedProxies = $trustedProxiesString === false
     : preg_split('/\s*,\s*/', trim($trustedProxiesString), -1, PREG_SPLIT_NO_EMPTY);
 
 return [
+    'bsVersion' => '5.x',
     'adminEmail' => 'admin@example.com',
     'supportEmail' => 'support@example.com',
     'user.passwordResetTokenExpire' => 3600,

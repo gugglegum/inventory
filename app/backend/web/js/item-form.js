@@ -11,8 +11,8 @@ $(document).ready(function() {
         modalBody.html(iframe);
     });
     // When modal closes - remove iframe to clear navigation history (although works only in Firefox)
-    $('#pickContainerModal').on('hidden.bs.modal', function () {
-        $('.modal-body', $('#pickContainerModal')).html('');
+    document.getElementById('pickContainerModal').addEventListener('hidden.bs.modal', function () {
+        $('.modal-body', this).html('');
     });
 
     let updateTimeoutId = undefined;
