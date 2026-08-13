@@ -188,6 +188,12 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringContainsString('data-bs-target="#pickContainerModal"', $response);
         self::assertStringContainsString('class="btn-close"', $response);
         self::assertStringContainsString('data-bs-dismiss="modal"', $response);
+        self::assertStringContainsString(
+            'class="photo-editor__drop-slot photo-editor__drop-slot--wide"',
+            $response
+        );
+        self::assertStringContainsString('data-photo-editor-droparea', $response);
+        self::assertStringNotContainsString('photo-editor__droparea--compact', $response);
         self::assertStringNotContainsString('data-toggle=', $response);
         self::assertStringNotContainsString('data-target=', $response);
         self::assertStringNotContainsString('data-dismiss=', $response);

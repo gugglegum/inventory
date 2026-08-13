@@ -205,6 +205,7 @@
         this.root = root;
         this.form = root.closest('form');
         this.droparea = root.querySelector('[data-photo-editor-droparea]');
+        this.dropSlot = root.querySelector('[data-photo-editor-drop-slot]');
         this.input = root.querySelector('[data-photo-editor-input]');
         this.list = root.querySelector('[data-photo-editor-list]');
         this.empty = root.querySelector('[data-photo-editor-empty]');
@@ -327,8 +328,8 @@
             event.preventDefault();
             card = handle.closest('[data-photo-editor-card]');
             sibling = event.key === 'ArrowLeft' || event.key === 'ArrowUp'
-                ? card.previousElementSibling
-                : card.nextElementSibling;
+                ? self.previousCard(card)
+                : self.nextCard(card);
 
             if (!sibling) {
                 return;
@@ -364,6 +365,26 @@
         return arrayFrom(event.dataTransfer && event.dataTransfer.types).indexOf('Files') !== -1;
     };
 
+    PhotoEditor.prototype.previousCard = function(card) {
+        var sibling = card ? card.previousElementSibling : null;
+
+        while (sibling && !sibling.hasAttribute('data-photo-editor-card')) {
+            sibling = sibling.previousElementSibling;
+        }
+
+        return sibling;
+    };
+
+    PhotoEditor.prototype.nextCard = function(card) {
+        var sibling = card ? card.nextElementSibling : null;
+
+        while (sibling && !sibling.hasAttribute('data-photo-editor-card')) {
+            sibling = sibling.nextElementSibling;
+        }
+
+        return sibling;
+    };
+
     PhotoEditor.prototype.addFiles = function(files) {
         var self = this;
 
@@ -378,7 +399,7 @@
             var card = self.createUploadCard(file);
             var validationError = self.validateFile(file);
 
-            self.list.appendChild(card);
+            self.list.insertBefore(card, self.dropSlot || null);
 
             if (validationError !== '') {
                 self.setCardError(card, validationError, false);
@@ -1139,12 +1160,24 @@
     };
 
     PhotoEditor.prototype.updateState = function() {
+        var hasCards = this.list.querySelector('[data-photo-editor-card]') !== null;
+
         if (this.manifestInput) {
             this.manifestInput.value = JSON.stringify(this.manifest());
         }
 
         if (this.empty) {
-            this.empty.hidden = this.list.querySelector('[data-photo-editor-card]') !== null;
+            this.empty.hidden = hasCards;
+        }
+
+        this.root.classList.toggle('photo-editor--has-cards', hasCards);
+
+        if (this.dropSlot) {
+            this.dropSlot.classList.toggle('photo-editor__drop-slot--wide', !hasCards);
+        }
+
+        if (this.droparea) {
+            this.droparea.classList.toggle('photo-editor__droparea--compact', hasCards);
         }
 
         if (!this.hasBlockingCards() && this.message && this.message.getAttribute('data-message-kind') === 'blocking') {

@@ -153,6 +153,13 @@ final class PostsControllerTest extends DbTestCase
         self::assertStringContainsString('data-entry-type="existing"', $response);
         self::assertStringContainsString('data-entry-id="' . $postPhoto->id . '"', $response);
         self::assertStringContainsString('data-upload-context="post"', $response);
+        self::assertStringContainsString('class="photo-editor photo-editor--has-cards"', $response);
+        self::assertStringContainsString('class="photo-editor__drop-slot"', $response);
+        self::assertStringContainsString(
+            'class="photo-editor__droparea photo-editor__droparea--compact"',
+            $response
+        );
+        self::assertStringNotContainsString('photo-editor__drop-slot--wide', $response);
         self::assertMatchesRegularExpression('/data-fancybox="photo-editor-[0-9a-f]{12}"/', $response);
         self::assertStringContainsString('bi bi-calendar3 kv-dp-icon', $response);
         self::assertStringContainsString('form-label', $response);

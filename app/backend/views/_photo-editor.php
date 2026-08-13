@@ -48,7 +48,7 @@ $this->registerJsFile(
 
 <div
     id="<?= Html::encode($editorId) ?>"
-    class="photo-editor"
+    class="photo-editor<?= $photoEntries !== [] ? ' photo-editor--has-cards' : '' ?>"
     data-photo-editor
     data-create-session-url="<?= Html::encode($createSessionUrl) ?>"
     data-repo-id="<?= $repoId ?>"
@@ -72,28 +72,6 @@ $this->registerJsFile(
         'revision',
         ['data-photo-editor-revision' => true]
     ) ?>
-
-    <div
-        class="photo-editor__droparea"
-        data-photo-editor-droparea
-        role="button"
-        tabindex="0"
-        aria-controls="<?= Html::encode($editorId) ?>-input"
-    >
-        <span class="photo-editor__droparea-title">Добавить фотографии</span>
-        <span class="photo-editor__droparea-hint">
-            Нажмите для выбора файлов, перетащите их сюда или вставьте изображение из буфера обмена
-        </span>
-        <input
-            id="<?= Html::encode($editorId) ?>-input"
-            class="photo-editor__file-input"
-            type="file"
-            accept="<?= Html::encode($accept) ?>"
-            multiple
-            data-photo-editor-input
-            tabindex="-1"
-        >
-    </div>
 
     <div
         class="photo-editor__message alert alert-danger"
@@ -157,6 +135,35 @@ $this->registerJsFile(
                 </div>
             </article>
         <?php } ?>
+
+        <div
+            class="photo-editor__drop-slot<?= $photoEntries === [] ? ' photo-editor__drop-slot--wide' : '' ?>"
+            data-photo-editor-drop-slot
+            role="listitem"
+        >
+            <div
+                class="photo-editor__droparea<?= $photoEntries !== [] ? ' photo-editor__droparea--compact' : '' ?>"
+                data-photo-editor-droparea
+                role="button"
+                tabindex="0"
+                aria-controls="<?= Html::encode($editorId) ?>-input"
+            >
+                <i class="bi bi-plus-lg photo-editor__droparea-icon" aria-hidden="true"></i>
+                <span class="photo-editor__droparea-title">Добавить фотографии</span>
+                <span class="photo-editor__droparea-hint">
+                    Нажмите для выбора файлов, перетащите их сюда или вставьте изображение из буфера обмена
+                </span>
+                <input
+                    id="<?= Html::encode($editorId) ?>-input"
+                    class="photo-editor__file-input"
+                    type="file"
+                    accept="<?= Html::encode($accept) ?>"
+                    multiple
+                    data-photo-editor-input
+                    tabindex="-1"
+                >
+            </div>
+        </div>
     </div>
 
     <p class="photo-editor__empty" data-photo-editor-empty<?= $photoEntries !== [] ? ' hidden' : '' ?>>
