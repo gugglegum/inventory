@@ -392,6 +392,18 @@
             return;
         }
 
+        files = files.map(function(file, index) {
+            return {
+                file: file,
+                index: index,
+                lastModified: Number(file.lastModified) || 0
+            };
+        }).sort(function(left, right) {
+            return left.lastModified - right.lastModified || left.index - right.index;
+        }).map(function(entry) {
+            return entry.file;
+        });
+
         activeEditor = this;
         this.clearMessage();
 
