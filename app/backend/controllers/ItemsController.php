@@ -10,6 +10,7 @@ use backend\services\ItemFormAssetService;
 use backend\services\ItemFormService;
 use backend\services\ItemImportService;
 use backend\services\ItemListService;
+use backend\services\ItemSearchCriteria;
 use backend\services\ItemSearchService;
 use backend\services\ItemViewDataService;
 use backend\services\PhotoEditorService;
@@ -109,7 +110,7 @@ class ItemsController extends RepoAwareController
     public function actionSearchContainer(int $repoId, string $q): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $queryString = Yii::$app->request->getQueryParam('q', '');
+        $queryString = $this->getStringQueryParam('q', '') ?? '';
         $containers = (new ItemListService())->searchContainers($repo, $queryString);
         $this->layout = 'blank';
         return $this->render('search-container', [
@@ -128,23 +129,39 @@ class ItemsController extends RepoAwareController
     public function actionSearch(int $repoId): Response|string
     {
         $repo = $this->findRepo($repoId);
-        $queryString = Yii::$app->request->getQueryParam('q');
-        $containerId = Yii::$app->request->getQueryParam('c') !== null ? (int) Yii::$app->request->getQueryParam('c') : null;
-        $itemId = Yii::$app->request->getQueryParam('id');
+        $queryString = $this->getStringQueryParam('q');
+        $descriptionQuery = $this->getStringQueryParam('description');
+        $notesQuery = $this->getStringQueryParam('notes');
+        $containerIdQuery = $this->getStringQueryParam('c');
+        $containerId = $containerIdQuery !== null ? (int) $containerIdQuery : null;
+        $itemId = $this->getStringQueryParam('id');
 
         $container = $containerId !== null ? $this->findItem($repo->id, $containerId) : null;
-        $searchResult = (new ItemSearchService())->search($repo, $queryString, $container, $itemId);
+        $criteria = new ItemSearchCriteria(
+            $queryString,
+            $descriptionQuery,
+            $notesQuery,
+            $container,
+            $itemId
+        );
+        $searchResult = (new ItemSearchService())->search($repo, $criteria);
         $items = $searchResult->items;
 
         // Если найден ровно 1 результат, то сразу перекидываем на страницу этого предмета
         if (is_array($items) && count($items) === 1) {
-            return $this->redirect(['/items/view', 'repoId' => $repo->id, 'itemId' => $items[0]->itemId, 'q' => $queryString]);
+            return $this->redirect($this->appendSearchQueryParams([
+                '/items/view',
+                'repoId' => $repo->id,
+                'itemId' => $items[0]->itemId,
+            ], $queryString, $descriptionQuery, $notesQuery));
         }
 
         return $this->render('search', [
             'items' => $items, // null -- если поиск не выполнялся, [] -- если ничего не найдено
             'paths' => $searchResult->paths,
             'query' => $queryString,
+            'descriptionQuery' => $descriptionQuery,
+            'notesQuery' => $notesQuery,
             'itemId' => $itemId,
             'searchInside' => $containerId !== null,
             'containerId' => $containerId,
@@ -166,7 +183,9 @@ class ItemsController extends RepoAwareController
     {
         $repo = $this->findRepo($repoId);
         $model = $this->findItem($repo->id, $itemId);
-        $queryString = Yii::$app->request->getQueryParam('q', '');
+        $queryString = $this->getStringQueryParam('q', '');
+        $descriptionQuery = $this->getStringQueryParam('description', '');
+        $notesQuery = $this->getStringQueryParam('notes', '');
         $viewData = (new ItemViewDataService())->prepare($model);
 
         return $this->render('view', [
@@ -177,6 +196,8 @@ class ItemsController extends RepoAwareController
             'prevItem' => $viewData->prevItem,
             'nextItem' => $viewData->nextItem,
             'query' => $queryString,
+            'descriptionQuery' => $descriptionQuery,
+            'notesQuery' => $notesQuery,
         ]);
     }
 
@@ -437,5 +458,41 @@ class ItemsController extends RepoAwareController
                 'containerId' => null,
             ]),
         ]);
+    }
+
+    /**
+     * Возвращает строковый GET-параметр или значение по умолчанию, не преобразуя массивы в "Array".
+     */
+    private function getStringQueryParam(string $name, ?string $default = null): ?string
+    {
+        $value = Yii::$app->request->getQueryParam($name, $default);
+
+        return is_scalar($value) ? (string) $value : $default;
+    }
+
+    /**
+     * Добавляет заполненные текстовые критерии к URL перехода на единственный найденный предмет.
+     *
+     * @param array $route Базовый маршрут Yii.
+     * @return array Маршрут с непустыми поисковыми параметрами.
+     */
+    private function appendSearchQueryParams(
+        array $route,
+        ?string $query,
+        ?string $descriptionQuery,
+        ?string $notesQuery,
+    ): array {
+        $queryParams = [
+            'q' => $query,
+            'description' => $descriptionQuery,
+            'notes' => $notesQuery,
+        ];
+        foreach ($queryParams as $name => $value) {
+            if ($value !== null && trim($value) !== '') {
+                $route[$name] = $value;
+            }
+        }
+
+        return $route;
     }
 }

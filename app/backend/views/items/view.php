@@ -13,6 +13,8 @@ use yii\helpers\Url;
 /** @var ?Item $prevItem */
 /** @var ?Item $nextItem */
 /** @var string $query */
+/** @var string $descriptionQuery */
+/** @var string $notesQuery */
 
 $this->title = $model->name;
 
@@ -37,6 +39,8 @@ if ($description !== '') {
         <div id="searchFormWrapper">
             <?= $this->render('_searchForm', [
                 'query' => $query,
+                'descriptionQuery' => $descriptionQuery,
+                'notesQuery' => $notesQuery,
                 'containerSearch' => false,
                 'showExtraOptions' => $model->isContainer && count($children) > 0,
                 'searchInside' => false,

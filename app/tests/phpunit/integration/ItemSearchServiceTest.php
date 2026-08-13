@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace tests\phpunit\integration;
 
 use backend\services\ItemSearchService;
+use backend\services\ItemSearchCriteria;
 use common\models\Item;
 use common\models\Repo;
 use common\models\RepoUser;
@@ -21,19 +22,36 @@ final class ItemSearchServiceTest extends DbTestCase
      */
     public function testSearchDoesNotTreatAlphanumericWordAsItemId(): void
     {
-        [$repo, $user] = $this->createRepoFixture();
+        [$firstRepo, $user] = $this->createRepoFixture();
+        $this->createItem($firstRepo, $user);
+        [$repo] = $this->createRepoFixture($user);
         $item = $this->createItem($repo, $user, [
             'name' => 'Предмет без совпадения с запросом',
             'description' => 'Контрольное описание',
         ]);
         $service = new ItemSearchService();
+        self::assertNotSame((int) $item->id, (int) $item->itemId);
 
-        $alphanumericResult = $service->search($repo, $item->id . 'mai', null, null);
+        $alphanumericResult = $service->search(
+            $repo,
+            new ItemSearchCriteria(query: (string) $item->itemId . 'mai')
+        );
 
         self::assertNotNull($alphanumericResult->items);
         self::assertSame([], $alphanumericResult->items);
 
-        $numericResult = $service->search($repo, (string) $item->id, null, null);
+        $alphanumericDirectIdResult = $service->search(
+            $repo,
+            new ItemSearchCriteria(itemId: (string) $item->itemId . 'mai')
+        );
+
+        self::assertNotNull($alphanumericDirectIdResult->items);
+        self::assertSame([], $alphanumericDirectIdResult->items);
+
+        $numericResult = $service->search(
+            $repo,
+            new ItemSearchCriteria(query: (string) $item->itemId)
+        );
 
         self::assertNotNull($numericResult->items);
         self::assertSame(
@@ -41,12 +59,127 @@ final class ItemSearchServiceTest extends DbTestCase
             array_map(static fn(Item $foundItem): int => (int) $foundItem->id, $numericResult->items)
         );
 
-        $negativeResult = $service->search($repo, 'предмет -' . $item->id . 'mai', null, null);
+        $globalIdResult = $service->search(
+            $repo,
+            new ItemSearchCriteria(query: (string) $item->id)
+        );
+
+        self::assertNotNull($globalIdResult->items);
+        self::assertSame([], $globalIdResult->items);
+
+        $negativeResult = $service->search(
+            $repo,
+            new ItemSearchCriteria(query: 'предмет -' . (string) $item->itemId . 'mai')
+        );
 
         self::assertNotNull($negativeResult->items);
         self::assertSame(
             [(int) $item->id],
             array_map(static fn(Item $foundItem): int => (int) $foundItem->id, $negativeResult->items)
+        );
+    }
+
+    /**
+     * Обычный запрос не ищет по описанию, а отдельный критерий описания поддерживает включения и исключения.
+     */
+    public function testDescriptionIsSearchedOnlyByAdvancedCriterion(): void
+    {
+        [$repo, $user] = $this->createRepoFixture();
+        $matchingItem = $this->createItem($repo, $user, [
+            'name' => 'Первый предмет',
+            'description' => 'description-marker исправный автомобильный адаптер',
+        ]);
+        $this->createItem($repo, $user, [
+            'name' => 'Второй предмет',
+            'description' => 'description-marker неисправный автомобильный адаптер',
+        ]);
+        $this->createItem($repo, $user, [
+            'name' => 'Предмет без описания',
+        ]);
+        $service = new ItemSearchService();
+
+        $defaultResult = $service->search(
+            $repo,
+            new ItemSearchCriteria(query: 'description-marker')
+        );
+        $descriptionResult = $service->search(
+            $repo,
+            new ItemSearchCriteria(description: 'description-marker -неисправный')
+        );
+
+        self::assertNotNull($defaultResult->items);
+        self::assertSame([], $defaultResult->items);
+        self::assertNotNull($descriptionResult->items);
+        self::assertSame(
+            [(int) $matchingItem->id],
+            array_map(static fn(Item $item): int => (int) $item->id, $descriptionResult->items)
+        );
+    }
+
+    /**
+     * Расширенные критерии объединяются через AND, а все позитивные слова заметок ищутся в одной заметке.
+     */
+    public function testAdvancedCriteriaSearchNotesAndCombineAllFields(): void
+    {
+        [$repo, $user] = $this->createRepoFixture();
+        $matchingItem = $this->createItem($repo, $user, [
+            'name' => 'notes-marker видеорегистратор',
+            'description' => 'Установлен в автомобиле',
+        ]);
+        $this->createPost($matchingItem, $user, [
+            'title' => 'Плановое обслуживание',
+            'text' => 'Литиевая батарея успешно заменена',
+        ]);
+
+        $splitNotesItem = $this->createItem($repo, $user, [
+            'name' => 'notes-marker запасной регистратор',
+            'description' => 'Хранится в автомобиле',
+        ]);
+        $this->createPost($splitNotesItem, $user, [
+            'title' => 'Плановое обслуживание',
+            'text' => 'Выполнена очистка корпуса',
+        ]);
+        $this->createPost($splitNotesItem, $user, [
+            'title' => 'Замена комплектующих',
+            'text' => 'Установлена литиевая батарея',
+        ]);
+
+        $excludedItem = $this->createItem($repo, $user, [
+            'name' => 'notes-marker основной регистратор',
+            'description' => 'Установлен в автомобиле',
+        ]);
+        $this->createPost($excludedItem, $user, [
+            'title' => 'Плановое обслуживание',
+            'text' => 'Литиевая батарея заменена',
+        ]);
+        $this->createPost($excludedItem, $user, [
+            'title' => 'Неудачная проверка',
+            'text' => 'Обнаружен дефект питания',
+        ]);
+
+        [$otherRepo] = $this->createRepoFixture($user);
+        $otherRepoItem = $this->createItem($otherRepo, $user, [
+            'name' => 'notes-marker чужой регистратор',
+            'description' => 'Установлен в автомобиле',
+        ]);
+        $this->createPost($otherRepoItem, $user, [
+            'title' => 'Плановое обслуживание',
+            'text' => 'Литиевая батарея успешно заменена',
+        ]);
+
+        $result = (new ItemSearchService())->search(
+            $repo,
+            new ItemSearchCriteria(
+                query: 'notes-marker',
+                description: 'автомобиле',
+                notes: 'обслуживание батарея -дефект'
+            )
+        );
+
+        self::assertNotNull($result->items);
+        self::assertSame(
+            [(int) $matchingItem->id],
+            array_map(static fn(Item $item): int => (int) $item->id, $result->items)
         );
     }
 
@@ -77,7 +210,10 @@ final class ItemSearchServiceTest extends DbTestCase
             'name' => 'tree-marker в другом репозитории',
         ]);
 
-        $result = (new ItemSearchService())->search($repo, 'tree-marker', $container, null);
+        $result = (new ItemSearchService())->search(
+            $repo,
+            new ItemSearchCriteria(query: 'tree-marker', container: $container)
+        );
 
         self::assertNotNull($result->items);
         self::assertSame(
@@ -97,14 +233,20 @@ final class ItemSearchServiceTest extends DbTestCase
             array_column($result->paths[$container->id], 'itemId')
         );
 
-        $directInsideResult = (new ItemSearchService())->search($repo, null, $container, $deepMatch->itemId);
+        $directInsideResult = (new ItemSearchService())->search(
+            $repo,
+            new ItemSearchCriteria(container: $container, itemId: $deepMatch->itemId)
+        );
         self::assertNotNull($directInsideResult->items);
         self::assertSame([(int) $deepMatch->id], array_map(
             static fn(Item $item): int => (int) $item->id,
             $directInsideResult->items
         ));
 
-        $directOutsideResult = (new ItemSearchService())->search($repo, null, $container, $outsideMatch->itemId);
+        $directOutsideResult = (new ItemSearchService())->search(
+            $repo,
+            new ItemSearchCriteria(container: $container, itemId: $outsideMatch->itemId)
+        );
         self::assertSame([], $directOutsideResult->items);
     }
 
@@ -128,7 +270,7 @@ final class ItemSearchServiceTest extends DbTestCase
         $deletedContainer->updateAttributes(['deleted' => time(), 'deletedBy' => $user->id]);
 
         $service = new ItemSearchService();
-        $result = $service->search($repo, 'deleted-marker', null, null);
+        $result = $service->search($repo, new ItemSearchCriteria(query: 'deleted-marker'));
 
         self::assertNotNull($result->items);
         self::assertSame(
@@ -153,7 +295,10 @@ final class ItemSearchServiceTest extends DbTestCase
         ]);
         $firstItem->updateAttributes(['parentItemId' => $secondItem->itemId]);
 
-        $result = (new ItemSearchService())->search($repo, 'cycle-marker', $firstItem, null);
+        $result = (new ItemSearchService())->search(
+            $repo,
+            new ItemSearchCriteria(query: 'cycle-marker', container: $firstItem)
+        );
 
         self::assertNotNull($result->items);
         self::assertSame(
@@ -213,7 +358,10 @@ final class ItemSearchServiceTest extends DbTestCase
         )->execute();
 
         $service = new ItemSearchService();
-        $result = $service->search($repo, 'limit-marker', $container, null);
+        $result = $service->search(
+            $repo,
+            new ItemSearchCriteria(query: 'limit-marker', container: $container)
+        );
 
         self::assertNotNull($result->items);
         self::assertCount(2000, $result->items);
@@ -231,7 +379,10 @@ final class ItemSearchServiceTest extends DbTestCase
             'created' => $createdAt,
         ])->execute();
 
-        $resultWithExtraItem = $service->search($repo, 'limit-marker', $container, null);
+        $resultWithExtraItem = $service->search(
+            $repo,
+            new ItemSearchCriteria(query: 'limit-marker', container: $container)
+        );
         self::assertNotNull($resultWithExtraItem->items);
         self::assertCount(2000, $resultWithExtraItem->items);
         self::assertTrue($resultWithExtraItem->isMoreThan);

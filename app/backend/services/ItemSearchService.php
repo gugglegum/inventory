@@ -7,7 +7,9 @@ namespace backend\services;
 use common\models\Item;
 use common\models\ItemQuery;
 use common\models\ItemTag;
+use common\models\Post;
 use common\models\Repo;
+use yii\db\Expression;
 use yii\db\Query;
 
 /**
@@ -24,37 +26,54 @@ final class ItemSearchService
     private const int MAX_RESULTS = 2000;
 
     /**
-     * Ищет предметы в репозитории по текстовой строке и/или внутреннему ID предмета.
+     * Ищет предметы в репозитории по заполненным критериям.
      *
      * @param Repo $repo Репозиторий, внутри которого выполняется поиск.
-     * @param ?string $queryString Поисковая строка с позитивными и негативными словами.
-     * @param ?Item $container Контейнер, которым нужно ограничить результаты поиска.
-     * @param string|int|null $itemId Внутренний ID предмета в репозитории.
+     * @param ItemSearchCriteria $criteria Нормализованные критерии поиска.
      */
-    public function search(Repo $repo, ?string $queryString, ?Item $container, string|int|null $itemId): ItemSearchResult
+    public function search(Repo $repo, ItemSearchCriteria $criteria): ItemSearchResult
     {
-        $queryWords = $queryString !== null ? $this->splitQuery($queryString) : [];
+        $queryWords = $criteria->query !== null ? $this->splitQuery($criteria->query) : [];
+        $descriptionWords = $criteria->description !== null ? $this->splitQuery($criteria->description) : [];
+        $noteWords = $criteria->notes !== null ? $this->splitQuery($criteria->notes) : [];
 
         $query = Item::find()->andWhere([Item::tableName() . '.repoId' => $repo->id]);
-        if ($container !== null) {
-            $this->restrictToSubtree($query, $container);
+        if ($criteria->container !== null) {
+            $this->restrictToSubtree($query, $criteria->container);
         }
 
         $hasPositiveCondition = false;
 
         if (count($queryWords) > 0) {
-            $hasPositiveCondition = $this->applyWordConditions($query, $queryWords);
+            $hasPositiveCondition = $this->applyDefaultWordConditions($query, $queryWords);
+        }
+
+        if (count($descriptionWords) > 0) {
+            $hasPositiveCondition = $this->applyDescriptionConditions($query, $descriptionWords)
+                || $hasPositiveCondition;
+        }
+
+        if (count($noteWords) > 0) {
+            $hasPositiveCondition = $this->applyNoteConditions($query, $noteWords)
+                || $hasPositiveCondition;
+        }
+
+        if ($criteria->itemId !== null && $criteria->itemId !== '') {
+            if (is_int($criteria->itemId) || ctype_digit($criteria->itemId)) {
+                $query->andWhere(Item::tableName() . '.itemId = :itemId', ['itemId' => $criteria->itemId]);
+            } else {
+                $query->andWhere('0=1');
+            }
+            $hasPositiveCondition = true;
+        }
+
+        if ($queryWords !== [] || $descriptionWords !== [] || $noteWords !== []) {
             $query->groupBy(Item::tableName() . '.id')
                 ->orderBy(Item::tableName() . '.isContainer DESC, ' . Item::tableName() . '.id ASC');
         }
 
-        if ($itemId !== null && $itemId !== '') {
-            $query->andWhere(Item::tableName() . '.itemId = :itemId', ['itemId' => $itemId]);
-            $hasPositiveCondition = true;
-        }
-
         if (!$hasPositiveCondition) {
-            return new ItemSearchResult(null, [], $container, false);
+            return new ItemSearchResult(null, [], $criteria->container, false);
         }
 
         $items = $query->limit(self::MAX_RESULTS + 1)->all();
@@ -63,7 +82,12 @@ final class ItemSearchService
             array_pop($items);
         }
 
-        return new ItemSearchResult($items, $this->getItemPathsForView($items, $repo), $container, $isMoreThan);
+        return new ItemSearchResult(
+            $items,
+            $this->getItemPathsForView($items, $repo),
+            $criteria->container,
+            $isMoreThan
+        );
     }
 
     /**
@@ -82,7 +106,7 @@ final class ItemSearchService
             ->andWhere([Item::tableName() . '.repoId' => $repo->id])
             ->andWhere('isContainer != 0');
 
-        $hasPositiveCondition = $this->applyWordConditions($query, $queryWords);
+        $hasPositiveCondition = $this->applyDefaultWordConditions($query, $queryWords);
         $query->groupBy(Item::tableName() . '.id');
 
         return $hasPositiveCondition ? $query->all() : [];
@@ -111,7 +135,7 @@ final class ItemSearchService
      *
      * @return bool True, если в запросе было хотя бы одно позитивное условие.
      */
-    private function applyWordConditions(ItemQuery $query, array $queryWords): bool
+    private function applyDefaultWordConditions(ItemQuery $query, array $queryWords): bool
     {
         $hasPositiveCondition = false;
         $itemTable = Item::tableName();
@@ -122,7 +146,7 @@ final class ItemSearchService
                 $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = {$itemTable}.id");
                 $isItemIdWord = ctype_digit($queryWord);
                 $itemIdCondition = $isItemIdWord
-                    ? " OR {$itemTable}.id = :tag{$i}"
+                    ? " OR {$itemTable}.itemId = :tag{$i}"
                     : '';
                 $params = ["tagMask{$i}" => '%' . $queryWord . '%'];
                 if ($isItemIdWord) {
@@ -131,7 +155,6 @@ final class ItemSearchService
                 $query->andWhere(
                     "t{$i}.tag LIKE :tagMask{$i}"
                     . " OR {$itemTable}.name LIKE :tagMask{$i}"
-                    . " OR {$itemTable}.description LIKE :tagMask{$i}"
                     . $itemIdCondition,
                     $params
                 );
@@ -144,7 +167,7 @@ final class ItemSearchService
                 $queryWord = mb_substr($queryWord, 1);
                 $isItemIdWord = ctype_digit($queryWord);
                 $itemIdCondition = $isItemIdWord
-                    ? " AND {$itemTable}.id != :tag{$i}"
+                    ? " AND {$itemTable}.itemId != :tag{$i}"
                     : '';
                 $params = ["tagMask{$i}" => '%' . $queryWord . '%'];
                 if ($isItemIdWord) {
@@ -153,7 +176,6 @@ final class ItemSearchService
                 $query->andWhere(
                     "t{$i}.tag IS NULL"
                     . " AND {$itemTable}.name NOT LIKE :tagMask{$i}"
-                    . " AND {$itemTable}.description NOT LIKE :tagMask{$i}"
                     . $itemIdCondition,
                     $params
                 );
@@ -162,6 +184,97 @@ final class ItemSearchService
         }
 
         return $hasPositiveCondition;
+    }
+
+    /**
+     * Добавляет условия, применяемые только к описанию предмета.
+     *
+     * @param ItemQuery $query Запрос предметов, который будет изменен на месте.
+     * @param string[] $queryWords Позитивные и негативные слова запроса по описанию.
+     *
+     * @return bool True, если задано хотя бы одно позитивное слово.
+     */
+    private function applyDescriptionConditions(ItemQuery $query, array $queryWords): bool
+    {
+        $hasPositiveCondition = false;
+        $descriptionColumn = 'COALESCE(' . Item::tableName() . ".description, '')";
+
+        foreach ($queryWords as $i => $queryWord) {
+            if ($queryWord[0] !== '-') {
+                $query->andWhere(
+                    "{$descriptionColumn} LIKE :descriptionMask{$i}",
+                    ["descriptionMask{$i}" => '%' . $queryWord . '%']
+                );
+                $hasPositiveCondition = true;
+                continue;
+            }
+
+            $queryWord = mb_substr($queryWord, 1);
+            $query->andWhere(
+                "{$descriptionColumn} NOT LIKE :descriptionMask{$i}",
+                ["descriptionMask{$i}" => '%' . $queryWord . '%']
+            );
+        }
+
+        return $hasPositiveCondition;
+    }
+
+    /**
+     * Добавляет поиск по заголовку и тексту заметок.
+     *
+     * Все позитивные слова должны встретиться в одной заметке. Каждое негативное слово исключает
+     * предмет, если оно встречается хотя бы в одной из его заметок.
+     *
+     * @param ItemQuery $query Запрос предметов, который будет изменен на месте.
+     * @param string[] $queryWords Позитивные и негативные слова запроса по заметкам.
+     *
+     * @return bool True, если задано хотя бы одно позитивное слово.
+     */
+    private function applyNoteConditions(ItemQuery $query, array $queryWords): bool
+    {
+        $positiveWords = [];
+        $negativeWords = [];
+        foreach ($queryWords as $queryWord) {
+            if ($queryWord[0] === '-') {
+                $negativeWords[] = mb_substr($queryWord, 1);
+            } else {
+                $positiveWords[] = $queryWord;
+            }
+        }
+
+        if ($positiveWords !== []) {
+            $positiveNoteQuery = $this->createNoteQuery();
+            foreach ($positiveWords as $i => $queryWord) {
+                $positiveNoteQuery->andWhere(
+                    "searchPost.title LIKE :positiveNoteMask{$i}"
+                    . " OR searchPost.text LIKE :positiveNoteMask{$i}",
+                    ["positiveNoteMask{$i}" => '%' . $queryWord . '%']
+                );
+            }
+            $query->andWhere(['exists', $positiveNoteQuery]);
+        }
+
+        foreach ($negativeWords as $i => $queryWord) {
+            $negativeNoteQuery = $this->createNoteQuery()->andWhere(
+                "searchPost.title LIKE :negativeNoteMask{$i}"
+                . " OR searchPost.text LIKE :negativeNoteMask{$i}",
+                ["negativeNoteMask{$i}" => '%' . $queryWord . '%']
+            );
+            $query->andWhere(['not exists', $negativeNoteQuery]);
+        }
+
+        return $positiveWords !== [];
+    }
+
+    /**
+     * Создает коррелированный подзапрос заметок текущего предмета.
+     */
+    private function createNoteQuery(): Query
+    {
+        return (new Query())
+            ->select(new Expression('1'))
+            ->from(['searchPost' => Post::tableName()])
+            ->where('searchPost.itemId = ' . Item::tableName() . '.id');
     }
 
     /**

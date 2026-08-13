@@ -34,6 +34,9 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringContainsString($repo->name, $response);
         self::assertStringContainsString($rootContainer->name, $response);
         self::assertStringContainsString($rootItem->name, $response);
+        self::assertStringContainsString('/js/search-form.js', $response);
+        self::assertStringContainsString('name="description" value="" disabled', $response);
+        self::assertStringContainsString('name="notes" value="" disabled', $response);
     }
 
     /**
@@ -74,6 +77,8 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringContainsString('Всего найдено контейнеров: 1', $response);
         self::assertStringContainsString($matchingContainer->name, $response);
         self::assertStringNotContainsString($nonContainer->name, $response);
+        self::assertStringNotContainsString('name="description"', $response);
+        self::assertStringNotContainsString('name="notes"', $response);
     }
 
     /**
@@ -94,6 +99,65 @@ final class ItemsControllerTest extends DbTestCase
             $response->headers->get('Location')
         );
         self::assertStringContainsString('q=video+-hdmi', $response->headers->get('Location'));
+    }
+
+    /**
+     * GET search показывает заполненные поля расширенного поиска и раскрывает их блок.
+     */
+    public function testSearchRendersAdvancedFieldsAndRetainsValues(): void
+    {
+        [$controller, $repo] = $this->prepareSearchFixture();
+
+        $this->setGetRequest([
+            'q' => 'отсутствующий-запрос',
+            'description' => 'автомобильный адаптер',
+            'notes' => 'замена батареи',
+        ]);
+
+        $response = $controller->actionSearch($repo->id);
+
+        self::assertIsString($response);
+        self::assertStringContainsString('<details id="advancedSearchOptions" open>', $response);
+        self::assertStringContainsString('name="description" value="автомобильный адаптер"', $response);
+        self::assertStringContainsString('name="notes" value="замена батареи"', $response);
+        self::assertStringNotContainsString('name="description" value="автомобильный адаптер" disabled', $response);
+        self::assertStringNotContainsString('name="notes" value="замена батареи" disabled', $response);
+    }
+
+    /**
+     * Редирект на единственный результат сохраняет расширенные критерии в URL предмета.
+     */
+    public function testAdvancedSearchRedirectPreservesCriteria(): void
+    {
+        $user = $this->createUser([
+            'access' => User::ACCESS_CREATE_REPO,
+        ]);
+        $repo = $this->createRepo($user);
+        $this->grantRepoAccess($repo, $user, RepoUser::ACCESS_CREATE_ITEMS | RepoUser::ACCESS_EDIT_ITEMS);
+        $item = $this->createItem($repo, $user, [
+            'name' => 'Видеорегистратор',
+            'description' => 'Установлен в автомобиле',
+        ]);
+        $this->createPost($item, $user, [
+            'title' => 'Обслуживание',
+            'text' => 'Заменена батарея',
+        ]);
+        $controller = new ItemsController('items', Yii::$app);
+        Yii::$app->controller = $controller;
+        $this->setGetRequest([
+            'description' => 'автомобиле',
+            'notes' => 'батарея',
+        ]);
+
+        $response = $controller->actionSearch($repo->id);
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(302, $response->statusCode);
+        $location = $response->headers->get('Location');
+        self::assertStringContainsString("/repo/{$repo->id}/items/{$item->itemId}", $location);
+        parse_str((string) parse_url($location, PHP_URL_QUERY), $queryParams);
+        self::assertSame('автомобиле', $queryParams['description'] ?? null);
+        self::assertSame('батарея', $queryParams['notes'] ?? null);
     }
 
     /**
