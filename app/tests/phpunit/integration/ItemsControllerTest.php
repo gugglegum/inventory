@@ -148,10 +148,18 @@ final class ItemsControllerTest extends DbTestCase
      */
     public function testViewRendersItemPage(): void
     {
-        [$controller, $repo, $parent, $item] = $this->prepareItemViewFixture();
+        [$controller, $repo, $parent, $item, $user] = $this->prepareItemViewFixture();
         $item->isContainer = 1;
         self::assertTrue($item->save(false));
         $this->createItemPhoto($item);
+        $olderPost = $this->createPost($item, $user, [
+            'datetime' => 1_700_000_000,
+            'title' => 'Более старая заметка',
+        ]);
+        $newerPost = $this->createPost($item, $user, [
+            'datetime' => 1_800_000_000,
+            'title' => 'Самая новая заметка',
+        ]);
 
         $this->setGetRequest(['q' => 'usb']);
 
@@ -165,6 +173,16 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringContainsString('dropdown-menu dropdown-menu-end', $response);
         self::assertStringContainsString('class="dropdown-item"', $response);
         self::assertStringContainsString('bi bi-three-dots-vertical', $response);
+        self::assertSame([$newerPost->id, $olderPost->id], array_column($item->posts, 'id'));
+
+        $addPostPosition = strpos($response, 'Добавить заметку');
+        $newerPostPosition = strpos($response, 'Самая новая заметка');
+        $olderPostPosition = strpos($response, 'Более старая заметка');
+        self::assertIsInt($addPostPosition);
+        self::assertIsInt($newerPostPosition);
+        self::assertIsInt($olderPostPosition);
+        self::assertLessThan($newerPostPosition, $addPostPosition);
+        self::assertLessThan($olderPostPosition, $newerPostPosition);
         self::assertStringNotContainsString('rel="item-photos"', $response);
         self::assertStringNotContainsString('data-toggle="dropdown"', $response);
     }
@@ -412,7 +430,7 @@ final class ItemsControllerTest extends DbTestCase
     /**
      * Создает предмет внутри контейнера для проверки view/json-preview сценариев.
      *
-     * @return array{0:ItemsController, 1:\common\models\Repo, 2:Item, 3:Item}
+     * @return array{0:ItemsController, 1:\common\models\Repo, 2:Item, 3:Item, 4:User}
      */
     private function prepareItemViewFixture(): array
     {
@@ -435,7 +453,7 @@ final class ItemsControllerTest extends DbTestCase
         $controller = new ItemsController('items', Yii::$app);
         Yii::$app->controller = $controller;
 
-        return [$controller, $repo, $parent, $item];
+        return [$controller, $repo, $parent, $item, $user];
     }
 
     /**

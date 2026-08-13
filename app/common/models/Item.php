@@ -520,7 +520,10 @@ class Item extends ActiveRecord
      */
     public function getPosts(): ActiveQuery
     {
-        return $this->hasMany(Post::class, ['itemId' => 'id']);
+        return $this->hasMany(Post::class, ['itemId' => 'id'])->orderBy([
+            'datetime' => SORT_DESC,
+            'id' => SORT_DESC,
+        ]);
     }
 
     /**

@@ -66,18 +66,19 @@ if ($description !== '') {
         <dd><?= $description ?></dd>
         <div id="item-post">
             <h3>Заметки о предмете</h3>
-<?php if ($model->getPosts()->count() > 0) { ?>
+            <div class="add-post-link">
+                <?= Html::a('<i class="bi bi-plus-circle"></i> Добавить заметку', ['posts/create', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
+            </div>
+<?php $posts = $model->posts; ?>
+<?php if ($posts !== []) { ?>
 <?= $this->render('/posts/_posts', [
-        'posts' => $model->posts,
+        'posts' => $posts,
         'item' => $model,
         'repo' => $repo,
     ]) ?>
 <?php } else {
     echo "<p class='hint-block'><em>Нет заметок</em></p>\n";
 } ?>
-            <div class="add-post-link">
-                <?= Html::a('<i class="bi bi-plus-circle"></i> Добавить заметку', ['posts/create', 'repoId' => $repo->id, 'itemId' => $model->itemId]) ?>
-            </div>
         </div>
     </dl>
 

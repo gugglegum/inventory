@@ -14,7 +14,7 @@ use yii\helpers\Url;
 
 ?>
 <ul class="posts">
-    <?php foreach ($item->posts as $post) { ?>
+    <?php foreach ($posts as $post) { ?>
         <li>
             <div class="title"><?= Html::encode(date('d.m.Y', $post->datetime)) ?> <?= Html::a($post->title, ['posts/view', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]) ?><?=
                 Html::a('', Url::to(['posts/update', 'repoId' => $repo->id, 'itemId' => $item->itemId, 'postId' => $post->id]), [
