@@ -120,12 +120,20 @@ final class ItemSearchService
         foreach ($queryWords as $queryWord) {
             if ($queryWord[0] !== '-') {
                 $query->leftJoin(["t{$i}" => ItemTag::tableName()], "t{$i}.itemId = {$itemTable}.id");
+                $isItemIdWord = ctype_digit($queryWord);
+                $itemIdCondition = $isItemIdWord
+                    ? " OR {$itemTable}.id = :tag{$i}"
+                    : '';
+                $params = ["tagMask{$i}" => '%' . $queryWord . '%'];
+                if ($isItemIdWord) {
+                    $params["tag{$i}"] = $queryWord;
+                }
                 $query->andWhere(
                     "t{$i}.tag LIKE :tagMask{$i}"
                     . " OR {$itemTable}.name LIKE :tagMask{$i}"
                     . " OR {$itemTable}.description LIKE :tagMask{$i}"
-                    . " OR {$itemTable}.id = :tag{$i}",
-                    ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']
+                    . $itemIdCondition,
+                    $params
                 );
                 $hasPositiveCondition = true;
             } else {
@@ -134,12 +142,20 @@ final class ItemSearchService
                     "t{$i}.itemId = {$itemTable}.id AND t{$i}.tag LIKE :tagMask{$i}"
                 );
                 $queryWord = mb_substr($queryWord, 1);
+                $isItemIdWord = ctype_digit($queryWord);
+                $itemIdCondition = $isItemIdWord
+                    ? " AND {$itemTable}.id != :tag{$i}"
+                    : '';
+                $params = ["tagMask{$i}" => '%' . $queryWord . '%'];
+                if ($isItemIdWord) {
+                    $params["tag{$i}"] = $queryWord;
+                }
                 $query->andWhere(
                     "t{$i}.tag IS NULL"
                     . " AND {$itemTable}.name NOT LIKE :tagMask{$i}"
                     . " AND {$itemTable}.description NOT LIKE :tagMask{$i}"
-                    . " AND {$itemTable}.id != :tag{$i}",
-                    ["tag{$i}" => $queryWord, "tagMask{$i}" => '%' . $queryWord . '%']
+                    . $itemIdCondition,
+                    $params
                 );
             }
             $i++;

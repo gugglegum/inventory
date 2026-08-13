@@ -17,6 +17,40 @@ use tests\phpunit\DbTestCase;
 final class ItemSearchServiceTest extends DbTestCase
 {
     /**
+     * Буквенно-цифровое слово не приводится MariaDB к числу и не совпадает с числовым ID предмета.
+     */
+    public function testSearchDoesNotTreatAlphanumericWordAsItemId(): void
+    {
+        [$repo, $user] = $this->createRepoFixture();
+        $item = $this->createItem($repo, $user, [
+            'name' => 'Предмет без совпадения с запросом',
+            'description' => 'Контрольное описание',
+        ]);
+        $service = new ItemSearchService();
+
+        $alphanumericResult = $service->search($repo, $item->id . 'mai', null, null);
+
+        self::assertNotNull($alphanumericResult->items);
+        self::assertSame([], $alphanumericResult->items);
+
+        $numericResult = $service->search($repo, (string) $item->id, null, null);
+
+        self::assertNotNull($numericResult->items);
+        self::assertSame(
+            [(int) $item->id],
+            array_map(static fn(Item $foundItem): int => (int) $foundItem->id, $numericResult->items)
+        );
+
+        $negativeResult = $service->search($repo, 'предмет -' . $item->id . 'mai', null, null);
+
+        self::assertNotNull($negativeResult->items);
+        self::assertSame(
+            [(int) $item->id],
+            array_map(static fn(Item $foundItem): int => (int) $foundItem->id, $negativeResult->items)
+        );
+    }
+
+    /**
      * Поиск внутри контейнера включает сам контейнер и потомков любой глубины, но не соседние ветки.
      */
     public function testSearchInsideReturnsInclusiveSubtreeAndBuildsPaths(): void
