@@ -4,7 +4,7 @@
     /*
      * API contract:
      * - create session: POST repoId/context -> token + upload_url;
-     * - upload: multipart file/last_modified/position -> id, thumbnail_url,
+     * - upload: multipart file/position -> id, thumbnail_url,
      *   preview_url (or open_url), delete_url;
      * - removing a temporary card: DELETE delete_url.
      * The parent form submits only the token, immutable revision and ordered
@@ -14,9 +14,27 @@
     var editors = [];
     var activeEditor = null;
     var pasteListenerRegistered = false;
+    var fileNameCollator = new Intl.Collator(undefined, {
+        numeric: true,
+        sensitivity: 'base'
+    });
 
     function arrayFrom(value) {
         return Array.prototype.slice.call(value || []);
+    }
+
+    function sortFilesByName(files) {
+        return files.map(function(file, index) {
+            return {
+                file: file,
+                index: index,
+                name: String(file.name || '')
+            };
+        }).sort(function(left, right) {
+            return fileNameCollator.compare(left.name, right.name) || left.index - right.index;
+        }).map(function(entry) {
+            return entry.file;
+        });
     }
 
     function jsonResponse(response) {
@@ -392,17 +410,7 @@
             return;
         }
 
-        files = files.map(function(file, index) {
-            return {
-                file: file,
-                index: index,
-                lastModified: Number(file.lastModified) || 0
-            };
-        }).sort(function(left, right) {
-            return left.lastModified - right.lastModified || left.index - right.index;
-        }).map(function(entry) {
-            return entry.file;
-        });
+        files = sortFilesByName(files);
 
         activeEditor = this;
         this.clearMessage();
@@ -602,7 +610,6 @@
         this.activeUploads += 1;
 
         formData.append('file', file);
-        formData.append('last_modified', String(file.lastModified || 0));
         formData.append('position', String(arrayFrom(this.list.children).indexOf(card)));
         if (csrfData.param !== '' && csrfData.token !== '') {
             formData.append(csrfData.param, csrfData.token);
