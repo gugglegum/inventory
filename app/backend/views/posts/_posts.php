@@ -60,15 +60,12 @@ $this->registerJsFile('@web/js/post-list.js', ['appendTimestamp' => true], 'post
 
                     <?php if ($postPhotos !== []) { ?>
                         <div class="post-card__photos" aria-label="Фотографии заметки">
-                            <?php foreach (array_slice($postPhotos, 0, 4) as $postPhoto) { ?>
+                            <?php foreach ($postPhotos as $postPhoto) { ?>
                                 <?= Html::a(
                                     Html::img($postPhoto->photo->getThumbnailUrl(32, 32, true, true, 90), ['alt' => 'Фотография заметки']),
                                     $postPhoto->photo->getUrl(),
                                     ['data-fancybox' => 'post-photos-' . $post->id]
                                 ) ?>
-                            <?php } ?>
-                            <?php if (count($postPhotos) > 4) { ?>
-                                <span class="post-card__photo-count">+<?= count($postPhotos) - 4 ?></span>
                             <?php } ?>
                         </div>
                     <?php } ?>

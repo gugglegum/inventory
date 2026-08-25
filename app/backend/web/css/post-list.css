@@ -89,8 +89,7 @@
     white-space: nowrap;
 }
 .post-card__action,
-.post-card__photos a,
-.post-card__photo-count {
+.post-card__photos a {
     position: relative;
     z-index: 2;
 }
@@ -121,8 +120,10 @@
 }
 .post-card__photos {
     display: flex;
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
     align-items: center;
+    min-width: 0;
     gap: 0.2em;
 }
 .post-card__photos img {
@@ -131,11 +132,6 @@
     height: 28px;
     border-radius: 0.2em;
     object-fit: cover;
-}
-.post-card__photo-count {
-    color: #6c757d;
-    font-size: 0.8em;
-    font-weight: 600;
 }
 .post-card__open::after {
     position: absolute;

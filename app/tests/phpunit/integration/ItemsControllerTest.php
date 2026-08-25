@@ -224,6 +224,9 @@ final class ItemsControllerTest extends DbTestCase
                 'text' => $index === 7 ? '' : 'Подробности заметки ' . $index,
             ]);
         }
+        for ($index = 0; $index < 6; $index++) {
+            $this->createPostPhoto($posts[7]);
+        }
 
         $this->setGetRequest(['q' => 'usb']);
 
@@ -248,7 +251,9 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringNotContainsString('Заметка 1', $response);
         self::assertSame(5, substr_count($response, '<article id="post-'));
         self::assertSame(5, substr_count($response, 'data-post-modal-url='));
+        self::assertSame(6, substr_count($response, 'data-fancybox="post-photos-' . $posts[7]->id . '"'));
         self::assertStringNotContainsString('post-card--compact', $response);
+        self::assertStringNotContainsString('post-card__photo-count', $response);
         self::assertStringNotContainsString('rel="item-photos"', $response);
         self::assertStringNotContainsString('data-toggle="dropdown"', $response);
     }
