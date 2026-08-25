@@ -285,6 +285,23 @@ final class ItemsControllerTest extends DbTestCase
     }
 
     /**
+     * Нулевой parentItemId из обязательного route-сегмента означает корень репозитория.
+     */
+    public function testCreateGetTreatsZeroRouteParentAsRoot(): void
+    {
+        [$controller, $repo] = $this->prepareItemFormFixture();
+
+        $this->setGetRequest(['isContainer' => '1']);
+
+        $response = $controller->actionCreate($repo->id, 0);
+
+        self::assertIsString($response);
+        self::assertStringContainsString('Создание контейнера', $response);
+        self::assertStringContainsString('id="item-parentitemid"', $response);
+        self::assertStringContainsString('value=""', $response);
+    }
+
+    /**
      * JSON-preview возвращает HTML partial с путём предмета.
      */
     public function testJsonPreviewReturnsRenderedItemWithPath(): void
@@ -332,6 +349,37 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringContainsString("/repo/{$repo->id}/items/{$item->itemId}", $response->headers->get('Location'));
         self::assertSame((int) $parent->itemId, (int) $item->parentItemId);
         self::assertEqualsCanonicalizing(['новый', 'проверка'], $item->fetchTags());
+    }
+
+    /**
+     * POST через корневой route с parentItemId=0 сохраняет SQL NULL в parentItemId.
+     */
+    public function testCreatePostTreatsZeroRouteParentAsRoot(): void
+    {
+        [$controller, $repo] = $this->prepareItemFormFixture();
+        $_FILES = [];
+
+        $this->setPostRequest([
+            'Item' => [
+                'name' => 'Новый корневой предмет',
+                'description' => '',
+                'parentItemId' => '',
+                'isContainer' => '0',
+                'priority' => '0',
+            ],
+            'ItemTagsForm' => [
+                'tags' => '',
+            ],
+        ]);
+
+        $response = $controller->actionCreate($repo->id, 0);
+
+        $item = Item::findOne(['repoId' => $repo->id, 'name' => 'Новый корневой предмет']);
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(302, $response->statusCode);
+        self::assertNotNull($item);
+        self::assertNull($item->parentItemId);
     }
 
     /**

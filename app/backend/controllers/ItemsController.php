@@ -218,7 +218,10 @@ class ItemsController extends RepoAwareController
     {
         $repo = $this->findRepo($repoId);
         $itemFormService = new ItemFormService();
-        $parent = $parentItemId !== null ? $this->findParentItem($repo->id, $parentItemId) : null;
+        $normalizedParentItemId = $parentItemId === 0 ? null : $parentItemId;
+        $parent = $normalizedParentItemId !== null
+            ? $this->findParentItem($repo->id, $normalizedParentItemId)
+            : null;
         $itemForm = $itemFormService->prepareForCreate(
             $repo,
             $parent,
