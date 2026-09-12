@@ -132,3 +132,147 @@ a.desc:after {
     width: auto;
     display: inline-block;
 }
+
+.user-menu {
+    min-width: 190px;
+}
+
+.navbar .dropdown-menu .dropdown-item:hover,
+.navbar .dropdown-menu .dropdown-item:focus {
+    text-decoration: none;
+}
+
+.navbar .dropdown-toggle {
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+[data-bs-theme="dark"] {
+    --bs-body-color: #dee2e6;
+    --bs-body-color-rgb: 222, 226, 230;
+    --bs-secondary-color: #adb5bd;
+    --bs-link-color: #8bb9fe;
+    --bs-link-color-rgb: 139, 185, 254;
+    --bs-link-hover-color: #b6d4fe;
+    --bs-link-hover-color-rgb: 182, 212, 254;
+    --bs-border-color: #495057;
+}
+
+[data-bs-theme="dark"] .footer,
+[data-bs-theme="dark"] .photo-editor__droparea,
+[data-bs-theme="dark"] .photo-editor__card,
+[data-bs-theme="dark"] .photo-editor__thumbnail {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+    border-color: var(--bs-border-color);
+}
+
+[data-bs-theme="dark"] hr {
+    color: var(--bs-border-color);
+    border-color: var(--bs-border-color);
+}
+
+[data-bs-theme="dark"] .dropdown-item {
+    color: var(--bs-dropdown-link-color);
+}
+
+[data-bs-theme="dark"] .dropdown-item.active,
+[data-bs-theme="dark"] .dropdown-item:active {
+    color: var(--bs-dropdown-link-active-color);
+}
+
+[data-bs-theme="dark"] .breadcrumb {
+    --bs-breadcrumb-bg: var(--bs-tertiary-bg);
+    --bs-breadcrumb-divider-color: var(--bs-secondary-color);
+    --bs-breadcrumb-item-active-color: var(--bs-secondary-color);
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary {
+    --bs-btn-color: #dee2e6;
+    --bs-btn-border-color: #6c757d;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #495057;
+    --bs-btn-hover-border-color: #adb5bd;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #495057;
+    --bs-btn-active-border-color: #adb5bd;
+    --bs-btn-disabled-color: #adb5bd;
+    --bs-btn-disabled-border-color: #495057;
+}
+
+[data-bs-theme="dark"] .pagination {
+    --bs-pagination-color: var(--bs-link-color);
+    --bs-pagination-hover-color: var(--bs-link-hover-color);
+}
+
+[data-bs-theme="dark"] .error-summary,
+[data-bs-theme="dark"] .photo-editor__card--error {
+    color: var(--bs-danger-text-emphasis);
+    background: var(--bs-danger-bg-subtle);
+    border-color: var(--bs-danger-border-subtle);
+}
+
+[data-bs-theme="dark"] .post-card {
+    --post-row-background: var(--bs-body-bg);
+}
+
+[data-bs-theme="dark"] .post-card:nth-child(even) {
+    --post-row-background: var(--bs-tertiary-bg);
+}
+
+[data-bs-theme="dark"] .post-card--clickable:hover,
+[data-bs-theme="dark"] .post-card--clickable:focus-within,
+[data-bs-theme="dark"] .post-card:target,
+[data-bs-theme="dark"] .photo-editor__droparea:hover,
+[data-bs-theme="dark"] .photo-editor__droparea:focus,
+[data-bs-theme="dark"] .photo-editor__droparea--active {
+    background: var(--bs-primary-bg-subtle);
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .post-card.post-card--target-fading {
+    background: var(--post-row-background);
+}
+
+[data-bs-theme="dark"] .post-count,
+[data-bs-theme="dark"] .post-card__date,
+[data-bs-theme="dark"] .post-card__text,
+[data-bs-theme="dark"] .post-modal__date,
+[data-bs-theme="dark"] .post-modal__meta,
+[data-bs-theme="dark"] .photo-editor__empty {
+    color: var(--bs-secondary-color);
+}
+
+[data-bs-theme="dark"] table.container-items tr,
+[data-bs-theme="dark"] table.container-items td.item-thumbnail {
+    border-color: var(--bs-border-color);
+}
+
+[data-bs-theme="dark"] table.container-items td.item-thumbnail {
+    background-color: var(--bs-tertiary-bg);
+}
+
+[data-bs-theme="dark"] table.repos tr,
+[data-bs-theme="dark"] table.repos th,
+[data-bs-theme="dark"] table.repos td,
+[data-bs-theme="dark"] #repo-view table.repo-users th,
+[data-bs-theme="dark"] #repo-view table.repo-users td,
+[data-bs-theme="dark"] #item-view .columns-container #item-children {
+    border-color: var(--bs-border-color);
+}
+
+[data-bs-theme="dark"] .datetimepicker table tr td.day:hover,
+[data-bs-theme="dark"] .datetimepicker table tr td.focused,
+[data-bs-theme="dark"] .datetimepicker table tr td span:not(.active):hover,
+[data-bs-theme="dark"] .datetimepicker table tr td span.focused,
+[data-bs-theme="dark"] .datetimepicker thead tr:first-child th:hover,
+[data-bs-theme="dark"] .datetimepicker tfoot th:hover {
+    background: var(--bs-secondary-bg);
+}
+
+[data-bs-theme="dark"] .datetimepicker table tr td.old,
+[data-bs-theme="dark"] .datetimepicker table tr td.new,
+[data-bs-theme="dark"] .datetimepicker table tr td.disabled,
+[data-bs-theme="dark"] .datetimepicker table tr td span.disabled {
+    color: var(--bs-secondary-color);
+}

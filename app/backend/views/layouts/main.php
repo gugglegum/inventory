@@ -13,6 +13,10 @@ use yii\bootstrap5\Breadcrumbs;
 use common\widgets\Alert;
 
 AppAsset::register($this);
+$this->registerJsFile('@web/js/theme.js', [
+    'position' => \yii\web\View::POS_HEAD,
+    'appendTimestamp' => true,
+]);
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
@@ -52,9 +56,25 @@ AppAsset::register($this);
         /** @var User $identity */
         $identity = Yii::$app->user->identity;
         $menuItems[] = [
-            'label' => 'Logout (' . $identity->username . ')',
-            'url' => ['/site/logout'],
-            'linkOptions' => ['data-method' => 'post']
+            'label' => $identity->username,
+            'linkOptions' => ['data-bs-auto-close' => 'outside'],
+            'dropdownOptions' => ['class' => 'dropdown-menu-end user-menu'],
+            'items' => [
+                '<div class="px-3 py-2 d-flex align-items-center gap-2">'
+                    . Html::label('Тема', 'theme-select', ['class' => 'form-label mb-0 flex-shrink-0'])
+                    . Html::dropDownList('theme', 'auto', [
+                        'auto' => 'Авто',
+                        'light' => 'Светлая',
+                        'dark' => 'Тёмная',
+                    ], ['id' => 'theme-select', 'class' => 'form-select'])
+                    . '</div>',
+                '-',
+                [
+                    'label' => 'Выход',
+                    'url' => ['/site/logout'],
+                    'linkOptions' => ['data-method' => 'post', 'class' => 'text-danger-emphasis'],
+                ],
+            ],
         ];
     }
     echo Nav::widget([

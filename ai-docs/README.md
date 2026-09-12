@@ -60,6 +60,16 @@ fastcgi_pass stockhub-php:9000;
 
 ### Bootstrap 5
 
+Меню пользователя в backend содержит select темы и последний пункт «Выход»
+(POST). Тема применяется через `data-bs-theme` на `<html>`; `js/theme.js`
+загружается в head до отрисовки. `localStorage['stockhub.theme']` хранит только
+`light` или `dark`; отсутствие ключа означает «Авто», выбор «Авто» удаляет ключ.
+Автоматический режим отслеживает `prefers-color-scheme`, изменения настройки
+синхронизируются между вкладками через событие `storage`. Дополнения для
+собственных компонентов и старых цветов находятся в `css/site.css` под
+`[data-bs-theme="dark"]`. Проверка логики: `node --test app/tests/js/theme.test.cjs`
+из корня репозитория.
+
 Интерфейс переведен с Bootstrap 3 на Bootstrap 5. Composer lock фиксирует
 Bootstrap 5.3.8, Yii-расширение `yiisoft/yii2-bootstrap5` 2.0.51 и локальный
 пакет Bootstrap Icons 1.13.1. Backend и frontend `AppAsset` подключают
