@@ -4,7 +4,6 @@ namespace backend\controllers;
 
 use common\helpers\PostDataHelper;
 use common\models\LoginForm;
-use common\services\OidcFlowRateLimiter;
 use common\services\OidcProvider;
 use common\services\OidcTokenVerifier;
 use common\services\SsoUserLinker;
@@ -19,7 +18,6 @@ use yii\web\HttpException;
 use yii\web\MethodNotAllowedHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
-use yii\web\TooManyRequestsHttpException;
 
 /**
  * Site controller
@@ -112,8 +110,6 @@ class SiteController extends Controller
             return $this->goHome();
         }
 
-        $this->consumeOidcAuthorizationStartQuota();
-
         try {
             $provider = $this->createOidcProvider();
             $authorizationEndpoint = $provider->authorizationEndpoint();
@@ -184,10 +180,6 @@ class SiteController extends Controller
             return $this->redirect(['site/login']);
         }
 
-        // Резервируем квоту до discovery: накопленные state не должны позволять
-        // burst-ом занять PHP-FPM workers исходящими запросами к недоступному SSO.
-        $this->consumeOidcTokenExchangeQuota();
-
         try {
             $provider = $this->createOidcProvider();
             $provider->discovery();
@@ -233,19 +225,6 @@ class SiteController extends Controller
         }
 
         return $provider;
-    }
-
-    /**
-     * Создает общий для deployment limiter через DI-контейнер.
-     */
-    protected function createOidcFlowRateLimiter(): OidcFlowRateLimiter
-    {
-        $limiter = Yii::$container->get(OidcFlowRateLimiter::class);
-        if (!$limiter instanceof OidcFlowRateLimiter) {
-            throw new RuntimeException('OIDC flow rate limiter is not configured.');
-        }
-
-        return $limiter;
     }
 
     private function isPasswordLoginEnabled(): bool
@@ -359,75 +338,6 @@ class SiteController extends Controller
         }
 
         Yii::$app->session->set(self::OIDC_SESSION_KEY, $pendingFlows);
-    }
-
-    /**
-     * Ограничивает discovery-запросы до обращения к OIDC provider.
-     */
-    private function consumeOidcAuthorizationStartQuota(): void
-    {
-        try {
-            $allowed = $this->createOidcFlowRateLimiter()->consumeAuthorizationStart(
-                $this->oidcClientIp(),
-            );
-        } catch (Throwable $exception) {
-            $this->throwOidcRateLimitUnavailable($exception);
-        }
-
-        if (!$allowed) {
-            throw new TooManyRequestsHttpException('Too many SSO authorization attempts.');
-        }
-    }
-
-    /**
-     * Резервирует локальную квоту до callback discovery и последующего /oauth/token.
-     */
-    private function consumeOidcTokenExchangeQuota(): void
-    {
-        try {
-            $allowed = $this->createOidcFlowRateLimiter()->consumeTokenExchange(
-                $this->oidcClientIp(),
-                $this->oidcHttpTimeout(),
-            );
-        } catch (Throwable $exception) {
-            $this->throwOidcRateLimitUnavailable($exception);
-        }
-
-        if (!$allowed) {
-            throw new TooManyRequestsHttpException('Too many SSO login attempts.');
-        }
-    }
-
-    private function oidcClientIp(): string
-    {
-        $clientIp = Yii::$app->request->getUserIP();
-        if (!is_string($clientIp) || @inet_pton($clientIp) === false) {
-            throw new RuntimeException('OIDC client IP address is unavailable.');
-        }
-
-        return $clientIp;
-    }
-
-    private function oidcHttpTimeout(): int
-    {
-        $httpTimeout = Yii::$app->params['oidc']['httpTimeout'] ?? null;
-        if (!is_int($httpTimeout) || $httpTimeout < 1) {
-            throw new RuntimeException('OIDC HTTP timeout is not configured.');
-        }
-
-        return $httpTimeout;
-    }
-
-    private function throwOidcRateLimitUnavailable(Throwable $exception): never
-    {
-        $this->logSsoFailure('OIDC rate limiter failed.', $exception);
-
-        throw new HttpException(
-            503,
-            'SSO login is temporarily unavailable.',
-            0,
-            $exception,
-        );
     }
 
     private function ssoCallbackFailureResponse(Throwable $exception): Response

@@ -6,7 +6,6 @@ namespace tests\phpunit\integration;
 
 use backend\controllers\SiteController;
 use common\models\User;
-use common\services\OidcFlowRateLimiter;
 use common\services\OidcProvider;
 use OpenSSLAsymmetricKey;
 use RuntimeException;
@@ -17,7 +16,6 @@ use yii\web\Cookie;
 use yii\web\HttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
-use yii\web\TooManyRequestsHttpException;
 
 /**
  * Сквозные integration-тесты browser-части OIDC authorization code flow.
@@ -40,8 +38,6 @@ final class SsoAuthControllerTest extends DbTestCase
 
     /** @var array<string, mixed> */
     private static array $jwk;
-
-    private string $rateLimitStorageFile;
 
     private bool $hadRemoteAddress;
 
@@ -88,21 +84,11 @@ final class SsoAuthControllerTest extends DbTestCase
         $this->hadRemoteAddress = array_key_exists('REMOTE_ADDR', $_SERVER);
         $this->originalRemoteAddress = $_SERVER['REMOTE_ADDR'] ?? null;
         $_SERVER['REMOTE_ADDR'] = '203.0.113.10';
-        $this->rateLimitStorageFile = Yii::getAlias('@phpunitRuntime')
-            . '/oidc-token-exchange-' . bin2hex(random_bytes(8)) . '.json';
-        $this->registerRateLimiter();
     }
 
     protected function tearDown(): void
     {
         Yii::$container->clear(OidcProvider::class);
-        Yii::$container->clear(OidcFlowRateLimiter::class);
-        foreach (['', '.lock', '.tmp'] as $suffix) {
-            $path = $this->rateLimitStorageFile . $suffix;
-            if (is_file($path)) {
-                unlink($path);
-            }
-        }
         if ($this->hadRemoteAddress) {
             $_SERVER['REMOTE_ADDR'] = $this->originalRemoteAddress;
         } else {
@@ -449,271 +435,42 @@ final class SsoAuthControllerTest extends DbTestCase
     }
 
     /**
-     * Смена PHP session cookie не обходит лимит доверенно определенного client IP.
+     * Повторные успешные входы и выходы не ограничиваются локальной IP-квотой.
      */
-    public function testTokenExchangeClientIpLimitSurvivesSessionChanges(): void
+    public function testRepeatedSuccessfulLoginsAreNotLocallyRateLimited(): void
     {
+        $user = $this->createUser();
+        $user->updateAttributes([
+            'ssoIssuer' => self::ISSUER,
+            'ssoSubject' => 'repeated-login-user',
+        ]);
         $transport = $this->configuredTransport();
-        $transport->respondToPost(self::ISSUER . '/oauth/token', []);
+        $transport->respondToGet(self::ISSUER . '/oauth/jwks', ['keys' => [self::$jwk]]);
         $this->registerProvider($transport);
         $controller = $this->prepareController();
 
-        for ($index = 0; $index < 2; $index++) {
+        for ($index = 0; $index < 12; $index++) {
             $pending = $this->startAuthorization($controller);
+            $transport->respondToPost(self::ISSUER . '/oauth/token', [
+                'token_type' => 'Bearer',
+                'access_token' => 'access-token',
+                'id_token' => $this->idToken([
+                    'sub' => 'repeated-login-user',
+                    'nonce' => $pending['nonce'],
+                ]),
+            ]);
             $this->setGetRequest([
                 'code' => 'code-' . $index,
                 'state' => $pending['state'],
             ], '/auth/sso/callback');
-            $controller->actionSsoCallback();
-            $this->switchBrowserSession();
+
+            self::assertSame(302, $controller->actionSsoCallback()->statusCode);
+            self::assertSame($user->id, Yii::$app->user->id);
+            $controller->actionLogout();
+            self::assertTrue(Yii::$app->user->isGuest);
         }
 
-        $pending = $this->startAuthorization($controller);
-        $this->setGetRequest([
-            'code' => 'rate-limited-code',
-            'state' => $pending['state'],
-        ], '/auth/sso/callback');
-
-        try {
-            $controller->actionSsoCallback();
-            self::fail('Client-IP OIDC token exchange limit was bypassed by changing session.');
-        } catch (TooManyRequestsHttpException $exception) {
-            self::assertSame(429, $exception->statusCode);
-        }
-
-        self::assertCount(2, $transport->postRequests);
-    }
-
-    /**
-     * Общий deployment-лимит проверяется до исходящего /oauth/token.
-     */
-    public function testTokenExchangeIsLimitedAcrossDeployment(): void
-    {
-        $this->registerRateLimiter(tokenGlobalLimit: 2, tokenClientLimit: 10);
-        $transport = $this->configuredTransport();
-        $transport->respondToPost(self::ISSUER . '/oauth/token', []);
-        $this->registerProvider($transport);
-        $controller = $this->prepareController();
-        $pendingFlows = [
-            $this->startAuthorization($controller),
-            $this->startAuthorization($controller),
-            $this->startAuthorization($controller),
-        ];
-
-        foreach (array_slice($pendingFlows, 0, 2) as $index => $pending) {
-            $this->setGetRequest([
-                'code' => 'global-code-' . $index,
-                'state' => $pending['state'],
-            ], '/auth/sso/callback');
-            $controller->actionSsoCallback();
-        }
-
-        $this->setGetRequest([
-            'code' => 'global-rate-limited-code',
-            'state' => $pendingFlows[2]['state'],
-        ], '/auth/sso/callback');
-
-        try {
-            $controller->actionSsoCallback();
-            self::fail('Deployment-wide OIDC token exchange limit was not enforced.');
-        } catch (TooManyRequestsHttpException $exception) {
-            self::assertSame(429, $exception->statusCode);
-        }
-
-        self::assertCount(2, $transport->postRequests);
-    }
-
-    /**
-     * Недоступное хранилище limiter запрещает exchange вместо fail-open.
-     */
-    public function testTokenExchangeFailsClosedWhenRateLimitStorageIsUnavailable(): void
-    {
-        $transport = $this->configuredTransport();
-        $transport->respondToPost(self::ISSUER . '/oauth/token', []);
-        $this->registerProvider($transport);
-        $controller = $this->prepareController();
-        $pending = $this->startAuthorization($controller);
-
-        Yii::$container->setSingleton(
-            OidcFlowRateLimiter::class,
-            new OidcFlowRateLimiter(
-                storageFile: Yii::getAlias('@phpunitRuntime') . '/missing/directory/rate-limit.json',
-            ),
-        );
-        $this->setGetRequest([
-            'code' => 'must-not-be-exchanged',
-            'state' => $pending['state'],
-        ], '/auth/sso/callback');
-
-        try {
-            $controller->actionSsoCallback();
-            self::fail('OIDC exchange proceeded without rate-limit storage.');
-        } catch (HttpException $exception) {
-            self::assertSame(503, $exception->statusCode);
-        }
-
-        self::assertSame([], $transport->postRequests);
-    }
-
-    /**
-     * Существующий пустой state считается повреждением, а не новым limiter.
-     */
-    public function testTokenExchangeFailsClosedForEmptyExistingRateLimitState(): void
-    {
-        $transport = $this->configuredTransport();
-        $transport->respondToPost(self::ISSUER . '/oauth/token', []);
-        $this->registerProvider($transport);
-        $controller = $this->prepareController();
-        $pending = $this->startAuthorization($controller);
-        self::assertNotFalse(file_put_contents($this->rateLimitStorageFile, ''));
-        $this->setGetRequest([
-            'code' => 'must-not-reset-limit',
-            'state' => $pending['state'],
-        ], '/auth/sso/callback');
-
-        try {
-            $controller->actionSsoCallback();
-            self::fail('OIDC exchange proceeded with an empty existing rate-limit state.');
-        } catch (HttpException $exception) {
-            self::assertSame(503, $exception->statusCode);
-        }
-
-        self::assertSame([], $transport->postRequests);
-    }
-
-    /**
-     * Stale temp от оборванной записи удаляется под постоянным lock-файлом.
-     */
-    public function testRateLimiterCleansStaleTemporaryState(): void
-    {
-        $transport = $this->configuredTransport();
-        $transport->respondToPost(self::ISSUER . '/oauth/token', []);
-        $this->registerProvider($transport);
-        $controller = $this->prepareController();
-        $pending = $this->startAuthorization($controller);
-        $temporaryFile = $this->rateLimitStorageFile . '.tmp';
-        self::assertNotFalse(file_put_contents($temporaryFile, 'incomplete-state'));
-        $this->setGetRequest([
-            'code' => 'one-time-code',
-            'state' => $pending['state'],
-        ], '/auth/sso/callback');
-
-        $controller->actionSsoCallback();
-
-        self::assertFileDoesNotExist($temporaryFile);
-        self::assertCount(1, $transport->postRequests);
-    }
-
-    /**
-     * Неуспешный (в том числе завершившийся по timeout) discovery расходует callback quota.
-     */
-    public function testTokenQuotaIsReservedBeforeFailedDiscovery(): void
-    {
-        $transport = $this->configuredTransport();
-        $this->registerProvider($transport);
-        $controller = $this->prepareController();
-        $pending = $this->startAuthorization($controller);
-        self::assertCount(0, $this->rateLimitState()['token']['global']);
-
-        Yii::$container->clear(OidcProvider::class);
-        $failingTransport = new FakeOidcHttpTransport();
-        $this->registerProvider($failingTransport);
-        $this->setGetRequest([
-            'code' => 'must-not-be-exchanged',
-            'state' => $pending['state'],
-        ], '/auth/sso/callback');
-
-        $quotaLifetime = (float) (
-            OidcFlowRateLimiter::BASE_WINDOW_SECONDS + (2 * self::HTTP_TIMEOUT)
-        );
-        $minimumExpiration = microtime(true) + $quotaLifetime;
-        $response = $controller->actionSsoCallback();
-
-        self::assertSame(302, $response->statusCode);
-        self::assertCount(1, $failingTransport->getRequests);
-        self::assertSame([], $failingTransport->postRequests);
-        $tokenExpirations = $this->rateLimitState()['token']['global'];
-        self::assertCount(1, $tokenExpirations);
-        self::assertGreaterThanOrEqual($minimumExpiration, $tokenExpirations[0]);
-        self::assertLessThanOrEqual(
-            microtime(true) + $quotaLifetime,
-            $tokenExpirations[0],
-        );
-    }
-
-    /**
-     * Burst накопленных callback останавливается quota до следующего outbound discovery.
-     */
-    public function testCallbackBurstIsLimitedBeforeOutboundDiscovery(): void
-    {
-        $this->registerRateLimiter(tokenGlobalLimit: 2, tokenClientLimit: 2);
-        $transport = $this->configuredTransport();
-        $this->registerProvider($transport);
-        $controller = $this->prepareController();
-        $pendingFlows = [
-            $this->startAuthorization($controller),
-            $this->startAuthorization($controller),
-            $this->startAuthorization($controller),
-        ];
-
-        Yii::$container->clear(OidcProvider::class);
-        $failingTransport = new FakeOidcHttpTransport();
-        $this->registerProvider($failingTransport);
-
-        foreach (array_slice($pendingFlows, 0, 2) as $index => $pending) {
-            $this->setGetRequest([
-                'code' => 'failed-discovery-code-' . $index,
-                'state' => $pending['state'],
-            ], '/auth/sso/callback');
-
-            $response = $controller->actionSsoCallback();
-            self::assertSame(302, $response->statusCode);
-        }
-
-        self::assertCount(2, $failingTransport->getRequests);
-        self::assertCount(2, $this->rateLimitState()['token']['global']);
-        $this->setGetRequest([
-            'code' => 'must-not-reach-discovery',
-            'state' => $pendingFlows[2]['state'],
-        ], '/auth/sso/callback');
-
-        try {
-            $controller->actionSsoCallback();
-            self::fail('Callback discovery burst bypassed the reserved quota.');
-        } catch (TooManyRequestsHttpException $exception) {
-            self::assertSame(429, $exception->statusCode);
-        }
-
-        self::assertCount(2, $failingTransport->getRequests);
-        self::assertSame([], $failingTransport->postRequests);
-    }
-
-    /**
-     * Authorization start/discovery ограничен по client IP независимо от cookie.
-     */
-    public function testAuthorizationStartIsLimitedByClientIpAcrossSessions(): void
-    {
-        $this->registerRateLimiter(authorizationClientLimit: 2);
-        $transport = $this->configuredTransport();
-        $this->registerProvider($transport);
-        $controller = $this->prepareController();
-
-        for ($index = 0; $index < 2; $index++) {
-            $this->startAuthorization($controller);
-            $this->switchBrowserSession();
-        }
-
-        $requestsBeforeLimit = count($transport->getRequests);
-        $this->setGetRequest([], '/auth/sso/redirect');
-
-        try {
-            $controller->actionSsoLogin();
-            self::fail('Authorization start client-IP limit was bypassed by changing session.');
-        } catch (TooManyRequestsHttpException $exception) {
-            self::assertSame(429, $exception->statusCode);
-        }
-
-        self::assertSame($requestsBeforeLimit, count($transport->getRequests));
+        self::assertCount(12, $transport->postRequests);
     }
 
     /**
@@ -779,59 +536,6 @@ final class SsoAuthControllerTest extends DbTestCase
             OidcProvider::class,
             new OidcProvider($this->oidcConfig(), $transport),
         );
-    }
-
-    private function registerRateLimiter(
-        int $tokenGlobalLimit = OidcFlowRateLimiter::DEFAULT_TOKEN_GLOBAL_LIMIT,
-        int $tokenClientLimit = OidcFlowRateLimiter::DEFAULT_TOKEN_CLIENT_LIMIT,
-        int $authorizationGlobalLimit = OidcFlowRateLimiter::DEFAULT_AUTHORIZATION_GLOBAL_LIMIT,
-        int $authorizationClientLimit = OidcFlowRateLimiter::DEFAULT_AUTHORIZATION_CLIENT_LIMIT,
-    ): void {
-        Yii::$container->setSingleton(
-            OidcFlowRateLimiter::class,
-            new OidcFlowRateLimiter(
-                tokenGlobalLimit: $tokenGlobalLimit,
-                tokenClientLimit: $tokenClientLimit,
-                authorizationGlobalLimit: $authorizationGlobalLimit,
-                authorizationClientLimit: $authorizationClientLimit,
-                storageFile: $this->rateLimitStorageFile,
-            ),
-        );
-    }
-
-    private function switchBrowserSession(): void
-    {
-        $session = Yii::$app->session;
-        $previousId = $session->getId();
-        $session->close();
-        $session->setId(bin2hex(random_bytes(16)));
-        $session->open();
-        $session->removeAll();
-
-        self::assertNotSame($previousId, $session->getId());
-    }
-
-    /**
-     * @return array{
-     *     version:int,
-     *     authorization:array{global:list<float>,clients:array<string,list<float>>},
-     *     token:array{global:list<float>,clients:array<string,list<float>>}
-     * }
-     */
-    private function rateLimitState(): array
-    {
-        $encodedState = file_get_contents($this->rateLimitStorageFile);
-        self::assertIsString($encodedState);
-        $state = json_decode($encodedState, true, 16, JSON_THROW_ON_ERROR);
-        self::assertIsArray($state);
-
-        /** @var array{
-         *     version:int,
-         *     authorization:array{global:list<float>,clients:array<string,list<float>>},
-         *     token:array{global:list<float>,clients:array<string,list<float>>}
-         * } $state
-         */
-        return $state;
     }
 
     private function prepareController(): SiteController
