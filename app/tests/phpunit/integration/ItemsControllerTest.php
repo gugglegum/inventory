@@ -37,6 +37,7 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringContainsString($rootContainer->name, $response);
         self::assertStringContainsString($rootItem->name, $response);
         self::assertStringContainsString('/js/search-form.js', $response);
+        self::assertMatchesRegularExpression('~<head>.*<script src="[^"]*/js/theme\.js\?v=\d+".*</head>~s', $response);
         self::assertStringContainsString('name="description" value="" disabled', $response);
         self::assertStringContainsString('name="notes" value="" disabled', $response);
     }
@@ -58,6 +59,7 @@ final class ItemsControllerTest extends DbTestCase
 
         self::assertIsString($response);
         self::assertSame('blank', $controller->layout);
+        self::assertMatchesRegularExpression('~<head>.*<script src="[^"]*/js/theme\.js\?v=\d+".*</head>~s', $response);
         self::assertStringContainsString($rootContainer->name, $response);
         self::assertStringContainsString($childContainer->name, $response);
         self::assertStringContainsString('Выбрать', $response);
@@ -84,6 +86,7 @@ final class ItemsControllerTest extends DbTestCase
 
         self::assertIsString($response);
         self::assertSame('blank', $controller->layout);
+        self::assertMatchesRegularExpression('~<head>.*<script src="[^"]*/js/theme\.js\?v=\d+".*</head>~s', $response);
         self::assertStringContainsString('Всего найдено контейнеров: 1', $response);
         self::assertStringContainsString($matchingContainer->name, $response);
         self::assertStringNotContainsString($nonContainer->name, $response);

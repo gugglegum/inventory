@@ -62,7 +62,9 @@ fastcgi_pass stockhub-php:9000;
 
 Меню пользователя в backend содержит select темы и последний пункт «Выход»
 (POST). Тема применяется через `data-bs-theme` на `<html>`; `js/theme.js`
-загружается в head до отрисовки. `localStorage['stockhub.theme']` хранит только
+подключается общим backend `AppAsset` в head до отрисовки, включая layout
+`blank` для `pick-container` и `search-container` (в том числе внутри iframe).
+`localStorage['stockhub.theme']` хранит только
 `light` или `dark`; отсутствие ключа означает «Авто», выбор «Авто» удаляет ключ.
 Автоматический режим отслеживает `prefers-color-scheme`, изменения настройки
 синхронизируются между вкладками через событие `storage`. Дополнения для

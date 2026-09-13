@@ -13,10 +13,6 @@ use yii\bootstrap5\Breadcrumbs;
 use common\widgets\Alert;
 
 AppAsset::register($this);
-$this->registerJsFile('@web/js/theme.js', [
-    'position' => \yii\web\View::POS_HEAD,
-    'appendTimestamp' => true,
-]);
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>

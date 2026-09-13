@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @link http://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
@@ -8,6 +9,7 @@
 namespace backend\assets;
 
 use yii\web\AssetBundle;
+use yii\web\View;
 
 /**
  * @author Qiang Xue <qiang.xue@gmail.com>
@@ -22,6 +24,7 @@ class AppAsset extends AssetBundle
         'css/site.css',
     ];
     public $js = [
+        ['js/theme.js', 'position' => View::POS_HEAD, 'appendTimestamp' => true],
     ];
     public $depends = [
         'yii\web\YiiAsset',
