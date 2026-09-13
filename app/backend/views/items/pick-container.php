@@ -17,8 +17,10 @@ $this->registerJsFile('@web/js/pick-container.js', ['appendTimestamp' => true, '
 $this->title = 'Выбор контейнера';
 $this->render('/_breadcrumbs', ['item' => null, 'repo' => $repo, 'suffix' => [$this->title]]);
 
-// Disable debug console in the bottom right corner
-$this->off(\yii\web\View::EVENT_END_BODY, [\yii\debug\Module::getInstance(), 'renderToolbar']);
+// Hide the toolbar only when the optional development module is already loaded.
+if (($debugModule = Yii::$app->getModule('debug', false)) !== null) {
+    $this->off(\yii\web\View::EVENT_END_BODY, [$debugModule, 'renderToolbar']);
+}
 ?>
 <div class="pick-container">
     <?= $this->render('_searchForm', [

@@ -24,6 +24,9 @@ $testConfig = yii\helpers\ArrayHelper::merge(
             'request' => [
                 'cookieValidationKey' => 'phpunit-test-cookie-key',
                 'enableCsrfValidation' => false,
+                // Isolated PHPUnit processes run from stdin, not a web entry script.
+                'scriptFile' => dirname(__DIR__, 3) . '/backend/web/index.php',
+                'scriptUrl' => '/index.php',
             ],
             'user' => [
                 'identityClass' => common\models\User::class,

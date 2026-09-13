@@ -490,6 +490,15 @@ Read-часть `InventoryController::actionView()` вынесена в `backend
 
 Read-side ветки `ItemsController::actionIndex()`, `ItemsController::actionPickContainer()` и `ItemsController::actionSearchContainer()` вынесены в `backend/services/ItemListService.php`. Сервис возвращает корневые предметы репозитория, готовит данные модального выбора контейнера через DTO `backend/services/ItemContainerPickerData.php` и делегирует поиск контейнеров существующему `ItemSearchService`. Контракт покрыт `tests/phpunit/integration/ItemListServiceTest.php`, а HTTP-render регрессии index/pick-container/search-container добавлены в `tests/phpunit/integration/ItemsControllerTest.php`.
 
+Шаблоны выбора и поиска контейнера отключают debug toolbar только у уже
+загруженного `Yii::$app->getModule('debug', false)`. Нельзя обращаться из этих
+шаблонов напрямую к `yii\debug\Module`: пакет `yii2-debug` находится в
+`require-dev` и отсутствует на production с `composer --no-dev`, что вызывает
+HTTP 500. Render-тесты обеих страниц запускаются в отдельных процессах с
+запрещённой автозагрузкой `yii\debug\*`. Тестовый request явно задаёт
+`scriptFile` и `scriptUrl`, чтобы изолированный PHP-процесс, запущенный из
+stdin, не зависел от CLI-значений `$_SERVER`.
+
 Подготовка и сохранение create/update формы пользователя вынесены из `UsersController` в `backend/services/UserFormService.php`. `backend/models/UserForm.php` теперь использует константу `SCENARIO_CREATE` вместо строкового сценария `create`, а контроллер оставляет за собой redirect/render. Сервис покрыт `tests/phpunit/integration/UserFormServiceTest.php`, HTTP CRUD-сценарии пользователей - `tests/phpunit/integration/UsersControllerTest.php`, login/logout - `tests/phpunit/integration/SiteControllerTest.php`. Глобальные bitmask-права `UserAccess::canManageUsers()` и `UserAccess::canCreateRepo()` дополнительно закреплены в `tests/phpunit/integration/AccessTest.php`.
 
 Каскадная логика удаления из ActiveRecord-моделей вынесена в common-сервисы: `common/services/ItemDeletionCascadeService.php` обслуживает `Item::softDelete()`, `Item::beforeSoftDelete()` и `Item::beforeDelete()`, а `common/services/RepoDeletionCascadeService.php` обслуживает `Repo::beforeDelete()`. Модельные методы и hooks оставлены как публичные точки входа, поэтому существующие вызовы `$item->delete()`, `$item->softDelete()` и `$repo->delete()` сохраняют поведение, но обход дочерних предметов, фотографий, заметок и root items больше не живет прямо в моделях. Поведение закреплено тестами `tests/phpunit/integration/ItemDeletionCascadeServiceTest.php` и `tests/phpunit/integration/RepoDeletionCascadeServiceTest.php`; существующие deletion/controller тесты дополнительно страхуют совместимость.

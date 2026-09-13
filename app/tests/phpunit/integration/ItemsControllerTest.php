@@ -8,6 +8,8 @@ use backend\controllers\ItemsController;
 use common\models\Item;
 use common\models\RepoUser;
 use common\models\User;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use tests\phpunit\DbTestCase;
 use Yii;
 use yii\web\Response;
@@ -42,13 +44,17 @@ final class ItemsControllerTest extends DbTestCase
     /**
      * GET pick-container рендерит выбранный контейнер и его дочерние контейнеры.
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function testPickContainerRendersSelectedContainerLevel(): void
     {
         [$controller, $repo, $rootContainer, , $childContainer] = $this->prepareItemListFixture();
 
         $this->setGetRequest();
 
-        $response = $controller->actionPickContainer($repo->id, (string) $rootContainer->itemId);
+        $response = $this->withoutDebugPackage(
+            static fn () => $controller->actionPickContainer($repo->id, (string) $rootContainer->itemId)
+        );
 
         self::assertIsString($response);
         self::assertSame('blank', $controller->layout);
@@ -64,13 +70,17 @@ final class ItemsControllerTest extends DbTestCase
     /**
      * GET search-container рендерит результаты поиска только среди контейнеров.
      */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function testSearchContainerRendersOnlyMatchingContainers(): void
     {
         [$controller, $repo, , , , $matchingContainer, $nonContainer] = $this->prepareItemListFixture();
 
         $this->setGetRequest(['q' => 'Кабельный']);
 
-        $response = $controller->actionSearchContainer($repo->id, 'Кабельный');
+        $response = $this->withoutDebugPackage(
+            static fn () => $controller->actionSearchContainer($repo->id, 'Кабельный')
+        );
 
         self::assertIsString($response);
         self::assertSame('blank', $controller->layout);
@@ -79,6 +89,26 @@ final class ItemsControllerTest extends DbTestCase
         self::assertStringNotContainsString($nonContainer->name, $response);
         self::assertStringNotContainsString('name="description"', $response);
         self::assertStringNotContainsString('name="notes"', $response);
+    }
+
+    /**
+     * Production uses composer --no-dev; rendering must not autoload yii2-debug.
+     */
+    private function withoutDebugPackage(callable $render): mixed
+    {
+        self::assertFalse(class_exists('yii\\debug\\Module', false));
+        $blockDebugAutoload = static function (string $class): void {
+            if (str_starts_with($class, 'yii\\debug\\')) {
+                throw new \Error('Development-only class requested: ' . $class);
+            }
+        };
+        spl_autoload_register($blockDebugAutoload, true, true);
+
+        try {
+            return $render();
+        } finally {
+            spl_autoload_unregister($blockDebugAutoload);
+        }
     }
 
     /**
