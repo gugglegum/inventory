@@ -219,6 +219,168 @@
         });
     }
 
+    function PhotoEditorForm(form) {
+        var self = this;
+
+        this.form = form;
+        this.waiting = false;
+        this.submitter = null;
+        this.submitTimer = null;
+        this.buttonStates = [];
+
+        form.addEventListener('click', function(event) {
+            var button = event.target.closest('button, input');
+
+            if (!button || button.form !== form || button.type !== 'submit' || button.disabled) {
+                return;
+            }
+
+            if (self.waiting) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                self.stopWaiting();
+            } else if (self.deferSubmit(button)) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
+        }, true);
+        form.addEventListener('submit', function(event) {
+            if (self.deferSubmit(event.submitter)) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
+        }, true);
+        form.addEventListener('reset', function() {
+            self.stopWaiting();
+        });
+
+        // Yii's validated resubmit is a jQuery event and bypasses native listeners.
+        if (window.jQuery) {
+            window.jQuery(form).on('beforeSubmit.photoEditor', function() {
+                if (self.deferSubmit()) {
+                    return false;
+                }
+            });
+        }
+    }
+
+    PhotoEditorForm.prototype.editors = function() {
+        return arrayFrom(this.form.querySelectorAll('[data-photo-editor]')).map(function(root) {
+            return root._photoEditorController;
+        }).filter(Boolean);
+    };
+
+    PhotoEditorForm.prototype.deferSubmit = function(submitter) {
+        if (!this.editors().some(function(editor) { return editor.hasBlockingCards(); })) {
+            return false;
+        }
+
+        if (!this.waiting) {
+            this.waiting = true;
+            this.submitter = submitter || this.form.querySelector('button[type="submit"], input[type="submit"]');
+            this.buttonStates = arrayFrom(this.form.querySelectorAll('button[type="submit"], input[type="submit"]'))
+                .filter(function(button) { return !button.disabled; })
+                .map(function(button) {
+                    var state = {
+                        button: button,
+                        title: button.getAttribute('title'),
+                        label: button.getAttribute('aria-label'),
+                        busy: button.getAttribute('aria-busy'),
+                        value: button.value,
+                        spinner: null
+                    };
+                    var label = button.getAttribute('aria-label') || button.textContent || button.value;
+                    var hint = 'Ожидание загрузки фотографий. Нажмите ещё раз, чтобы отменить ожидание.';
+
+                    button.setAttribute('title', hint);
+                    button.setAttribute('aria-label', label + '. ' + hint);
+                    button.setAttribute('aria-busy', 'true');
+                    if (button.tagName === 'BUTTON') {
+                        state.spinner = document.createElement('span');
+                        state.spinner.className = 'spinner-border spinner-border-sm me-2';
+                        state.spinner.setAttribute('aria-hidden', 'true');
+                        button.insertBefore(state.spinner, button.firstChild);
+                    } else {
+                        button.value += ' — ожидание…';
+                    }
+
+                    return state;
+                });
+        }
+
+        this.updateState();
+        return true;
+    };
+
+    PhotoEditorForm.prototype.stopWaiting = function() {
+        window.clearTimeout(this.submitTimer);
+        this.submitTimer = null;
+        this.waiting = false;
+        this.submitter = null;
+        this.buttonStates.forEach(function(state) {
+            ['title', 'aria-label', 'aria-busy'].forEach(function(attribute, index) {
+                var value = [state.title, state.label, state.busy][index];
+                if (value === null) {
+                    state.button.removeAttribute(attribute);
+                } else {
+                    state.button.setAttribute(attribute, value);
+                }
+            });
+            if (state.spinner) {
+                state.spinner.remove();
+            } else {
+                state.button.value = state.value;
+            }
+        });
+        this.buttonStates = [];
+    };
+
+    PhotoEditorForm.prototype.updateState = function() {
+        var self = this;
+        var editors = this.editors();
+        var failed = editors.filter(function(editor) {
+            return editor.list.querySelector('[data-photo-editor-card][data-status="error"]');
+        });
+
+        if (!this.waiting) {
+            return;
+        }
+        if (failed.length > 0) {
+            this.stopWaiting();
+            failed.forEach(function(editor) {
+                editor.showMessage('Не удалось загрузить фотографии. Повторите загрузку или уберите карточки с ошибками, затем сохраните форму.', 'blocking');
+            });
+            failed[0].root.scrollIntoView({behavior: 'smooth', block: 'center'});
+            return;
+        }
+        if (editors.some(function(editor) { return editor.hasBlockingCards(); }) || this.submitTimer !== null) {
+            return;
+        }
+
+        // Finish the current upload/removal callback and refresh every manifest first.
+        this.submitTimer = window.setTimeout(function() {
+            var submitter = self.submitter;
+
+            self.submitTimer = null;
+            if (!self.waiting || !self.form.isConnected) {
+                self.stopWaiting();
+                return;
+            }
+            if (self.editors().some(function(editor) { return editor.hasBlockingCards(); })) {
+                self.updateState();
+                return;
+            }
+
+            self.stopWaiting();
+            // A real click preserves the submitter and runs normal HTML/Yii validation.
+            if (submitter && submitter.form === self.form && !submitter.disabled) {
+                submitter.click();
+            } else {
+                self.form.requestSubmit();
+            }
+        }, 0);
+    };
+
     function PhotoEditor(root) {
         this.root = root;
         this.form = root.closest('form');
@@ -364,18 +526,9 @@
         });
 
         if (this.form) {
-            this.form.addEventListener('submit', function(event) {
-                if (!self.hasBlockingCards()) {
-                    return;
-                }
-
-                event.preventDefault();
-                self.showMessage(
-                    'Дождитесь окончания загрузки или устраните ошибки в карточках фотографий.',
-                    'blocking'
-                );
-                self.root.scrollIntoView({behavior: 'smooth', block: 'center'});
-            }, true);
+            if (!this.form._photoEditorFormController) {
+                this.form._photoEditorFormController = new PhotoEditorForm(this.form);
+            }
         }
     };
 
@@ -1207,30 +1360,9 @@
     };
 
     PhotoEditor.prototype.updateFormSubmitState = function() {
-        var blocked;
-
-        if (!this.form) {
-            return;
+        if (this.form && this.form._photoEditorFormController) {
+            this.form._photoEditorFormController.updateState();
         }
-
-        blocked = arrayFrom(this.form.querySelectorAll('[data-photo-editor]')).some(function(root) {
-            return root._photoEditorController && root._photoEditorController.hasBlockingCards();
-        });
-
-        arrayFrom(this.form.querySelectorAll('button[type="submit"], input[type="submit"]')).forEach(function(button) {
-            if (blocked) {
-                if (!button.hasAttribute('data-photo-editor-disabled')) {
-                    button.setAttribute('data-photo-editor-disabled', button.disabled ? 'was-disabled' : 'was-enabled');
-                }
-                button.disabled = true;
-                return;
-            }
-
-            if (button.hasAttribute('data-photo-editor-disabled')) {
-                button.disabled = button.getAttribute('data-photo-editor-disabled') === 'was-disabled';
-                button.removeAttribute('data-photo-editor-disabled');
-            }
-        });
     };
 
     PhotoEditor.prototype.showMessage = function(message, kind) {
