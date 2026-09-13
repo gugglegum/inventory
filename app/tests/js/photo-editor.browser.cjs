@@ -50,6 +50,10 @@ async function setup(t, {editors = 1, session = true, mobile = false} = {}) {
         if (url.pathname === '/upload') uploads.push(route);
         else if (url.pathname === '/delete') deletes.push(route);
         else if (url.pathname === '/session') sessions.push(route);
+        else if (url.pathname.endsWith('.woff2')) await route.fulfill({
+            path: path.join(app, 'vendor/twbs/bootstrap-icons/font/fonts/bootstrap-icons.woff2'),
+            contentType: 'font/woff2',
+        });
         else if (url.pathname === '/form') await route.fulfill({contentType: 'text/html', body: `
             <!doctype html><html lang="ru"><meta charset="UTF-8"><body>
             <form id="item-form" style="padding:20px">
@@ -65,7 +69,7 @@ async function setup(t, {editors = 1, session = true, mobile = false} = {}) {
     for (const script of ['vendor/bower-asset/jquery/dist/jquery.js', 'vendor/yiisoft/yii2/assets/yii.js', 'vendor/yiisoft/yii2/assets/yii.activeForm.js']) {
         await page.addScriptTag({path: path.join(app, script)});
     }
-    for (const css of ['vendor/twbs/bootstrap/dist/css/bootstrap.css', 'backend/web/css/photo-editor.css']) {
+    for (const css of ['vendor/twbs/bootstrap/dist/css/bootstrap.css', 'vendor/twbs/bootstrap-icons/font/bootstrap-icons.css', 'backend/web/css/photo-editor.css']) {
         await page.addStyleTag({path: path.join(app, css)});
     }
     await page.evaluate(() => {
@@ -248,4 +252,133 @@ test('temporary deletion is awaited even when the final uploading card is remove
     await ui.deletes.shift().fulfill({json: {}});
     await until(async () => (await ui.saved()).length === 1);
     assert.deepEqual(JSON.parse((await ui.saved())[0]['manifest-0']), []);
+});
+
+async function drag(page, type, {target = 'body', names = ['photo.png'], text = null} = {}) {
+    return page.evaluate(({type, target, names, text, bytes}) => {
+        const dataTransfer = new DataTransfer();
+        if (text !== null) dataTransfer.setData('text/plain', text);
+        else names.forEach(name => dataTransfer.items.add(new File([new Uint8Array(bytes)], name, {type: 'image/png'})));
+        const event = new DragEvent(type, {dataTransfer, bubbles: true, cancelable: true});
+        document.querySelector(target).dispatchEvent(event);
+        return event.defaultPrevented;
+    }, {type, target, names, text, bytes: Array.from(png)});
+}
+
+test('file drag anywhere on the page shows an overlay and drops one sorted batch', async t => {
+    const ui = await setup(t);
+    await ui.page.evaluate(() => {
+        const header = document.createElement('header');
+        header.textContent = 'За пределами формы';
+        document.body.prepend(header);
+    });
+    assert.equal(await drag(ui.page, 'dragenter', {target: 'header'}), true);
+    const overlay = ui.page.locator('[data-photo-editor-drop-overlay]');
+    assert.equal(await overlay.isVisible(), true);
+    assert.equal(await overlay.evaluate(element => getComputedStyle(element).pointerEvents), 'none');
+    assert.equal(await drag(ui.page, 'dragover', {target: '#name'}), true);
+    assert.equal(await drag(ui.page, 'drop', {target: 'header', names: ['10.png', '2.png']}), true);
+    await until(() => ui.uploads.length === 2);
+    assert.equal(await overlay.isVisible(), false);
+    assert.equal(await ui.page.locator('[data-photo-editor-card]').count(), 2);
+    assert.deepEqual(await ui.page.locator('.photo-editor__name').allTextContents(), ['2.png', '10.png']);
+    assert.equal(ui.page.url(), 'https://stockhub.test/form');
+});
+
+test('dropping directly on the original dropzone or a text field uploads files only once', async t => {
+    const ui = await setup(t);
+    for (const target of ['[data-photo-editor-droparea]', '#name']) {
+        await drag(ui.page, 'dragenter', {target});
+        assert.equal(await drag(ui.page, 'drop', {target}), true);
+    }
+    await until(() => ui.uploads.length === 2);
+    assert.equal(await ui.page.locator('[data-photo-editor-card]').count(), 2);
+    assert.equal(await ui.page.locator('.photo-editor__droparea--active').count(), 0);
+    assert.equal(await ui.page.locator('#name').inputValue(), 'Предмет');
+});
+
+test('overlay survives nested drag events and clears when leaving or cancelling the drag', async t => {
+    const ui = await setup(t);
+    const overlay = ui.page.locator('[data-photo-editor-drop-overlay]');
+    await drag(ui.page, 'dragenter');
+    await drag(ui.page, 'dragenter', {target: '#top'});
+    await drag(ui.page, 'dragleave');
+    assert.equal(await overlay.isVisible(), true);
+    await drag(ui.page, 'dragleave', {target: '#top'});
+    assert.equal(await overlay.isVisible(), false);
+    for (const cancel of ['escape', 'blur', 'dragend', 'pagehide']) {
+        await drag(ui.page, 'dragenter');
+        assert.equal(await overlay.isVisible(), true);
+        await ui.page.evaluate(cancel => {
+            if (cancel === 'escape') document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
+            else if (cancel === 'dragend') document.dispatchEvent(new DragEvent('dragend'));
+            else window.dispatchEvent(new Event(cancel));
+        }, cancel);
+        assert.equal(await overlay.isVisible(), false);
+        assert.equal(await ui.page.locator('.photo-editor__droparea--active').count(), 0);
+    }
+    assert.equal(ui.uploads.length, 0);
+});
+
+test('text drags and pages without a visible photo form are left alone', async t => {
+    const ui = await setup(t);
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+        assert.equal(await drag(ui.page, type, {target: '#name', text: 'Текст'}), false);
+    }
+    assert.equal(await ui.page.locator('[data-photo-editor-drop-overlay]').count(), 0);
+    await ui.page.locator('form').evaluate(form => { form.hidden = true; });
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+        assert.equal(await drag(ui.page, type), false);
+    }
+    assert.equal(await ui.page.locator('[data-photo-editor-drop-overlay]').count(), 0);
+    assert.equal(ui.uploads.length, 0);
+});
+
+test('page drops join an existing deferred save', async t => {
+    const ui = await setup(t);
+    await ui.add(['1.png']);
+    await until(() => ui.uploads.length === 1);
+    await ui.page.locator('#top').click();
+    await drag(ui.page, 'dragenter');
+    await drag(ui.page, 'drop', {names: ['2.png']});
+    await until(() => ui.uploads.length === 2);
+    await ui.ready(1);
+    assert.deepEqual(await ui.saved(), []);
+    await ui.ready(2);
+    await until(async () => (await ui.saved()).length === 1);
+    assert.equal(JSON.parse((await ui.saved())[0]['manifest-0']).length, 2);
+});
+
+test('a drop uses the hovered editor, then the active editor for the rest of the page', async t => {
+    const ui = await setup(t, {editors: 2});
+    await drag(ui.page, 'dragenter', {target: '#editor-1'});
+    await drag(ui.page, 'drop', {target: '#editor-1', names: ['1.png']});
+    await drag(ui.page, 'dragenter');
+    await drag(ui.page, 'drop', {names: ['2.png']});
+    await until(() => ui.uploads.length === 2);
+    assert.equal(await ui.page.locator('#editor-0 [data-photo-editor-card]').count(), 0);
+    assert.equal(await ui.page.locator('#editor-1 [data-photo-editor-card]').count(), 2);
+});
+
+test('overlay fits desktop and mobile viewports in both color themes', async t => {
+    for (const mobile of [false, true]) {
+        const ui = await setup(t, {mobile});
+        for (const theme of ['light', 'dark']) {
+            await ui.page.locator('html').evaluate((root, theme) => root.setAttribute('data-bs-theme', theme), theme);
+            await drag(ui.page, 'dragenter');
+            const overlay = ui.page.locator('[data-photo-editor-drop-overlay]');
+            const frame = await overlay.boundingBox();
+            const message = await ui.page.locator('.photo-editor-drop-overlay__message').boundingBox();
+            const viewport = ui.page.viewportSize();
+            assert.ok(frame.x >= 0 && frame.y >= 0 && frame.x + frame.width <= viewport.width);
+            assert.ok(frame.y + frame.height <= viewport.height);
+            assert.ok(message.x >= frame.x && message.x + message.width <= frame.x + frame.width);
+            assert.ok(message.y >= frame.y && message.y + message.height <= frame.y + frame.height);
+            if (process.env.PHOTO_EDITOR_SCREENSHOT_DIR) {
+                await ui.page.evaluate(() => document.fonts.ready);
+                await ui.page.screenshot({path: path.join(process.env.PHOTO_EDITOR_SCREENSHOT_DIR, `photo-drop-${mobile ? 'mobile' : 'desktop'}-${theme}.png`)});
+            }
+            await drag(ui.page, 'dragleave');
+        }
+    }
 });

@@ -14,6 +14,7 @@
     var editors = [];
     var activeEditor = null;
     var pasteListenerRegistered = false;
+    var dropListenersRegistered = false;
     var fileNameCollator = new Intl.Collator(undefined, {
         numeric: true,
         sensitivity: 'base'
@@ -219,6 +220,122 @@
         });
     }
 
+    function editorForDrop(target) {
+        var visible = visibleEditors().filter(function(editor) { return editor.form; });
+        var root = target.closest ? target.closest('[data-photo-editor]') : null;
+        var form = target.closest ? target.closest('form') : null;
+        var direct = visible.find(function(editor) { return editor.root === root; });
+        var inForm = visible.filter(function(editor) { return editor.form === form; });
+
+        if (direct) {
+            return direct;
+        }
+        if (inForm.length === 1) {
+            return inForm[0];
+        }
+        if (visible.indexOf(activeEditor) !== -1) {
+            return activeEditor;
+        }
+        return visible.length === 1 ? visible[0] : null;
+    }
+
+    function registerDropListeners() {
+        var depth = 0;
+        var overlay = null;
+        var highlightedEditor = null;
+
+        if (dropListenersRegistered) {
+            return;
+        }
+        dropListenersRegistered = true;
+
+        function show(editor) {
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'photo-editor-drop-overlay';
+                overlay.setAttribute('data-photo-editor-drop-overlay', '');
+                overlay.setAttribute('role', 'status');
+                overlay.innerHTML = '<div class="photo-editor-drop-overlay__message">' +
+                    '<i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>' +
+                    '<strong>Отпустите фотографии в любом месте страницы</strong>' +
+                    '<span>Они будут добавлены к форме</span></div>';
+                document.body.appendChild(overlay);
+            }
+            if (highlightedEditor && highlightedEditor.droparea) {
+                highlightedEditor.droparea.classList.remove('photo-editor__droparea--active');
+            }
+            highlightedEditor = editor;
+            if (editor.droparea) {
+                editor.droparea.classList.add('photo-editor__droparea--active');
+            }
+            overlay.hidden = false;
+        }
+
+        function reset() {
+            depth = 0;
+            if (overlay) {
+                overlay.hidden = true;
+            }
+            if (highlightedEditor && highlightedEditor.droparea) {
+                highlightedEditor.droparea.classList.remove('photo-editor__droparea--active');
+            }
+            highlightedEditor = null;
+        }
+
+        function accept(event) {
+            var editor;
+
+            // Text, links and the editor's pointer-based sorting are not file drops.
+            if (arrayFrom(event.dataTransfer && event.dataTransfer.types).indexOf('Files') === -1) {
+                return null;
+            }
+            editor = editorForDrop(event.target);
+            if (!editor) {
+                reset();
+                return null;
+            }
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+            return editor;
+        }
+
+        document.addEventListener('dragenter', function(event) {
+            var editor = accept(event);
+            if (editor) {
+                depth += 1;
+                show(editor);
+            }
+        }, true);
+        document.addEventListener('dragover', function(event) {
+            var editor = accept(event);
+            if (editor) {
+                show(editor);
+            }
+        }, true);
+        document.addEventListener('dragleave', function() {
+            depth = Math.max(0, depth - 1);
+            if (depth === 0) {
+                reset();
+            }
+        }, true);
+        document.addEventListener('drop', function(event) {
+            var editor = accept(event);
+            reset();
+            if (editor) {
+                event.stopPropagation();
+                editor.addFiles(arrayFrom(event.dataTransfer.files));
+            }
+        }, true);
+        document.addEventListener('dragend', reset, true);
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                reset();
+            }
+        });
+        window.addEventListener('blur', reset);
+        window.addEventListener('pagehide', reset);
+    }
+
     function PhotoEditorForm(form) {
         var self = this;
 
@@ -403,7 +520,6 @@
         this.activeUploads = 0;
         this.activeDeletes = 0;
         this.sessionPromise = null;
-        this.dragCounter = 0;
         this.dragState = null;
         this.nextClientId = 1;
 
@@ -436,40 +552,6 @@
             this.input.addEventListener('change', function() {
                 self.addFiles(arrayFrom(self.input.files));
                 self.input.value = '';
-            });
-            this.droparea.addEventListener('dragenter', function(event) {
-                if (!self.hasFileDrag(event)) {
-                    return;
-                }
-
-                event.preventDefault();
-                self.dragCounter += 1;
-                self.droparea.classList.add('photo-editor__droparea--active');
-            });
-            this.droparea.addEventListener('dragover', function(event) {
-                if (!self.hasFileDrag(event)) {
-                    return;
-                }
-
-                event.preventDefault();
-                event.dataTransfer.dropEffect = 'copy';
-            });
-            this.droparea.addEventListener('dragleave', function() {
-                self.dragCounter = Math.max(0, self.dragCounter - 1);
-                if (self.dragCounter === 0) {
-                    self.droparea.classList.remove('photo-editor__droparea--active');
-                }
-            });
-            this.droparea.addEventListener('drop', function(event) {
-                if (!self.hasFileDrag(event)) {
-                    return;
-                }
-
-                event.preventDefault();
-                activeEditor = self;
-                self.dragCounter = 0;
-                self.droparea.classList.remove('photo-editor__droparea--active');
-                self.addFiles(arrayFrom(event.dataTransfer.files));
             });
         }
 
@@ -530,10 +612,6 @@
                 this.form._photoEditorFormController = new PhotoEditorForm(this.form);
             }
         }
-    };
-
-    PhotoEditor.prototype.hasFileDrag = function(event) {
-        return arrayFrom(event.dataTransfer && event.dataTransfer.types).indexOf('Files') !== -1;
     };
 
     PhotoEditor.prototype.previousCard = function(card) {
@@ -1403,6 +1481,7 @@
         root._photoEditorController = editor;
         editors.push(editor);
         registerPasteListener();
+        registerDropListeners();
 
         return editor;
     }

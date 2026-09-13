@@ -151,7 +151,7 @@ $this->registerJsFile(
                 <i class="bi bi-plus-lg photo-editor__droparea-icon" aria-hidden="true"></i>
                 <span class="photo-editor__droparea-title">Добавить фотографии</span>
                 <span class="photo-editor__droparea-hint">
-                    Нажмите для выбора файлов, перетащите их сюда или вставьте изображение из буфера обмена
+                    Нажмите для выбора файлов, перетащите их в любое место страницы или вставьте изображение из буфера обмена
                 </span>
                 <input
                     id="<?= Html::encode($editorId) ?>-input"
